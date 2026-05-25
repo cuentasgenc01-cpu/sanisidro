@@ -385,7 +385,7 @@
     
     <div class="buttons">
         <button class="btn-guardar" id="btnGuardar" onclick="guardarRegistro()" disabled>GUARDAR REGISTRO</button>
-        <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
+        <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL DEL CURSO</button>
     </div>
 
     <!-- SELECCIONES -->
@@ -522,6 +522,7 @@
         
         const select = document.getElementById("actividad");
         select.innerHTML = '<option value="">Seleccionar Incidencia</option><option value="+ NUEVA">+ CREAR NUEVA</option>';
+        select.innerHTML = '<option value="">Seleccionar Incidencia</option><option value="+ NUEVA" style="color: #FF5722; font-weight: bold; background-color: #FFF3E0;">+ NUEVA ACTIVIDAD</option>';
         
         todasLasActividades.forEach(act => {
             const option = document.createElement("option");
@@ -548,7 +549,12 @@
 
         document.getElementById("fecha").disabled = !cursoActual;
         document.getElementById("estudiante").disabled = !cursoActual;
-        document.getElementById("actividad").disabled = !cursoActual;
+        document.getElementById("actividad").disabled = true; // Bloqueado hasta seleccionar estudiante
+        document.getElementById("btnHistEstudiante").disabled = true;
+
+        estudiante = "";
+        actividadesSeleccionadas = [];
+        mostrarActividadesSeleccionadas();
         
         if (!cursoActual) return;
         
@@ -582,6 +588,7 @@
 
         estudiante = document.getElementById("estudiante").value;
         document.getElementById("btnHistEstudiante").disabled = !estudiante;
+        document.getElementById("actividad").disabled = !estudiante; // Habilitar incidencias al elegir estudiante
         actividadesSeleccionadas = [];
         mostrarActividadesSeleccionadas();
     }
@@ -728,10 +735,11 @@
             
             alert("Registro guardado");
             actividadesSeleccionadas = [];
-            document.getElementById("estudiante").value = "";
-            document.getElementById("actividad").value = "";
+            
+            // Resetear para que aparezca "Seleccionar Estudiante" y se bloqueen incidencias
+            await cursoSeleccionado(); 
+            
             mostrarActividadesSeleccionadas();
-            cargarRegistrosProfe();
             cargarActividades();
             
         } catch (error) {
