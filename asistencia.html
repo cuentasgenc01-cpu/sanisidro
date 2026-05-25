@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #0D47A1;
+            position: fixed;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar a.active {
+            background: white;
+            color: #0D47A1;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            width: 100%;
+            margin-top: 50px;
+            background: #C62828;
+            padding: 15px;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .sidebar button:hover {
+            background: #B71C1C;
+        }
+
+        .container {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .header {
+            background: #0D47A1;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+        }
+
+        .header button {
+            background: #FF5722;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .header button:hover {
+            background: #E64A19;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls select,
+        .controls input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .controls input[type="date"] {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .controls select {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-guardar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-guardar:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .btn-guardar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-historial {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-historial:hover:not(:disabled) {
+            background: #0b7dda;
+        }
+
+        .btn-historial:disabled {
+            background: #ccc;
+        }
+
+        .btn-actualizar {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-actualizar:hover:not(:disabled) {
+            background: #E68900;
+        }
+
+        .btn-actualizar:disabled {
+            background: #ccc;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0D47A1;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .list-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .list-item:hover {
+            background: #f9f9f9;
+        }
+
+        .list-item.asistente {
+            background: white;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .list-item.falta {
+            background: #ffcdd2;
+            border-left: 6px solid #d32f2f;
+        }
+
+        .list-item.atraso {
+            background: #b2ebf2;
+            border-left: 6px solid #00bcd4;
+        }
+
+        .list-item.licencia {
+            background: #c8e6c9;
+            border-left: 6px solid #558b2f;
+        }
+
+        .item-number {
+            width: 30px;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .item-name {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        .item-status {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 100px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .status-a {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-f {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .status-fa {
+            background: #00bcd4;
+            color: white;
+        }
+
+        .status-l {
+            background: #558b2f;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #0D47A1;
+        }
+
+        .modal-content p {
+            margin-bottom: 10px;
+        }
+
+        .modal-content button {
+            background: #0D47A1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* Estilos para los chips de filtro similares a la App */
+        .filter-chip {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .filter-chip.active {
+            border-width: 2px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0D47A1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2 id="nombreProfesorSidebar">Profesor</h2>
+    
+    <a href="panel.html">🏠 Inicio</a>
+    <a href="asistencia.html" class="active">📋 Asistencia</a>
+    <a href="#">📝 Notas</a>
+    <a href="#">📅 Horario</a>
+    <a href="kardex.html">⚖️ Kardex Disciplinario</a>
+    
+    <button onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+</div>
+
+<div class="loading" id="loading">
+    <div style="text-align: center;">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Cargando...</div>
+    </div>
+</div>
+
+<div class="container">
+    <h1 style="color: #0D47A1; margin-bottom: 20px; font-size: 24px;">📋 ASISTENCIA</h1>
+    
+    <div class="controls">
+        <select id="curso" onchange="cursoSeleccionado()">
+            <option value="">Seleccionar Curso</option>
+        </select>
+        <input type="date" id="fecha" onchange="fechaSeleccionada()" disabled>
+        <div class="buttons">
+            <button class="btn-guardar" id="btnGuardar" onclick="guardarAsistencia()" disabled>GUARDAR</button>
+            <button class="btn-actualizar" id="btnActualizar" onclick="actualizarDatos()" disabled>ACTUALIZAR</button>
+            <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card" onclick="filtrarEstado('A')">
+            <h3>TOTAL</h3>
+            <div class="number" id="stat-total">0</div>
+        </div>
+        <div class="stat-card" onclick="filtrarEstado('A')">
+            <h3>ASISTENTES</h3>
+            <div class="number" id="stat-asistentes" style="color: #4CAF50;">0</div>
+        </div>
+        <div class="stat-card" onclick="filtrarEstado('FA')">
+            <h3>ATRASOS</h3>
+            <div class="number" id="stat-atrasos" style="color: #00bcd4;">0</div>
+        </div>
+        <div class="stat-card" onclick="filtrarEstado('F')">
+            <h3>FALTAS</h3>
+            <div class="number" id="stat-faltas" style="color: #d32f2f;">0</div>
+        </div>
+        <div class="stat-card" onclick="filtrarEstado('L')">
+            <h3>LICENCIAS</h3>
+            <div class="number" id="stat-licencias" style="color: #558b2f;">0</div>
+        </div>
+    </div>
+
+    <div class="list-container" id="alumnosList"></div>
+</div>
+
+<div class="modal" id="historialModal">
+    <div class="modal-content">
+        <h2>HISTORIAL DE CAMBIOS</h2>
+        <p id="historialFecha"></p>
+        <div id="historialContenido" style="max-height: 400px; overflow-y: auto;"></div>
+        <button onclick="document.getElementById('historialModal').classList.remove('active')">CERRAR</button>
+    </div>
+</div>
+
+<!-- MODAL HISTORIAL POR ESTUDIANTE (ESTILO APP) -->
+<div class="modal" id="modalHistorialAlumno">
+    <div class="modal-content" style="max-width: 600px; position: relative;">
+        <span style="position: absolute; right: 15px; top: 10px; cursor: pointer; font-size: 24px; font-weight: bold; color: #666;" 
+              onclick="document.getElementById('modalHistorialAlumno').classList.remove('active')">&times;</span>
+        <h2 id="histAlumnoTitulo" style="font-size: 16px; font-weight: 900;">HISTORIAL: </h2>
+        
+        <!-- Rango de Fechas -->
+        <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label style="font-size: 10px; font-weight: bold; color: #6750A4;">Desde:</label>
+                <input type="date" id="histFechaInicio" style="width: 100%; padding: 5px; font-size: 12px;">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 10px; font-weight: bold; color: #6750A4;">Hasta:</label>
+                <input type="date" id="histFechaFin" style="width: 100%; padding: 5px; font-size: 12px;">
+            </div>
+        </div>
+
+        <!-- Chips de Filtro -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div class="filter-chip" id="chipF" style="background: rgba(211, 47, 47, 0.1); border: 1px solid #d32f2f;" onclick="toggleFiltroEstado('F')">
+                <span style="color: #d32f2f; font-size: 10px; font-weight: 900;">F</span>
+                <span id="countF" style="color: #d32f2f; font-size: 16px; font-weight: 900;">0</span>
+            </div>
+            <div class="filter-chip" id="chipFA" style="background: rgba(0, 188, 212, 0.1); border: 1px solid #00bcd4;" onclick="toggleFiltroEstado('FA')">
+                <span style="color: #00bcd4; font-size: 10px; font-weight: 900;">ATRA</span>
+                <span id="countFA" style="color: #00bcd4; font-size: 16px; font-weight: 900;">0</span>
+            </div>
+            <div class="filter-chip" id="chipL" style="background: rgba(85, 139, 47, 0.1); border: 1px solid #558b2f;" onclick="toggleFiltroEstado('L')">
+                <span style="color: #558b2f; font-size: 10px; font-weight: 900;">L</span>
+                <span id="countL" style="color: #558b2f; font-size: 16px; font-weight: 900;">0</span>
+            </div>
+        </div>
+
+        <!-- Cabecera Tabla -->
+        <div style="display: flex; background: #eee; padding: 5px; font-size: 10px; font-weight: 900; border-radius: 4px;">
+            <span style="width: 85px;">FECHA</span>
+            <select id="filtroProfeHist" style="flex: 1; border: none; background: transparent; font-size: 10px; font-weight: 900;" onchange="renderizarHistorialAlumno()">
+                <option value="TODOS">TODOS LOS PROFESORES</option>
+            </select>
+            <span style="width: 50px; text-align: center;">ESTADO</span>
+        </div>
+
+        <div id="historialAlumnoContenido" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="document.getElementById('modalHistorialAlumno').classList.remove('active')" style="background: #999;">CERRAR</button>
+            <button onclick="buscarHistorialAlumno()" style="background: #5E49A1; font-weight: 900;">BUSCAR</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get, onValue, update, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
+        authDomain: "pruebamaria-80f86.firebaseapp.com",
+        databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
+        projectId: "pruebamaria-80f86",
+        storageBucket: "pruebamaria-80f86.firebasestorage.app",
+        messagingSenderId: "700964200967",
+        appId: "1:700964200967:web:6d83c96c2748db5299c0a2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // VARIABLES GLOBALES
+    let profesor = localStorage.getItem("profesor");
+    let estados = {};
+    let alumnos = [];
+    let cursoActual = "";
+    const hoy = new Date();
+    let fechaActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    let fechaElegida = fechaActual;
+
+    // Variables para el historial del alumno
+    let alumnoActualHist = "";
+    let registrosCompletosHist = [];
+    let filtroEstadoHist = null;
+    document.getElementById("histFechaInicio").value = fechaActual;
+    document.getElementById("histFechaFin").value = fechaActual;
+
+    // Formatear fecha para que coincida con Firebase (D-M-YYYY)
+    function formatFechaDB(fechaISO) {
+        if (!fechaISO) return "";
+        const [y, m, d] = fechaISO.split('-');
+        return `${parseInt(d)}-${parseInt(m)}-${y}`;
+    }
+
+    // INICIALIZAR
+    document.getElementById("nombreProfesorSidebar").textContent = profesor || "Invitado";
+    document.getElementById("fecha").value = fechaActual;
+    
+    // Verificar si es fecha actual al cambiar
+    function actualizarEstadoBotones() {
+        const esHoy = fechaElegida === fechaActual;
+        document.getElementById("btnGuardar").disabled = !cursoActual || !esHoy;
+        document.getElementById("btnActualizar").disabled = !cursoActual || !esHoy;
+    }
+
+    // CARGAR CURSOS DEL PROFESOR
+    async function cargarCursos() {
+        if (!profesor) return;
+        const snapshot = await get(ref(db, `PROFESORES/${profesor}/CURSO`));
+        const select = document.getElementById("curso");
+        select.innerHTML = '<option value="">Seleccionar Curso</option>';
+        
+        if (snapshot.exists()) {
+            Object.keys(snapshot.val()).forEach(curso => {
+                const option = document.createElement("option");
+                option.value = curso;
+                option.textContent = curso;
+                select.appendChild(option);
+            });
+        }
+    }
+
+    window.cursoSeleccionado = async function() {
+        const selectCurso = document.getElementById("curso");
+        // Eliminar la opción "Seleccionar Curso" al elegir uno real
+        if (selectCurso.options[0].value === "") {
+            selectCurso.remove(0);
+        }
+
+        cursoActual = document.getElementById("curso").value;
+        document.getElementById("fecha").disabled = !cursoActual;
+
+        if (!cursoActual) return;
+        
+        document.getElementById("btnHistorial").disabled = false;
+        actualizarEstadoBotones();
+        
+        cargarAlumnos();
+        cargarEstados();
+    }
+
+    window.fechaSeleccionada = function() {
+        fechaElegida = document.getElementById("fecha").value;
+        actualizarEstadoBotones();
+        
+        // Recargar alumnos y estados cuando cambia la fecha
+        if (cursoActual) {
+            cargarEstados();
+        }
+    }
+
+    async function cargarAlumnos() {
+        if (!cursoActual) return;
+        const snapshot = await get(ref(db, `CURSOS/${cursoActual}`));
+        alumnos = [];
+        
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                alumnos.push(child.val());
+            });
+            alumnos.sort();
+        }
+        
+        mostrarAlumnos();
+    }
+
+    async function cargarEstados() {
+        if (!cursoActual || !fechaElegida) return;
+        const fechaDB = formatFechaDB(fechaElegida);
+        const snapshot = await get(ref(db, `asistencia/${fechaDB}/${cursoActual}`));
+        estados = {};
+        
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                estados[child.key] = child.val();
+            });
+        }
+        
+        // Inicializar con "A" si no existen
+        alumnos.forEach(alumno => {
+            if (!estados[alumno]) {
+                estados[alumno] = "A";
+            }
+        });
+        
+        mostrarAlumnos();
+    }
+
+    window.actualizarDatos = async function() {
+        if (!cursoActual || !fechaElegida) return;
+        document.getElementById("loading").classList.add("active");
+        document.getElementById("loadingText").textContent = "Actualizando datos...";
+        try {
+            await cargarAlumnos();
+            await cargarEstados();
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    function mostrarAlumnos() {
+        const container = document.getElementById("alumnosList");
+        container.innerHTML = "";
+        
+        if (alumnos.length === 0) {
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No hay alumnos en este curso</div>';
+            return;
+        }
+        
+        alumnos.forEach((alumno, index) => {
+            const estado = estados[alumno] || "A";
+            const item = document.createElement("div");
+            item.className = `list-item ${getClasePorEstado(estado)}`;
+            
+            const labelEstado = {
+                "A": "✓ ASISTENTE",
+                "F": "✗ FALTA",
+                "FA": "⏱ ATRA",
+                "L": "📜 LICENCIA"
+            }[estado] || estado;
+            
+            const colorEstado = {
+                "A": "#4CAF50",
+                "F": "#d32f2f",
+                "FA": "#00bcd4",
+                "L": "#558b2f"
+            }[estado] || "#333";
+            
+            item.innerHTML = `
+                <span class="item-number">${index + 1}.</span>
+                <span class="item-name">${alumno}</span>
+                <span class="item-status status-${estado.toLowerCase()}" style="background: ${colorEstado};">${labelEstado}</span>
+            `;
+            
+            item.onclick = () => cambiarEstado(alumno);
+            item.oncontextmenu = (e) => {
+                e.preventDefault();
+                verHistorialAlumno(alumno);
+            };
+            
+            container.appendChild(item);
+        });
+        
+        actualizarEstadisticas();
+    }
+
+    function getClasePorEstado(estado) {
+        switch(estado) {
+            case "F": return "falta";
+            case "FA": return "atraso";
+            case "L": return "licencia";
+            default: return "asistente";
+        }
+    }
+
+    function cambiarEstado(alumno) {
+        let estado = estados[alumno] || "A";
+
+        const transiciones = {
+            "A": "F",
+            "F": "FA",
+            "FA": "L",
+            "L": "A"
+        };
+
+        estado = transiciones[estado] || "A";
+        estados[alumno] = estado;
+        mostrarAlumnos();
+    }
+
+    function actualizarEstadisticas() {
+        const total = alumnos.length;
+        const asistentes = alumnos.filter(a => (estados[a] || "A") === "A").length;
+        const atrasos = alumnos.filter(a => (estados[a] || "A") === "FA").length;
+        const faltas = alumnos.filter(a => (estados[a] || "A") === "F").length;
+        const licencias = alumnos.filter(a => (estados[a] || "A") === "L").length;
+        
+        document.getElementById("stat-total").textContent = total;
+        document.getElementById("stat-asistentes").textContent = asistentes;
+        document.getElementById("stat-atrasos").textContent = atrasos;
+        document.getElementById("stat-faltas").textContent = faltas;
+        document.getElementById("stat-licencias").textContent = licencias;
+    }
+
+    window.filtrarEstado = function(estado) {
+        console.log(`Filtrar por: ${estado}`);
+        // Aquí se podría implementar filtrado de lista
+    }
+
+    window.guardarAsistencia = async function() {
+        if (!cursoActual || !fechaElegida) return;
+        
+        // Validar que sea la fecha actual
+        if (fechaElegida !== fechaActual) {
+            alert("Solo puedes guardar la asistencia del día actual");
+            return;
+        }
+        
+        document.getElementById("loading").classList.add("active");
+        document.getElementById("loadingText").textContent = "Guardando asistencia...";
+        
+        try {
+            const updates = {};
+            const fechaDB = formatFechaDB(fechaElegida);
+            
+            // Guardar estados en asistencia
+            Object.keys(estados).forEach(alumno => {
+                updates[`asistencia/${fechaDB}/${cursoActual}/${alumno}`] = estados[alumno];
+            });
+            
+            // Guardar en historial de cambios
+            const ahora = new Date().toLocaleString("es-ES");
+            const cambios = {};
+            
+            Object.keys(estados).forEach(alumno => {
+                if (estados[alumno] !== "A") {
+                    cambios[alumno] = estados[alumno];
+                }
+            });
+            
+            const historialRef = ref(db, `HISTORIAL_CAMBIOS/${cursoActual}`);
+            const historialSnapshot = await get(historialRef);
+            
+            let existente = null;
+            if (historialSnapshot.exists()) {
+                historialSnapshot.forEach(child => {
+                    if (child.val().profesor === profesor && child.val().fecha_asis === fechaDB) {
+                        existente = child.key;
+                    }
+                });
+            }
+            
+            const registroHistorial = {
+                profesor: profesor,
+                fecha_asis: fechaDB,
+                fecha_hora_reg: ahora,
+                cambios: cambios
+            };
+            
+            if (existente) {
+                updates[`HISTORIAL_CAMBIOS/${cursoActual}/${existente}`] = registroHistorial;
+            } else {
+                // Para push, hacemos un update separado
+                const newKey = push(historialRef).key;
+                updates[`HISTORIAL_CAMBIOS/${cursoActual}/${newKey}`] = registroHistorial;
+            }
+            
+            await update(ref(db), updates);
+            
+            alert("¡Asistencia guardada correctamente!");
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error al guardar: " + error.message);
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    window.verHistorial = async function() {
+        if (!cursoActual || !fechaElegida) return;
+        const fechaDB = formatFechaDB(fechaElegida);
+        
+        document.getElementById("loading").classList.add("active");
+        document.getElementById("loadingText").textContent = "Cargando historial...";
+        
+        try {
+            const snapshot = await get(ref(db, `HISTORIAL_CAMBIOS/${cursoActual}`));
+            
+            const container = document.getElementById("historialContenido");
+            container.innerHTML = "";
+            
+            document.getElementById("historialFecha").textContent = `Cambios del día: ${fechaDB}`;
+            
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    if (data.fecha_asis !== fechaDB) return; // Filtro manual
+
+                    const card = document.createElement("div");
+                    card.style.cssText = "background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #0D47A1;";
+                    
+                    let cambiosHTML = `<strong>Prof: ${data.profesor}</strong><br>`;
+                    cambiosHTML += `<small>${data.fecha_hora_reg}</small><br><br>`;
+                    
+                    if (data.cambios) {
+                        Object.keys(data.cambios).forEach(alumno => {
+                            let estado = data.cambios[alumno];
+                            let estadoDisplay = estado === "FA" ? "ATRA" : estado;
+                            cambiosHTML += `<div>• <strong>${alumno}:</strong> ${estadoDisplay}</div>`;
+                        });
+                    }
+                    
+                    card.innerHTML = cambiosHTML;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">No hay registros de cambios para esta fecha.</div>';
+            }
+            
+            document.getElementById("historialModal").classList.add("active");
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error al cargar historial: " + error.message);
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    window.toggleFiltroEstado = function(estado) {
+        filtroEstadoHist = (filtroEstadoHist === estado) ? null : estado;
+        
+        // Actualizar UI de los chips
+        document.getElementById("chipF").style.borderWidth = (filtroEstadoHist === 'F') ? "3px" : "1px";
+        document.getElementById("chipFA").style.borderWidth = (filtroEstadoHist === 'FA') ? "3px" : "1px";
+        document.getElementById("chipL").style.borderWidth = (filtroEstadoHist === 'L') ? "3px" : "1px";
+        
+        renderizarHistorialAlumno();
+    }
+
+    window.verHistorialAlumno = async function(alumno) {
+        alumnoActualHist = alumno;
+        document.getElementById("histAlumnoTitulo").textContent = `HISTORIAL: ${alumno}`;
+        document.getElementById("historialAlumnoContenido").innerHTML = "";
+        document.getElementById("countF").textContent = "0";
+        document.getElementById("countFA").textContent = "0";
+        document.getElementById("countL").textContent = "0";
+        filtroEstadoHist = null;
+        
+        document.getElementById("modalHistorialAlumno").classList.add("active");
+    }
+
+    window.buscarHistorialAlumno = async function() {
+        if (!cursoActual || !alumnoActualHist) return;
+        
+        document.getElementById("loading").classList.add("active");
+        document.getElementById("loadingText").textContent = "Buscando historial...";
+        
+        // Parsear fechas de los inputs (YYYY-MM-DD) a objetos Date locales para comparar correctamente
+        const [yI, mI, dI] = document.getElementById("histFechaInicio").value.split('-').map(Number);
+        const [yF, mF, dF] = document.getElementById("histFechaFin").value.split('-').map(Number);
+        
+        const fIni = new Date(yI, mI - 1, dI);
+        const fFin = new Date(yF, mF - 1, dF);
+        
+        try {
+            const snapshot = await get(ref(db, `HISTORIAL_CAMBIOS/${cursoActual}`));
+            registrosCompletosHist = [];
+            const profesoresSet = new Set();
+
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    // Parsear fecha D-M-YYYY a objeto Date para comparar
+                    const parts = data.fecha_asis.split('-');
+                    const fechaAsis = new Date(parts[2], parts[1] - 1, parts[0]);
+
+                    if (fechaAsis >= fIni && fechaAsis <= fFin) {
+                        if (data.cambios && data.cambios[alumnoActualHist]) {
+                            const cambio = data.cambios[alumnoActualHist];
+                            // Si el cambio dice "A a F", tomamos "F"
+                            const estadoFinal = cambio.includes(" a ") ? cambio.split(" a ").pop() : cambio;
+                            
+                            if (estadoFinal !== "A") {
+                                registrosCompletosHist.push({
+                                    fecha: data.fecha_asis,
+                                    docente: data.profesor,
+                                    estado: estadoFinal,
+                                    timestamp: fechaAsis.getTime()
+                                });
+                                profesoresSet.add(data.profesor);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Ordenar por fecha descendente
+            registrosCompletosHist.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Llenar combo de profesores
+            const comboProfe = document.getElementById("filtroProfeHist");
+            comboProfe.innerHTML = '<option value="TODOS">TODOS LOS PROFESORES</option>';
+            Array.from(profesoresSet).sort().forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p; opt.textContent = p;
+                comboProfe.appendChild(opt);
+            });
+
+            renderizarHistorialAlumno();
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    window.renderizarHistorialAlumno = function() {
+        const profeSel = document.getElementById("filtroProfeHist").value;
+        const container = document.getElementById("historialAlumnoContenido");
+        container.innerHTML = "";
+
+        const filtrados = registrosCompletosHist.filter(r => 
+            (filtroEstadoHist === null || r.estado === filtroEstadoHist) &&
+            (profeSel === "TODOS" || r.docente === profeSel)
+        );
+
+        // Actualizar contadores globales (del set actual filtrado solo por profe)
+        const baseParaConteo = registrosCompletosHist.filter(r => profeSel === "TODOS" || r.docente === profeSel);
+        document.getElementById("countF").textContent = baseParaConteo.filter(r => r.estado === 'F').length;
+        document.getElementById("countFA").textContent = baseParaConteo.filter(r => r.estado === 'FA').length;
+        document.getElementById("countL").textContent = baseParaConteo.filter(r => r.estado === 'L').length;
+
+        filtrados.forEach(r => {
+            const div = document.createElement("div");
+            div.style.cssText = "display: flex; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; font-size: 11px;";
+            const color = r.estado === 'F' ? '#d32f2f' : (r.estado === 'FA' ? '#00bcd4' : '#558b2f');
+            const label = r.estado === 'FA' ? 'ATRA' : r.estado;
+
+            div.innerHTML = `
+                <span style="width: 85px;">${r.fecha}</span>
+                <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${r.docente}</span>
+                <span style="width: 50px; text-align: center; color: white; background: ${color}; font-weight: 900; border-radius: 4px; padding: 2px;">${label}</span>
+            `;
+            container.appendChild(div);
+        });
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 20px; color: gray; font-size: 12px; font-weight: bold;">SIN REGISTROS PARA ESTA SELECCIÓN</div>';
+        }
+    }
+
+    window.cerrarSesion = function() {
+        localStorage.removeItem("profesor");
+        window.location.href = "index.html";
+    }
+
+    // INICIALIZAR
+    cargarCursos();
+</script>
+
+</body>
+</html>

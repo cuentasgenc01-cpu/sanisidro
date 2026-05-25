@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Panel</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f2f2f2;
+}
+
+.sidebar{
+    width:250px;
+    height:100vh;
+    background:#0D47A1;
+    position:fixed;
+    color:white;
+    padding:20px;
+}
+
+.sidebar h2{
+    margin-bottom:30px;
+}
+
+.sidebar a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:15px;
+}
+
+.main{
+    margin-left:250px;
+    padding:30px;
+}
+
+.card{
+    background:white;
+    padding:30px;
+    border-radius:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2 id="nombreProfesor"></h2>
+
+<a href="panel.html">🏠 Inicio</a>
+<a href="asistencia.html">📋 Asistencia</a>
+<a href="#">📝 Notas</a>
+<a href="#">📅 Horario</a>
+<a href="kardex.html">⚖️ Kardex Disciplinario</a>
+
+<button id="btnCerrarSesion" style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:none; color:white; border-radius:10px; cursor:pointer; font-size:16px;">
+🚪 Cerrar Sesión
+</button>
+
+</div>
+
+<div class="main">
+
+<div class="card">
+
+<h1>SISTEMA ACADÉMICO</h1>
+
+<p>Panel principal del profesor</p>
+
+</div>
+
+</div>
+
+<script>
+
+const profesor =
+localStorage.getItem("profesor");
+
+document.getElementById(
+"nombreProfesor"
+).innerHTML = profesor;
+
+document.getElementById("btnCerrarSesion").addEventListener("click", function(){
+    localStorage.removeItem("profesor");
+    window.location.href = "index.html";
+});
+
+</script>
+
+</body>
+</html>

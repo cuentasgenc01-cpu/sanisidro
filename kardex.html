@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kardex Disciplinario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #0D47A1;
+            position: fixed;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar a.active {
+            background: white;
+            color: #0D47A1;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            width: 100%;
+            margin-top: 50px;
+            background: #C62828;
+            padding: 15px;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .sidebar button:hover {
+            background: #B71C1C;
+        }
+
+        .container {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .header {
+            background: #0D47A1;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+        }
+
+        .header button {
+            background: #FF5722;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .header button:hover {
+            background: #E64A19;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls select,
+        .controls input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-guardar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-guardar:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .btn-guardar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-historial {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-historial:hover:not(:disabled) {
+            background: #0b7dda;
+        }
+
+        .btn-historial:disabled {
+            background: #ccc;
+        }
+
+        .btn-agregar {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-agregar:hover {
+            background: #E68900;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #0D47A1;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .row input,
+        .row select {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .activity-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .activity-chip {
+            background: #E8F5E9;
+            border: 2px solid #4CAF50;
+            padding: 10px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 5px;
+        }
+
+        .activity-chip:hover {
+            background: #C8E6C9;
+        }
+
+        .activity-chip .remove {
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .selected-activities {
+            background: #F5F5F5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .selected-activities h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .record-card {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .record-card h4 {
+            color: #0D47A1;
+            margin-bottom: 5px;
+        }
+
+        .record-card p {
+            color: #1B5E20;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .record-card .delete-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            float: right;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #0D47A1;
+        }
+
+        .modal-content button {
+            background: #0D47A1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0D47A1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2 id="nombreProfesorSidebar">Profesor</h2>
+    
+    <a href="panel.html">🏠 Inicio</a>
+    <a href="asistencia.html">📋 Asistencia</a>
+    <a href="#">📝 Notas</a>
+    <a href="#">📅 Horario</a>
+    <a href="kardex.html" class="active">⚖️ Kardex Disciplinario</a>
+    
+    <button onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+</div>
+
+<div class="loading" id="loading">
+    <div style="text-align: center;">
+        <div class="spinner"></div>
+        <div style="color: white; margin-top: 20px;">Cargando...</div>
+    </div>
+</div>
+
+<div class="container">
+    <h1 style="color: #0D47A1; margin-bottom: 20px; font-size: 24px;">⚖️ KARDEX DISCIPLINARIO</h1>
+    
+    <div class="buttons">
+        <button class="btn-guardar" id="btnGuardar" onclick="guardarRegistro()" disabled>GUARDAR REGISTRO</button>
+        <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
+    </div>
+
+    <!-- SELECCIONES -->
+    <div class="section">
+        <h2>SELECCIONAR ESTUDIANTE E INCIDENCIA</h2>
+        
+        <div class="row">
+            <select id="curso" onchange="cursoSeleccionado()">
+                <option value="">Seleccionar Curso</option>
+            </select>
+            <input type="date" id="fecha" onchange="fechaSeleccionada()" disabled>
+        </div>
+
+        <div class="row">
+            <select id="estudiante" onchange="estudianteSeleccionado()" disabled>
+                <option value="">Seleccionar Estudiante</option>
+            </select>
+            <button class="btn-agregar" onclick="verHistorialEstudiante()" disabled id="btnHistEstudiante">📋 HISTORIAL</button>
+        </div>
+
+        <div class="row">
+            <select id="actividad" onchange="actividadSeleccionada()" disabled>
+                <option value="">Seleccionar Incidencia</option>
+                <option value="+ NUEVA">+ CREAR NUEVA</option>
+            </select>
+        </div>
+
+        <div id="nuevaActividadDiv" style="display: none;" class="row">
+            <input type="text" id="nuevaActividad" placeholder="Nombre de la nueva incidencia">
+            <button class="btn-agregar" onclick="agregarNuevaActividad()">AGREGAR</button>
+        </div>
+    </div>
+
+    <!-- INCIDENCIAS SELECCIONADAS -->
+    <div class="section" id="actividadesSection" style="display: none;">
+        <h2>INCIDENCIAS A REGISTRAR</h2>
+        <div class="activity-list" id="actividadesList"></div>
+    </div>
+
+    <!-- REGISTROS DEL PROFESOR -->
+    <div class="section" id="registrosSection" style="display: none;">
+        <h2>MIS REGISTROS DEL DÍA</h2>
+        <div id="registrosList"></div>
+    </div>
+</div>
+
+<!-- MODAL HISTORIAL -->
+<div class="modal" id="historialModal">
+    <div class="modal-content">
+        <h2>HISTORIAL DE INCIDENCIAS</h2>
+        <div id="historialContenido"></div>
+        <button onclick="document.getElementById('historialModal').classList.remove('active')">CERRAR</button>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINACIÓN -->
+<div class="modal" id="confirmModal">
+    <div class="modal-content">
+        <h2>Confirmar Eliminación</h2>
+        <p id="confirmText"></p>
+        <button onclick="confirmarEliminacion()" style="background: #d32f2f;">ELIMINAR</button>
+        <button onclick="document.getElementById('confirmModal').classList.remove('active')" style="background: #999; margin-left: 10px;">CANCELAR</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
+        authDomain: "pruebamaria-80f86.firebaseapp.com",
+        databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
+        projectId: "pruebamaria-80f86",
+        storageBucket: "pruebamaria-80f86.firebasestorage.app",
+        messagingSenderId: "700964200967",
+        appId: "1:700964200967:web:6d83c96c2748db5299c0a2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // VARIABLES GLOBALES
+    let profesor = localStorage.getItem("profesor");
+    let cursoActual = "";
+    let estudiante = "";
+    let actividadesSeleccionadas = [];
+    let todasLasActividades = [];
+    const hoy = new Date();
+    let fechaActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    let registrosHoy = [];
+    let registroABorrar = null;
+
+    // INICIALIZAR
+    document.getElementById("nombreProfesorSidebar").textContent = profesor || "Invitado";
+    document.getElementById("fecha").value = fechaActual;
+
+    // Formatear fecha para que coincida con Firebase (D-M-YYYY)
+    function formatFechaDB(fechaISO) {
+        if (!fechaISO) return "";
+        const [y, m, d] = fechaISO.split('-');
+        return `${parseInt(d)}-${parseInt(m)}-${y}`;
+    }
+
+    // CARGAR CURSOS
+    async function cargarCursos() {
+        if (!profesor) return;
+        const snapshot = await get(ref(db, `PROFESORES/${profesor}/CURSO`));
+        const select = document.getElementById("curso");
+        select.innerHTML = '<option value="">Seleccionar Curso</option>';
+        
+        if (snapshot.exists()) {
+            Object.keys(snapshot.val()).forEach(curso => {
+                const option = document.createElement("option");
+                option.value = curso;
+                option.textContent = curso;
+                select.appendChild(option);
+            });
+        }
+    }
+
+    // CARGAR ACTIVIDADES
+    async function cargarActividades() {
+        const snapshot = await get(ref(db, "KARDEX"));
+        todasLasActividades = [];
+        
+        if (snapshot.exists()) {
+            Object.keys(snapshot.val()).forEach(act => {
+                if (!act.toLowerCase().includes("todo")) {
+                    todasLasActividades.push(act);
+                }
+            });
+        }
+        
+        const select = document.getElementById("actividad");
+        select.innerHTML = '<option value="">Seleccionar Incidencia</option><option value="+ NUEVA">+ CREAR NUEVA</option>';
+        
+        todasLasActividades.forEach(act => {
+            const option = document.createElement("option");
+            option.value = act;
+            option.textContent = act;
+            select.appendChild(option);
+        });
+    }
+
+    window.cursoSeleccionado = async function() {
+        const selectCurso = document.getElementById("curso");
+        // Ocultar "Seleccionar Curso" al elegir uno real
+        if (selectCurso.options[0].value === "") {
+            selectCurso.remove(0);
+        }
+
+        cursoActual = document.getElementById("curso").value;
+        document.getElementById("btnHistorial").disabled = !cursoActual;
+
+        // Solo habilitar el botón de guardar si el curso está seleccionado y la fecha es hoy
+        const hoyObj = new Date();
+        const hoyLocal = hoyObj.getFullYear() + '-' + String(hoyObj.getMonth() + 1).padStart(2, '0') + '-' + String(hoyObj.getDate()).padStart(2, '0');
+        document.getElementById("btnGuardar").disabled = !cursoActual || fechaActual !== hoyLocal;
+
+        document.getElementById("fecha").disabled = !cursoActual;
+        document.getElementById("estudiante").disabled = !cursoActual;
+        document.getElementById("actividad").disabled = !cursoActual;
+        
+        if (!cursoActual) return;
+        
+        // Cargar estudiantes
+        const snapshot = await get(ref(db, `CURSOS/${cursoActual}`));
+        const select = document.getElementById("estudiante");
+        select.innerHTML = '<option value="">Seleccionar Estudiante</option>';
+        
+        if (snapshot.exists()) {
+            const alumnos = [];
+            snapshot.forEach(child => {
+                alumnos.push(child.val());
+            });
+            alumnos.sort().forEach((alumno, index) => {
+                const option = document.createElement("option");
+                option.value = alumno;
+                option.textContent = `${index + 1}. ${alumno}`;
+                select.appendChild(option);
+            });
+        }
+        
+        cargarRegistrosProfe();
+    }
+
+    window.estudianteSeleccionado = function() {
+        const selectEst = document.getElementById("estudiante");
+        // Ocultar "Seleccionar Estudiante" al elegir uno real
+        if (selectEst.options[0].value === "") {
+            selectEst.remove(0);
+        }
+
+        estudiante = document.getElementById("estudiante").value;
+        document.getElementById("btnHistEstudiante").disabled = !estudiante;
+        actividadesSeleccionadas = [];
+        mostrarActividadesSeleccionadas();
+    }
+
+    window.fechaSeleccionada = function() {
+        fechaActual = document.getElementById("fecha").value;
+
+        // Al cambiar la fecha, verificamos si es hoy para habilitar o bloquear el botón de guardar
+        const hoyObj = new Date();
+        const hoyLocal = hoyObj.getFullYear() + '-' + String(hoyObj.getMonth() + 1).padStart(2, '0') + '-' + String(hoyObj.getDate()).padStart(2, '0');
+        document.getElementById("btnGuardar").disabled = !cursoActual || fechaActual !== hoyLocal;
+
+        cargarRegistrosProfe();
+    }
+
+    window.actividadSeleccionada = function() {
+        const select = document.getElementById("actividad");
+        const valor = select.value;
+
+        // Ocultar "Seleccionar Incidencia" al elegir uno real o crear nueva
+        if (select.options[0].value === "" && valor !== "") {
+            select.remove(0);
+        }
+        
+        if (valor === "+ NUEVA") {
+            document.getElementById("nuevaActividadDiv").style.display = "flex";
+            document.getElementById("actividad").value = "";
+        } else if (valor && !actividadesSeleccionadas.includes(valor)) {
+            actividadesSeleccionadas.push(valor);
+            mostrarActividadesSeleccionadas();
+            document.getElementById("actividad").value = "";
+        }
+    }
+
+    window.agregarNuevaActividad = function() {
+        const input = document.getElementById("nuevaActividad");
+        const nueva = input.value.trim();
+        
+        if (!nueva) {
+            alert("Ingrese el nombre de la incidencia");
+            return;
+        }
+        
+        if (!actividadesSeleccionadas.includes(nueva)) {
+            actividadesSeleccionadas.push(nueva);
+            mostrarActividadesSeleccionadas();
+        }
+        
+        input.value = "";
+        document.getElementById("nuevaActividadDiv").style.display = "none";
+    }
+
+    function mostrarActividadesSeleccionadas() {
+        const container = document.getElementById("actividadesList");
+        container.innerHTML = "";
+        
+        if (actividadesSeleccionadas.length === 0) {
+            document.getElementById("actividadesSection").style.display = "none";
+            return;
+        }
+        
+        document.getElementById("actividadesSection").style.display = "block";
+        
+        actividadesSeleccionadas.forEach(act => {
+            const chip = document.createElement("div");
+            chip.className = "activity-chip";
+            chip.innerHTML = `
+                ${act}
+                <span class="remove" onclick="eliminarActividad('${act}')">×</span>
+            `;
+            container.appendChild(chip);
+        });
+    }
+
+    window.eliminarActividad = function(actividad) {
+        actividadesSeleccionadas = actividadesSeleccionadas.filter(a => a !== actividad);
+        mostrarActividadesSeleccionadas();
+    }
+
+    window.guardarRegistro = async function() {
+        if (!cursoActual || !estudiante || actividadesSeleccionadas.length === 0) {
+            alert("Complete todos los campos");
+            return;
+        }
+        
+        document.getElementById("loading").classList.add("active");
+        
+        try {
+            // Formatear fecha y hora como DD-MM-YYYY HH:mm:ss
+            const now = new Date();
+            const ahora = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()} ` +
+                          `${String(now.getHours()).padStart(2, '0')}:` +
+                          `${String(now.getMinutes()).padStart(2, '0')}:` +
+                          `${String(now.getSeconds()).padStart(2, '0')}`;
+            
+            const fechaDB = formatFechaDB(fechaActual);
+            const actividadesStr = actividadesSeleccionadas.join(" | ");
+            
+            const kardexRef = ref(db, `KARDEXREGISTRO/${cursoActual}`);
+            const snapshot = await get(kardexRef);
+            
+            let existenteKey = null;
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    if (data.profesor === profesor && data.fecha_asis === fechaDB) {
+                        existenteKey = child.key;
+                    }
+                });
+            }
+            
+            const updates = {};
+            
+            if (existenteKey) {
+                const existing = (await get(ref(db, `KARDEXREGISTRO/${cursoActual}/${existenteKey}`))).val();
+                const cambios = existing.cambios || {};
+                const anterior = cambios[estudiante] || "";
+                cambios[estudiante] = anterior ? `${anterior} | ${actividadesStr}` : actividadesStr;
+                
+                updates[`KARDEXREGISTRO/${cursoActual}/${existenteKey}`] = {
+                    profesor: profesor,
+                    fecha_asis: fechaDB,
+                    fecha_hora_reg: `EDITADO ${ahora}`,
+                    cambios: cambios
+                };
+            } else {
+                const newKey = push(ref(db, `KARDEXREGISTRO/${cursoActual}`)).key;
+                updates[`KARDEXREGISTRO/${cursoActual}/${newKey}`] = {
+                    profesor: profesor,
+                    fecha_asis: fechaDB,
+                    fecha_hora_reg: ahora,
+                    cambios: {[estudiante]: actividadesStr}
+                };
+            }
+            
+            // Agregar nuevas actividades a KARDEX
+            for (const act of actividadesSeleccionadas) {
+                if (!todasLasActividades.includes(act)) {
+                    updates[`KARDEX/${act}`] = true;
+                }
+            }
+            
+            await update(ref(db), updates);
+            
+            alert("Registro guardado");
+            actividadesSeleccionadas = [];
+            document.getElementById("estudiante").value = "";
+            document.getElementById("actividad").value = "";
+            mostrarActividadesSeleccionadas();
+            cargarRegistrosProfe();
+            cargarActividades();
+            
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    async function cargarRegistrosProfe() {
+        if (!cursoActual) return;
+        
+        const fechaDB = formatFechaDB(fechaActual);
+        const snapshot = await get(ref(db, `KARDEXREGISTRO/${cursoActual}`));
+        registrosHoy = [];
+        
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                const data = child.val();
+                if (data.profesor === profesor && data.fecha_asis === fechaDB) {
+                    registrosHoy.push({key: child.key, ...data});
+                }
+            });
+        }
+        
+        mostrarRegistros();
+    }
+
+    function mostrarRegistros() {
+        const container = document.getElementById("registrosList");
+        const section = document.getElementById("registrosSection");
+        const header = section.querySelector("h2");
+        container.innerHTML = "";
+        
+        if (registrosHoy.length === 0) {
+            section.style.display = "none";
+            return;
+        }
+        
+        section.style.display = "block";
+
+        // Calcular total de incidencias como en la App (total de estudiantes registrados)
+        let totalIncidencias = 0;
+        registrosHoy.forEach(reg => {
+            if (reg.cambios) totalIncidencias += Object.keys(reg.cambios).length;
+        });
+
+        const hoyObj = new Date();
+        const hoyLocal = hoyObj.getFullYear() + '-' + String(hoyObj.getMonth() + 1).padStart(2, '0') + '-' + String(hoyObj.getDate()).padStart(2, '0');
+
+        const titulo = (fechaActual === hoyLocal) 
+            ? `MIS REGISTROS DE HOY (${totalIncidencias})` 
+            : `MIS REGISTROS DEL ${fechaActual} (${totalIncidencias})`;
+        header.textContent = titulo;
+        
+        registrosHoy.forEach(reg => {
+            if (reg.cambios) {
+                Object.keys(reg.cambios).forEach(est => {
+                    const card = document.createElement("div");
+                    card.className = "record-card";
+                    card.innerHTML = `
+                        <h4 style="font-size: 13px; font-weight: bold;">${est}</h4>
+                        <p style="font-size: 12px; color: #1B5E20; font-weight: bold;">${reg.cambios[est]}</p>
+                        <small>${reg.fecha_hora_reg}</small>
+                        ${fechaActual === hoyLocal ? `
+                            <button class="delete-btn" onclick="confirmarBorrar('${reg.key}', '${est}')">BORRAR</button>
+                        ` : ''}
+                        <div style="clear: both;"></div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        });
+    }
+
+    window.verHistorial = async function() {
+        if (!cursoActual) return;
+        
+        document.getElementById("loading").classList.add("active");
+        
+        try {
+            const fechaDB = formatFechaDB(fechaActual);
+            const snapshot = await get(ref(db, `KARDEXREGISTRO/${cursoActual}`));
+            const container = document.getElementById("historialContenido");
+            container.innerHTML = "";
+            
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    if (data.fecha_asis === fechaDB) {
+                        const card = document.createElement("div");
+                        card.style.cssText = "background: #f9f9f9; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #0D47A1;";
+                        
+                        let html = `<strong>Prof: ${data.profesor}</strong><br><small>${data.fecha_hora_reg}</small><br><br>`;
+                        
+                        if (data.cambios) {
+                            Object.keys(data.cambios).forEach(est => {
+                                html += `<div>• <strong>${est}:</strong> ${data.cambios[est]}</div>`;
+                            });
+                        }
+                        
+                        card.innerHTML = html;
+                        container.appendChild(card);
+                    }
+                });
+            }
+            
+            document.getElementById("historialModal").classList.add("active");
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    window.verHistorialEstudiante = async function() {
+        if (!estudiante || !cursoActual) return;
+        alert("Historial de " + estudiante + " - Funcionalidad en desarrollo");
+    }
+
+    window.confirmarBorrar = function(key, est) {
+        registroABorrar = {key, est, curso: cursoActual};
+        document.getElementById("confirmText").textContent = `¿Eliminar registro de ${est}?`;
+        document.getElementById("confirmModal").classList.add("active");
+    }
+
+    window.confirmarEliminacion = async function() {
+        if (!registroABorrar) return;
+        
+        document.getElementById("loading").classList.add("active");
+        
+        try {
+            const reg = registrosHoy.find(r => r.key === registroABorrar.key);
+            const cambios = reg.cambios || {};
+            delete cambios[registroABorrar.est];
+            
+            if (Object.keys(cambios).length === 0) {
+                await remove(ref(db, `KARDEXREGISTRO/${registroABorrar.curso}/${registroABorrar.key}`));
+            } else {
+                const updates = {};
+                updates[`KARDEXREGISTRO/${registroABorrar.curso}/${registroABorrar.key}/cambios`] = cambios;
+                await update(ref(db), updates);
+            }
+            
+            alert("Registro eliminado");
+            cargarRegistrosProfe();
+            document.getElementById("confirmModal").classList.remove("active");
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            document.getElementById("loading").classList.remove("active");
+        }
+    }
+
+    window.cerrarSesion = function() {
+        localStorage.removeItem("profesor");
+        window.location.href = "index.html";
+    }
+
+    // INICIALIZAR
+    cargarCursos();
+    cargarActividades();
+
+    // Exportar para scripts globales
+    window.db = db;
+    window.ref = ref;
+</script>
+
+</body>
+</html>
