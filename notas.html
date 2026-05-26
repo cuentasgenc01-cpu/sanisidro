@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calificaciones - San María Auxiliadora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #0D47A1;
+            position: fixed;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar a.active {
+            background: white;
+            color: #0D47A1;
+            font-weight: bold;
+        }
+
+        .sidebar button {
+            width: 100%;
+            margin-top: 50px;
+            background: #C62828;
+            padding: 15px;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .sidebar button:hover {
+            background: #B71C1C;
+        }
+
+        .container {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            color: #0D47A1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: #0D47A1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565C0;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        .btn-danger {
+            background: #D32F2F;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #C62828;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #0D47A1;
+            font-size: 12px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #0D47A1;
+            box-shadow: 0 0 5px rgba(13, 71, 161, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .dimension-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .dimension-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .dimension-header:hover {
+            background: #e8e8e8;
+        }
+
+        .dimension-title {
+            font-weight: bold;
+            color: #0D47A1;
+        }
+
+        .dimension-info {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .dimension-content {
+            display: none;
+        }
+
+        .dimension-content.expanded {
+            display: block;
+        }
+
+        .activity-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .activity-row input {
+            padding: 8px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .add-activity {
+            text-align: center;
+            padding: 10px;
+            background: #E8F5E9;
+            border: 2px dashed #2E7D32;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #2E7D32;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .add-activity:hover {
+            background: #C8E6C9;
+        }
+
+        .total-section {
+            background: #E8F5E9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .total-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .total-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-top: 10px;
+        }
+
+        .total-value.fail {
+            color: #D32F2F;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #0D47A1;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .student-list {
+            background: white;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .student-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-item:hover {
+            background: #f5f5f5;
+        }
+
+        .student-item.selected {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: bold;
+        }
+
+        .student-name {
+            flex: 1;
+        }
+
+        .student-grade {
+            font-weight: bold;
+            color: #2E7D32;
+            margin-left: 10px;
+        }
+
+        .student-grade.fail {
+            color: #D32F2F;
+        }
+
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .access-denied-icon {
+            font-size: 80px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .access-denied h2 {
+            color: #0D47A1;
+            margin-bottom: 10px;
+        }
+
+        .access-denied p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            z-index: 300;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0D47A1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .container {
+                margin-left: 200px;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .activity-row {
+                grid-template-columns: 1fr auto;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #0D47A1;
+            border-bottom-color: #0D47A1;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .alert-danger {
+            background: #FFEBEE;
+            color: #C62828;
+            border-left: 4px solid #C62828;
+        }
+
+        .alert-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .alert-info {
+            background: #E3F2FD;
+            color: #1565C0;
+            border-left: 4px solid #1565C0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .content-area {
+            max-width: 1200px;
+        }
+
+        .permission-check {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-small {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0D47A1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2 id="sidebarProfesor">San María Auxiliadora</h2>
+        <a href="panel.html">🏠 Inicio</a>
+        <a href="asistencia.html">✓ Asistencia</a>
+        <a href="notas.html" class="active">📝 Calificaciones</a>
+        <a href="kardex.html">📋 Kardex</a>
+        <button onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="header">
+            <h1>CALIFICACIONES</h1>
+            <div class="header-buttons">
+                <button class="btn btn-primary" onclick="location.href='panel.html'" title="Volver">← Atrás</button>
+            </div>
+        </div>
+
+        <!-- Permission Check Loading -->
+        <div class="permission-check" id="permissionCheck">
+            <div class="spinner-small"></div>
+            <p style="margin-top: 20px; color: #999;">Verificando permisos...</p>
+        </div>
+
+        <!-- Access Denied -->
+        <div class="access-denied hidden" id="accessDenied">
+            <div class="access-denied-icon">🔒</div>
+            <h2>ACCESO DENEGADO</h2>
+            <p>No tienes permiso para utilizar el módulo de calificaciones.</p>
+            <p style="font-size: 12px; color: #999;">Contacta al administrador para solicitar acceso.</p>
+            <button class="btn btn-primary" onclick="window.location.href='panel.html'">Volver al Menú</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area hidden" id="mainContent">
+            <!-- Filters Row -->
+            <div class="row">
+                <div class="form-group">
+                    <label for="trimestre">TRIMESTRE</label>
+                    <select id="trimestre" onchange="onTrimestreChange()">
+                        <option value="">Seleccionar Trimestre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="curso">CURSO</label>
+                    <select id="curso" onchange="onCursoChange()" disabled>
+                        <option value="">Seleccionar Curso</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Student and Options Row -->
+            <div class="row" id="studentRowContainer" style="display: none;">
+                <div class="form-group">
+                    <label for="estudiante">ESTUDIANTE</label>
+                    <select id="estudiante" onchange="onEstudianteChange()" disabled>
+                        <option value="">Seleccionar Estudiante</option>
+                    </select>
+                </div>
+                <div class="form-group" style="background: white; padding: 15px; border-radius: 8px; display: flex; align-items: flex-end;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="soloAsistentes" onchange="toggleSoloAsistentes()">
+                        <label for="soloAsistentes" style="margin-bottom: 0; font-weight: normal; font-size: 14px;">Solo asistentes</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimensions Section -->
+            <div id="dimensionsSection" style="display: none;">
+                <!-- SER Dimension -->
+                <div class="dimension-card">
+                    <div class="dimension-header" onclick="toggleDimension('ser')">
+                        <span class="dimension-title">SER (10 puntos)</span>
+                        <span class="dimension-info">Prom: <span id="promSer">-</span></span>
+                    </div>
+                    <div class="dimension-content" id="serContent">
+                        <div id="serActivities"></div>
+                        <div class="add-activity" onclick="addActivity('ser')">+ AGREGAR ACTIVIDAD</div>
+                    </div>
+                </div>
+
+                <!-- SABER Dimension -->
+                <div class="dimension-card">
+                    <div class="dimension-header" onclick="toggleDimension('saber')">
+                        <span class="dimension-title">SABER (45 puntos)</span>
+                        <span class="dimension-info">Prom: <span id="promSaber">-</span></span>
+                    </div>
+                    <div class="dimension-content" id="saberContent">
+                        <div id="saberActivities"></div>
+                        <div class="add-activity" onclick="addActivity('saber')">+ AGREGAR ACTIVIDAD</div>
+                    </div>
+                </div>
+
+                <!-- HACER Dimension -->
+                <div class="dimension-card">
+                    <div class="dimension-header" onclick="toggleDimension('hacer')">
+                        <span class="dimension-title">HACER (40 puntos)</span>
+                        <span class="dimension-info">Prom: <span id="promHacer">-</span></span>
+                    </div>
+                    <div class="dimension-content" id="hacerContent">
+                        <div id="hacerActivities"></div>
+                        <div class="add-activity" onclick="addActivity('hacer')">+ AGREGAR ACTIVIDAD</div>
+                    </div>
+                </div>
+
+                <!-- AUTOEVALUACION -->
+                <div class="form-group">
+                    <label for="autoevaluacion">AUTOEVALUACIÓN (5 puntos)</label>
+                    <input type="number" id="autoevaluacion" min="0" max="5" oninput="calcularTotal()" placeholder="0-5">
+                </div>
+
+                <!-- NOTAS EXTRAS / NOTA TRIMESTRAL -->
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1;">
+                            <label id="extrasLabel" for="notasExtras">NOTAS EXTRAS (20 puntos)</label>
+                            <input type="number" id="notasExtras" min="0" max="20" oninput="calcularTotal()" placeholder="0-20">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px; padding-top: 20px;">
+                            <input type="checkbox" id="esNotaTrimestral" onchange="toggleNotaTrimestral()">
+                            <label for="esNotaTrimestral" style="margin-bottom: 0;">Nota Trimestral</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOTAL SECTION -->
+                <div class="total-section">
+                    <div class="total-label">Nota Final Calculada</div>
+                    <div class="total-value" id="totalValue">-</div>
+                </div>
+
+                <!-- Save Button -->
+                <button class="btn btn-success" onclick="guardarNotas()" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 16px;" id="saveBtn" disabled>
+                    💾 GUARDAR CALIFICACIONES
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-title">Confirmar eliminación</div>
+            <p id="deleteMessage">¿Está seguro de que desea eliminar esta actividad?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="closeModal('deleteModal')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="loading" id="loading">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Guardando...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            get,
+            set,
+            update,
+            onValue,
+            off
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
+            authDomain: "pruebamaria-80f86.firebaseapp.com",
+            databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
+            projectId: "pruebamaria-80f86",
+            storageBucket: "pruebamaria-80f86.firebasestorage.app",
+            messagingSenderId: "700964200967",
+            appId: "1:700964200967:web:6d83c96c2748db5299c0a2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Global State
+        let profesor = localStorage.getItem('profesor') || 'Invitado';
+        let tienePermiso = false;
+        let trimestres = [];
+        let cursos = [];
+        let estudiantes = [];
+        let notasData = {};
+        let deleteTarget = null;
+
+        const MAXIMOS = { ser: 10, saber: 45, hacer: 40, auto: 5, extras: 20 };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        async function initApp() {
+            if (profesor === 'Invitado' || !profesor) {
+                console.warn('No hay profesor autenticado, redirigiendo a login');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+                return;
+            }
+
+            // Mostrar nombre del profesor en el sidebar
+            const sidebarEl = document.getElementById('sidebarProfesor');
+            if (sidebarEl && profesor !== 'Invitado') {
+                sidebarEl.textContent = profesor;
+            }
+
+            verificarPermiso();
+        }
+
+        async function verificarPermiso() {
+            try {
+                const permRef = ref(db, `PROFESORES/${profesor}/CALIFICACIONES`);
+                const snapshot = await get(permRef);
+                tienePermiso = snapshot.exists() && snapshot.val() === true;
+
+                const permCheckEl = document.getElementById('permissionCheck');
+                const accessDeniedEl = document.getElementById('accessDenied');
+                const mainContentEl = document.getElementById('mainContent');
+
+                if (tienePermiso) {
+                    permCheckEl.classList.add('hidden');
+                    accessDeniedEl.classList.add('hidden');
+                    mainContentEl.classList.remove('hidden');
+                    cargarTrimestres();
+                } else {
+                    permCheckEl.classList.add('hidden');
+                    accessDeniedEl.classList.remove('hidden');
+                    mainContentEl.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error verificando permiso:', error);
+            }
+        }
+
+        async function cargarTrimestres() {
+            try {
+                const trimRef = ref(db, 'TRIMESTRE');
+                const snapshot = await get(trimRef);
+                trimestres = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    for (const [key, value] of Object.entries(data)) {
+                        if (value === true && key !== 'ACTIVO') {
+                            trimestres.push(key);
+                        }
+                    }
+                }
+                actualizarSelectTrimestre();
+            } catch (error) {
+                console.error('Error cargando trimestres:', error);
+            }
+        }
+
+        function actualizarSelectTrimestre() {
+            const select = document.getElementById('trimestre');
+            select.innerHTML = '<option value="">Seleccionar Trimestre</option>';
+            trimestres.forEach(t => {
+                const option = document.createElement('option');
+                option.value = t;
+                option.textContent = t;
+                select.appendChild(option);
+            });
+        }
+
+        async function onTrimestreChange() {
+            const trimestre = document.getElementById('trimestre').value;
+            if (!trimestre) {
+                document.getElementById('curso').disabled = true;
+                document.getElementById('curso').innerHTML = '<option value="">Seleccionar Curso</option>';
+                cursos = [];
+                return;
+            }
+
+            try {
+                const cursosRef = ref(db, `PROFESORES/${profesor}/CURSO`);
+                const snapshot = await get(cursosRef);
+                cursos = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    for (const [key, value] of Object.entries(data)) {
+                        if (value && value !== 'REGENTA') {
+                            cursos.push(key);
+                        }
+                    }
+                }
+                cursos.sort();
+                actualizarSelectCurso();
+                document.getElementById('curso').disabled = false;
+            } catch (error) {
+                console.error('Error cargando cursos:', error);
+            }
+        }
+
+        function actualizarSelectCurso() {
+            const select = document.getElementById('curso');
+            select.innerHTML = '<option value="">Seleccionar Curso</option>';
+            cursos.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c;
+                option.textContent = c;
+                select.appendChild(option);
+            });
+        }
+
+        async function onCursoChange() {
+            const curso = document.getElementById('curso').value;
+            if (!curso) {
+                document.getElementById('estudiante').disabled = true;
+                document.getElementById('estudiante').innerHTML = '<option value="">Seleccionar Estudiante</option>';
+                document.getElementById('studentRowContainer').style.display = 'none';
+                document.getElementById('dimensionsSection').style.display = 'none';
+                estudiantes = [];
+                return;
+            }
+
+            try {
+                const cursosRef = ref(db, `CURSOS/${curso}`);
+                const snapshot = await get(cursosRef);
+                estudiantes = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    for (const [key, value] of Object.entries(data)) {
+                        if (typeof value === 'string') {
+                            estudiantes.push(value);
+                        }
+                    }
+                }
+                estudiantes.sort();
+                actualizarSelectEstudiante();
+                document.getElementById('estudiante').disabled = false;
+                document.getElementById('studentRowContainer').style.display = 'grid';
+            } catch (error) {
+                console.error('Error cargando estudiantes:', error);
+            }
+        }
+
+        function actualizarSelectEstudiante() {
+            const select = document.getElementById('estudiante');
+            select.innerHTML = '<option value="">Seleccionar Estudiante</option>';
+            estudiantes.forEach((e, i) => {
+                const option = document.createElement('option');
+                option.value = e;
+                option.textContent = `${i + 1}. ${e}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function onEstudianteChange() {
+            const estudiante = document.getElementById('estudiante').value;
+            const trimestre = document.getElementById('trimestre').value;
+            const curso = document.getElementById('curso').value;
+
+            if (!estudiante || !trimestre || !curso) {
+                document.getElementById('dimensionsSection').style.display = 'none';
+                return;
+            }
+
+            try {
+                showLoading('Cargando notas del estudiante...');
+                const notasRef = ref(db, `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}`);
+                const snapshot = await get(notasRef);
+
+                notasData = {
+                    ser: {},
+                    saber: {},
+                    hacer: {},
+                    autoevaluacion: '',
+                    notasExtras: '',
+                    esNotaTrimestral: false,
+                    notaTrimestralAnterior: 0
+                };
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.SER) notasData.ser = data.SER;
+                    if (data.SABER) notasData.saber = data.SABER;
+                    if (data.HACER) notasData.hacer = data.HACER;
+                    notasData.autoevaluacion = data.AUTOEVALUACION || '';
+                    notasData.esNotaTrimestral = data.ES_TRIMESTRAL === true;
+                    notasData.notaTrimestralAnterior = data.NOTA_TRIMESTRAL || 0;
+                    notasData.notasExtras = notasData.esNotaTrimestral ? (data.NOTA_TRIMESTRAL || '') : (data.NOTAS_EXTRAS || '');
+                }
+
+                renderizarDimensiones();
+                document.getElementById('dimensionsSection').style.display = 'block';
+                hideLoading();
+            } catch (error) {
+                console.error('Error cargando notas:', error);
+                hideLoading();
+            }
+        }
+
+        function renderizarDimensiones() {
+            renderizarDimension('ser', 'SER', MAXIMOS.ser);
+            renderizarDimension('saber', 'SABER', MAXIMOS.saber);
+            renderizarDimension('hacer', 'HACER', MAXIMOS.hacer);
+
+            document.getElementById('autoevaluacion').value = notasData.autoevaluacion;
+
+            const esTrimestraElCheck = document.getElementById('esNotaTrimestral');
+            esTrimestraElCheck.checked = notasData.esNotaTrimestral;
+
+            const notasExtrasInput = document.getElementById('notasExtras');
+            if (notasData.esNotaTrimestral) {
+                document.getElementById('extrasLabel').textContent = 'NOTA TRIMESTRAL (100 puntos)';
+                notasExtrasInput.max = 100;
+                notasExtrasInput.value = notasData.notaTrimestralAnterior || '';
+            } else {
+                document.getElementById('extrasLabel').textContent = 'NOTAS EXTRAS (20 puntos)';
+                notasExtrasInput.max = 20;
+                notasExtrasInput.value = notasData.notasExtras || '';
+            }
+
+            calcularTotal();
+        }
+
+        function renderizarDimension(id, label, max) {
+            const datos = notasData[id];
+            const container = document.getElementById(`${id}Activities`);
+            container.innerHTML = '';
+
+            for (const [nombre, valor] of Object.entries(datos)) {
+                const row = document.createElement('div');
+                row.className = 'activity-row';
+                row.innerHTML = `
+                    <input type="text" value="${nombre}" onchange="updateActivityName('${id}', '${nombre}', this.value)">
+                    <input type="number" value="${valor}" min="0" max="${max}" onchange="updateActivityValue('${id}', '${nombre}', this.value); calcularTotal();">
+                    <button class="btn btn-danger btn-sm" onclick="deleteActivity('${id}', '${nombre}')">🗑️</button>
+                `;
+                container.appendChild(row);
+            }
+
+            if (Object.keys(datos).length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.color = '#999';
+                emptyMsg.textContent = 'Sin actividades';
+                container.appendChild(emptyMsg);
+            }
+        }
+
+        function updateActivityName(dimension, oldName, newName) {
+            if (oldName !== newName && newName.trim()) {
+                notasData[dimension][newName] = notasData[dimension][oldName];
+                delete notasData[dimension][oldName];
+                renderizarDimension(dimension, '', MAXIMOS[dimension]);
+                calcularTotal();
+            }
+        }
+
+        function updateActivityValue(dimension, nombre, valor) {
+            notasData[dimension][nombre] = parseInt(valor) || 0;
+        }
+
+        function deleteActivity(dimension, nombre) {
+            deleteTarget = { dimension, nombre };
+            document.getElementById('deleteMessage').textContent = `¿Desea eliminar la actividad "${nombre}"?`;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function confirmDelete() {
+            if (deleteTarget) {
+                const { dimension, nombre } = deleteTarget;
+                delete notasData[dimension][nombre];
+                renderizarDimension(dimension, '', MAXIMOS[dimension]);
+                calcularTotal();
+                closeModal('deleteModal');
+            }
+        }
+
+        function addActivity(dimension) {
+            const nombre = prompt('Nombre de la actividad:');
+            if (nombre && nombre.trim()) {
+                notasData[dimension][nombre.trim()] = 0;
+                renderizarDimension(dimension, '', MAXIMOS[dimension]);
+            }
+        }
+
+        function toggleDimension(id) {
+            const content = document.getElementById(`${id}Content`);
+            content.classList.toggle('expanded');
+        }
+
+        function calcularTotal() {
+            const pSer = calcularPromedio('ser');
+            const pSaber = calcularPromedio('saber');
+            const pHacer = calcularPromedio('hacer');
+            const auto = parseFloat(document.getElementById('autoevaluacion').value) || 0;
+            const extras = parseFloat(document.getElementById('notasExtras').value) || 0;
+
+            document.getElementById('promSer').textContent = pSer !== null ? pSer.toFixed(2) : '-';
+            document.getElementById('promSaber').textContent = pSaber !== null ? pSaber.toFixed(2) : '-';
+            document.getElementById('promHacer').textContent = pHacer !== null ? pHacer.toFixed(2) : '-';
+
+            let total = null;
+            const totalEl = document.getElementById('totalValue');
+
+            if (notasData.esNotaTrimestral) {
+                total = Math.round(extras);
+            } else if (pSer !== null && pSaber !== null && pHacer !== null && auto > 0) {
+                const base = pSer + pSaber + pHacer + auto;
+                total = Math.round(base + extras);
+            }
+
+            if (total !== null) {
+                totalEl.textContent = total;
+                totalEl.classList.toggle('fail', total < 51);
+                document.getElementById('saveBtn').disabled = false;
+            } else {
+                totalEl.textContent = '-';
+                totalEl.classList.remove('fail');
+                document.getElementById('saveBtn').disabled = true;
+            }
+        }
+
+        function calcularPromedio(dimension) {
+            const valores = Object.values(notasData[dimension])
+                .map(v => parseFloat(v))
+                .filter(v => !isNaN(v) && v > 0);
+            return valores.length > 0 ? valores.reduce((a, b) => a + b) / valores.length : null;
+        }
+
+        async function guardarNotas() {
+            const trimestre = document.getElementById('trimestre').value;
+            const curso = document.getElementById('curso').value;
+            const estudiante = document.getElementById('estudiante').value;
+
+            if (!trimestre || !curso || !estudiante) {
+                alert('Seleccione trimestre, curso y estudiante');
+                return;
+            }
+
+            showLoading('Guardando calificaciones...');
+
+            try {
+                const updates = {};
+                
+                if (notasData.esNotaTrimestral) {
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTA_TRIMESTRAL`] = Math.round(parseFloat(document.getElementById('notasExtras').value) || 0);
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/ES_TRIMESTRAL`] = true;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTAS_EXTRAS`] = null;
+                } else {
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/SER`] = notasData.ser;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/SABER`] = notasData.saber;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/HACER`] = notasData.hacer;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/AUTOEVALUACION`] = parseInt(document.getElementById('autoevaluacion').value) || 0;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTAS_EXTRAS`] = Math.round(parseFloat(document.getElementById('notasExtras').value) || 0);
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/ES_TRIMESTRAL`] = false;
+                    updates[`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTA_TRIMESTRAL`] = null;
+                }
+
+                const rootRef = ref(db, '/');
+                await update(rootRef, updates);
+
+                hideLoading();
+                alert('✅ Calificaciones guardadas correctamente');
+                onEstudianteChange(); // Recargar
+            } catch (error) {
+                console.error('Error guardando:', error);
+                hideLoading();
+                alert('❌ Error al guardar: ' + error.message);
+            }
+        }
+
+        function toggleNotaTrimestral() {
+            const checked = document.getElementById('esNotaTrimestral').checked;
+            notasData.esNotaTrimestral = checked;
+            if (checked) {
+                document.getElementById('extrasLabel').textContent = 'NOTA TRIMESTRAL (100 puntos)';
+                document.getElementById('notasExtras').max = 100;
+                document.getElementById('notasExtras').value = notasData.notaTrimestralAnterior || '';
+            } else {
+                document.getElementById('extrasLabel').textContent = 'NOTAS EXTRAS (20 puntos)';
+                document.getElementById('notasExtras').max = 20;
+                document.getElementById('notasExtras').value = notasData.notasExtras || '';
+            }
+            calcularTotal();
+        }
+
+        function toggleSoloAsistentes() {
+            // Implementar filtro de asistentes si es necesario
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function showLoading(text = 'Cargando...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        window.updateActivityName = updateActivityName;
+        window.updateActivityValue = updateActivityValue;
+        window.deleteActivity = deleteActivity;
+        window.confirmDelete = confirmDelete;
+        window.addActivity = addActivity;
+        window.toggleDimension = toggleDimension;
+        window.calcularTotal = calcularTotal;
+        window.guardarNotas = guardarNotas;
+        window.toggleNotaTrimestral = toggleNotaTrimestral;
+        window.toggleSoloAsistentes = toggleSoloAsistentes;
+        window.closeModal = closeModal;
+        window.onTrimestreChange = onTrimestreChange;
+        window.onCursoChange = onCursoChange;
+        window.onEstudianteChange = onEstudianteChange;
+
+        window.cerrarSesion = function() {
+            localStorage.removeItem('profesor');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 100);
+        };
+    </script>
+</body>
+</html>

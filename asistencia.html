@@ -409,7 +409,7 @@
     
     <a href="panel.html">🏠 Inicio</a>
     <a href="asistencia.html" class="active">📋 Asistencia</a>
-    <a href="#">📝 Notas</a>
+    <a href="notas.html">📝 Notas</a>
     <a href="#">📅 Horario</a>
     <a href="kardex.html">⚖️ Kardex Disciplinario</a>
     
@@ -465,7 +465,9 @@
 </div>
 
 <div class="modal" id="historialModal">
-    <div class="modal-content">
+    <div class="modal-content" style="position: relative;">
+        <span style="position: absolute; right: 15px; top: 10px; cursor: pointer; font-size: 24px; font-weight: bold; color: #666;" 
+              onclick="document.getElementById('historialModal').classList.remove('active')">&times;</span>
         <h2>HISTORIAL DE CAMBIOS</h2>
         <p id="historialFecha"></p>
         <div id="historialContenido" style="max-height: 400px; overflow-y: auto;"></div>
@@ -526,16 +528,29 @@
     </div>
 </div>
 
+<!-- MODAL LISTA POR ESTADO -->
+<div class="modal" id="modalListaPorEstado">
+    <div class="modal-content" style="position: relative;">
+        <span style="position: absolute; right: 15px; top: 10px; cursor: pointer; font-size: 24px; font-weight: bold; color: #666;" 
+              onclick="document.getElementById('modalListaPorEstado').classList.remove('active')">&times;</span>
+        <h2 id="tituloListaEstado" style="color: #0D47A1; font-size: 20px;">LISTA</h2>
+        <div id="contenidoListaEstado" style="max-height: 400px; overflow-y: auto; margin: 15px 0; border-top: 1px solid #eee;"></div>
+        <div style="text-align: right;">
+            <button onclick="document.getElementById('modalListaPorEstado').classList.remove('active')" style="background: #0D47A1; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">CERRAR</button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, onValue, update, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
-        authDomain: "pruebamaria-80f86.firebaseapp.com",
-        databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
-        projectId: "pruebamaria-80f86",
-        storageBucket: "pruebamaria-80f86.firebasestorage.app",
+        authDomain: "sanisidro-933a9.firebaseapp.com",
+        databaseURL: "https://sanisidro-933a9-default-rtdb.firebaseio.com",
+        projectId: "sanisidro-933a9",
+        storageBucket: "sanisidro-933a9.firebasestorage.app",
         messagingSenderId: "700964200967",
         appId: "1:700964200967:web:6d83c96c2748db5299c0a2"
     };
@@ -757,9 +772,41 @@
     }
 
     window.filtrarEstado = function(estado) {
-        console.log(`Filtrar por: ${estado}`);
-        // Aquí se podría implementar filtrado de lista
-    }
+        if (!cursoActual || alumnos.length === 0) return;
+
+        const titulos = {
+            'TOTAL': 'LISTA TOTAL',
+            'A': 'LISTA DE ASISTENTES',
+            'F': 'LISTA DE FALTAS',
+            'FA': 'LISTA DE ATRASOS',
+            'L': 'LISTA DE LICENCIAS'
+        };
+
+        const filtrados = alumnos.filter(a => {
+            const est = estados[a] || "A";
+            return estado === 'TOTAL' || est === estado;
+        });
+
+        const titulo = document.getElementById("tituloListaEstado");
+        const container = document.getElementById("contenidoListaEstado");
+
+        titulo.textContent = `${titulos[estado] || 'LISTA'} (${filtrados.length})`;
+        container.innerHTML = "";
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">No hay estudiantes con este estado.</div>';
+        } else {
+            filtrados.forEach((nombre, idx) => {
+                const div = document.createElement("div");
+                div.style.padding = "12px 10px";
+                div.style.borderBottom = "1px solid #eee";
+                div.innerHTML = `<span style="color:#999; font-weight:bold; margin-right:10px;">${idx + 1}.</span> ${nombre}`;
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById("modalListaPorEstado").classList.add("active");
+    };
 
     window.guardarAsistencia = async function() {
         if (!cursoActual || !fechaElegida) return;
