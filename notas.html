@@ -528,23 +528,28 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-        <h2 id="sidebarProfesor">San María Auxiliadora</h2>
-        <a href="panel.html">🏠 Inicio</a>
-        <a href="asistencia.html">✓ Asistencia</a>
-        <a href="notas.html" class="active">📝 Calificaciones</a>
-        <a href="kardex.html">📋 Kardex</a>
-        <button onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
-    </div>
+    
+<div class="sidebar">
+
+<h2 id="sidebarProfesor"></h2>
+
+<a href="panel.html">🏠 Inicio</a>
+<a href="asistencia.html">📋 Asistencia</a>
+<a href="notas.html" class="active">📝 Notas</a>
+<a href="#">📅 Horario</a>
+<a href="kardex.html">⚖️ Kardex Disciplinario</a>
+
+<button onclick="cerrarSesion()"
+style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:none; color:white; border-radius:10px; cursor:pointer; font-size:16px;">
+🚪 Cerrar Sesión
+</button>
+
+</div>
+
 
     <!-- Main Content -->
     <div class="container">
-        <div class="header">
-            <h1>CALIFICACIONES</h1>
-            <div class="header-buttons">
-                <button class="btn btn-primary" onclick="location.href='panel.html'" title="Volver">← Atrás</button>
-            </div>
-        </div>
+        
 
         <!-- Permission Check Loading -->
         <div class="permission-check" id="permissionCheck">
@@ -563,6 +568,52 @@
 
         <!-- Main Content Area -->
         <div class="content-area hidden" id="mainContent">
+            
+            <!-- FILA SUPERIOR -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-bottom:20px;">
+
+                <div class="form-group"
+                    style="display:flex;align-items:center;min-height:90px;">
+
+                    <h1 style="color:#0D47A1;font-size:24px;font-weight:bold;">
+                        CALIFICACIONES
+                    </h1>
+
+                </div>
+
+                <div class="form-group"
+                    style="display:flex;flex-direction:column;justify-content:center;min-height:90px;">
+
+                    <div class="total-label"
+                        style="font-size:14px;font-weight:bold;">
+                        NOTA FINAL CALCULADA
+                    </div>
+
+                    <div class="total-value"
+                        id="totalValue"
+                        style="font-size:34px;margin-top:5px;">
+                        -
+                    </div>
+
+                </div>
+
+                <div class="form-group"
+                    style="display:flex;align-items:center;justify-content:center;min-height:90px;">
+
+                    <button class="btn btn-success"
+                        onclick="guardarNotas()"
+                        style="width:100%;padding:16px;font-size:16px;font-weight:bold;"
+                        id="saveBtn"
+                        disabled>
+
+                        💾 GUARDAR CALIFICACIONES
+
+                    </button>
+
+                </div>
+
+            </div>
+
             <!-- Filters Row -->
             <div class="row">
                 <div class="form-group">
@@ -587,15 +638,18 @@
                         <option value="">Seleccionar Estudiante</option>
                     </select>
                 </div>
-                <div class="form-group" style="background: white; padding: 15px; border-radius: 8px; display: flex; align-items: flex-end;">
-                    <div class="checkbox-group">
+                <div class="form-group" style="background: white; padding: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: flex-start; min-height: 80px;">
+                    <div class="checkbox-group" style="margin-top:0;">
                         <input type="checkbox" id="soloAsistentes" onchange="toggleSoloAsistentes()">
                         <label for="soloAsistentes" style="margin-bottom: 0; font-weight: normal; font-size: 14px;">Solo asistentes</label>
                     </div>
                 </div>
             </div>
 
+            
+            
             <!-- Dimensions Section -->
+
             <div id="dimensionsSection" style="display: none;">
                 <!-- SER Dimension -->
                 <div class="dimension-card">
@@ -605,7 +659,11 @@
                     </div>
                     <div class="dimension-content" id="serContent">
                         <div id="serActivities"></div>
-                        <div class="add-activity" onclick="addActivity('ser')">+ AGREGAR ACTIVIDAD</div>
+                        <div class="add-activity"
+style="background:#E3F2FD;border:2px dashed #1565C0;color:#1565C0;"
+onclick="addActivity('ser')">
++ COLOCAR ACTIVIDADES SER
+</div>
                     </div>
                 </div>
 
@@ -617,7 +675,11 @@
                     </div>
                     <div class="dimension-content" id="saberContent">
                         <div id="saberActivities"></div>
-                        <div class="add-activity" onclick="addActivity('saber')">+ AGREGAR ACTIVIDAD</div>
+                        <div class="add-activity"
+style="background:#FFF3E0;border:2px dashed #EF6C00;color:#EF6C00;"
+onclick="addActivity('saber')">
++ COLOCAR ACTIVIDADES SABER
+</div>
                     </div>
                 </div>
 
@@ -629,14 +691,36 @@
                     </div>
                     <div class="dimension-content" id="hacerContent">
                         <div id="hacerActivities"></div>
-                        <div class="add-activity" onclick="addActivity('hacer')">+ AGREGAR ACTIVIDAD</div>
+                        <div class="add-activity"
+style="background:#E8F5E9;border:2px dashed #2E7D32;color:#2E7D32;"
+onclick="addActivity('hacer')">
++ COLOCAR ACTIVIDADES HACER
+</div>
                     </div>
                 </div>
 
                 <!-- AUTOEVALUACION -->
                 <div class="form-group">
                     <label for="autoevaluacion">AUTOEVALUACIÓN (5 puntos)</label>
-                    <input type="number" id="autoevaluacion" min="0" max="5" oninput="calcularTotal()" placeholder="0-5">
+                    <input type="number"
+id="autoevaluacion"
+min="0"
+max="5"
+step="1"
+oninput="
+    this.value=this.value.replace(/[^0-9]/g,'');
+
+    if(parseInt(this.value)>5){
+
+        alert('CORREGIR NOTA');
+
+        this.value='';
+
+    }
+
+    calcularTotal();
+"
+placeholder="0-5">
                 </div>
 
                 <!-- NOTAS EXTRAS / NOTA TRIMESTRAL -->
@@ -653,16 +737,7 @@
                     </div>
                 </div>
 
-                <!-- TOTAL SECTION -->
-                <div class="total-section">
-                    <div class="total-label">Nota Final Calculada</div>
-                    <div class="total-value" id="totalValue">-</div>
-                </div>
-
-                <!-- Save Button -->
-                <button class="btn btn-success" onclick="guardarNotas()" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 16px;" id="saveBtn" disabled>
-                    💾 GUARDAR CALIFICACIONES
-                </button>
+                
             </div>
         </div>
     </div>
@@ -701,10 +776,10 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
-            authDomain: "pruebamaria-80f86.firebaseapp.com",
-            databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
-            projectId: "pruebamaria-80f86",
-            storageBucket: "pruebamaria-80f86.firebasestorage.app",
+            authDomain: "sanisidro-933a9.firebaseapp.com",
+            databaseURL: "https://sanisidro-933a9-default-rtdb.firebaseio.com",
+            projectId: "sanisidro-933a9",
+            storageBucket: "sanisidro-933a9.firebasestorage.app",
             messagingSenderId: "700964200967",
             appId: "1:700964200967:web:6d83c96c2748db5299c0a2"
         };
@@ -960,8 +1035,27 @@
                 const row = document.createElement('div');
                 row.className = 'activity-row';
                 row.innerHTML = `
-                    <input type="text" value="${nombre}" onchange="updateActivityName('${id}', '${nombre}', this.value)">
-                    <input type="number" value="${valor}" min="0" max="${max}" onchange="updateActivityValue('${id}', '${nombre}', this.value); calcularTotal();">
+                    <input type="text"
+       value="${nombre}"
+       readonly
+       style="background:#F5F5F5;font-weight:bold;color:#333;border:2px solid #DDD;">
+                    <input type="number"
+       value="${valor}"
+       min="0"
+       max="${max}"
+       step="1"
+       oninput="
+            this.value=this.value.replace(/[^0-9]/g,'');
+
+            if(parseInt(this.value) > ${max}){
+
+                alert('CORREGIR NOTA');
+
+                this.value='';
+
+            }
+       "
+       onchange="updateActivityValue('${id}', '${nombre}', this.value); calcularTotal();">
                     <button class="btn btn-danger btn-sm" onclick="deleteActivity('${id}', '${nombre}')">🗑️</button>
                 `;
                 container.appendChild(row);
@@ -1005,11 +1099,25 @@
         }
 
         function addActivity(dimension) {
-            const nombre = prompt('Nombre de la actividad:');
-            if (nombre && nombre.trim()) {
-                notasData[dimension][nombre.trim()] = 0;
-                renderizarDimension(dimension, '', MAXIMOS[dimension]);
+
+            const nombre = prompt(
+                'COLOCAR ACTIVIDAD PARA ' +
+                dimension.toUpperCase()
+            );
+
+            if (!nombre || !nombre.trim()) return;
+
+            const actividad = nombre.trim().toUpperCase();
+
+            if (notasData[dimension][actividad] !== undefined) {
+                alert('LA ACTIVIDAD YA EXISTE');
+                return;
             }
+
+            notasData[dimension][actividad] = 0;
+
+            renderizarDimension(dimension, '', MAXIMOS[dimension]);
+
         }
 
         function toggleDimension(id) {

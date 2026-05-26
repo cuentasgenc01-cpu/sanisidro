@@ -357,7 +357,202 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-    </style>
+    
+#contenidoHistorialEstudiante{
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+
+/* ======================================= */
+/* MODAL HISTORIAL APP */
+/* ======================================= */
+
+.historial-app-modal{
+
+    background: #F3EDF7;
+
+    width: 90%;
+    max-width: 700px;
+
+    border-radius: 40px;
+
+    padding: 30px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+    animation: aparecerModal 0.2s ease;
+}
+
+@keyframes aparecerModal{
+
+    from{
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to{
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}
+
+.historial-header h2{
+
+    color: #1E1B22;
+
+    font-size: 22px;
+
+    font-weight: bold;
+
+    margin-bottom: 30px;
+
+    text-transform: uppercase;
+}
+
+.historial-fechas{
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+
+    flex-wrap: wrap;
+}
+
+.historial-fechas label{
+
+    display: block;
+
+    color: #6750A4;
+
+    font-weight: bold;
+
+    margin-bottom: 8px;
+}
+
+.historial-fechas input{
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    border: 1px solid #CCC;
+
+    font-size: 14px;
+}
+
+.tabla-historial{
+
+    max-height: 350px;
+
+    overflow-y: auto;
+
+    background: white;
+
+    border-radius: 15px;
+
+    padding: 10px;
+}
+
+.tabla-historial table{
+
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.tabla-historial thead{
+
+    position: sticky;
+
+    top: 0;
+
+    background: #EEE;
+}
+
+.tabla-historial th{
+
+    padding: 12px;
+
+    text-align: left;
+
+    font-size: 14px;
+
+    color: #333;
+}
+
+.tabla-historial td{
+
+    padding: 14px;
+
+    border-bottom: 1px solid #EEE;
+
+    font-size: 14px;
+}
+
+.incidencia-verde{
+
+    color: #2E7D32;
+
+    font-weight: bold;
+}
+
+.historial-botones{
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 20px;
+
+    margin-top: 30px;
+}
+
+.btn-cerrar-historial{
+
+    background: transparent;
+
+    border: none;
+
+    color: #6750A4;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.btn-buscar-historial{
+
+    background: #6750A4;
+
+    color: white;
+
+    border: none;
+
+    padding: 14px 35px;
+
+    border-radius: 40px;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.btn-buscar-historial:hover{
+
+    background: #5A3FA0;
+}
+
+</style>
 </head>
 <body>
 
@@ -385,7 +580,7 @@
     
     <div class="buttons">
         <button class="btn-guardar" id="btnGuardar" onclick="guardarRegistro()" disabled>GUARDAR REGISTRO</button>
-        <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL DEL CURSO</button>
+        <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
     </div>
 
     <!-- SELECCIONES -->
@@ -403,7 +598,7 @@
             <select id="estudiante" onchange="estudianteSeleccionado()" disabled>
                 <option value="">Seleccionar Estudiante</option>
             </select>
-            <button class="btn-agregar" onclick="verHistorialEstudiante()" disabled id="btnHistEstudiante">📋 HISTORIAL</button>
+            <button class="btn-agregar" onclick="verHistorialEstudiante()" disabled id="btnHistEstudiante">📋 HISTORIAL DEL ESTUDIANTE</button>
         </div>
 
         <div class="row">
@@ -588,6 +783,7 @@
 
         estudiante = document.getElementById("estudiante").value;
         document.getElementById("btnHistEstudiante").disabled = !estudiante;
+        document.getElementById("btnHistorial").disabled = !cursoActual;
         document.getElementById("actividad").disabled = !estudiante; // Habilitar incidencias al elegir estudiante
         actividadesSeleccionadas = [];
         mostrarActividadesSeleccionadas();
@@ -607,11 +803,6 @@
     window.actividadSeleccionada = function() {
         const select = document.getElementById("actividad");
         const valor = select.value;
-
-        // Ocultar "Seleccionar Incidencia" al elegir uno real o crear nueva
-        if (select.options[0].value === "" && valor !== "") {
-            select.remove(0);
-        }
         
         if (valor === "+ NUEVA") {
             document.getElementById("nuevaActividadDiv").style.display = "flex";
@@ -906,7 +1097,382 @@
     // Exportar para scripts globales
     window.db = db;
     window.ref = ref;
+
+// =======================================
+// VER HISTORIAL ESTUDIANTE
+// =======================================
+
+window.verHistorialEstudiante = async function () {
+
+    if (!cursoActual || !estudiante) {
+        alert("Seleccione un estudiante");
+        return;
+    }
+
+    document
+        .getElementById("historialEstudianteModal")
+        .classList.add("active");
+
+    const hoy = new Date();
+    const hoyISO = hoy.toISOString().split("T")[0];
+
+    document.getElementById("fechaInicioHistorial").value = hoyISO;
+    document.getElementById("fechaFinHistorial").value = hoyISO;
+
+    document.getElementById("contenidoHistorialEstudiante").innerHTML = `
+        <tr>
+            <td colspan="3"
+                style="text-align:center;padding:30px;color:#999;font-weight:bold;">
+                PRESIONE BUSCAR
+            </td>
+        </tr>
+    `;
+
+    
+    document.getElementById("tituloHistorialEstudiante").textContent =
+        "HISTORIAL: " + estudiante;
+
+    const selectProfesor =
+        document.getElementById("filtroProfesorTabla");
+
+    selectProfesor.innerHTML =
+        '<option value="TODOS">TODOS LOS PROFESORES</option>';
+
+    try {
+
+        const snapshotProfes = await get(
+            ref(db, `KARDEXREGISTRO/${cursoActual}`)
+        );
+
+        const profesSet = new Set();
+
+        if (snapshotProfes.exists()) {
+
+            snapshotProfes.forEach(reg => {
+
+                const data = reg.val();
+
+                if (data.profesor) {
+                    profesSet.add(data.profesor);
+                }
+
+            });
+
+        }
+
+        [...profesSet].sort().forEach(prof => {
+
+            const op = document.createElement("option");
+
+            op.value = prof;
+            op.textContent = prof;
+
+            selectProfesor.appendChild(op);
+
+        });
+
+    } catch(e) {
+        console.log(e);
+    }
+};
+
+window.cerrarModalHistorialEstudiante = function () {
+
+    document
+        .getElementById("historialEstudianteModal")
+        .classList.remove("active");
+
+};
+
+
+window.buscarHistorialPorFecha = async function () {
+
+    const fechaInicio =
+        document.getElementById("fechaInicioHistorial").value;
+
+    const fechaFin =
+        document.getElementById("fechaFinHistorial").value;
+
+    const contenedor =
+        document.getElementById("contenidoHistorialEstudiante");
+
+    const filtroProfesor =
+        document.getElementById("filtroProfesorTabla").value;
+
+    document.getElementById("tituloHistorialEstudiante").textContent =
+        "HISTORIAL: " + estudiante;
+
+    const selectProfesor =
+        document.getElementById("filtroProfesorTabla");
+
+    selectProfesor.innerHTML =
+        '<option value="TODOS">TODOS LOS PROFESORES</option>';
+
+    try {
+
+        const snapshotProfes = await get(
+            ref(db, `KARDEXREGISTRO/${cursoActual}`)
+        );
+
+        const profesSet = new Set();
+
+        if (snapshotProfes.exists()) {
+
+            snapshotProfes.forEach(reg => {
+
+                const data = reg.val();
+
+                if (data.profesor) {
+                    profesSet.add(data.profesor);
+                }
+
+            });
+
+        }
+
+        [...profesSet].sort().forEach(prof => {
+
+            const op = document.createElement("option");
+
+            op.value = prof;
+            op.textContent = prof;
+
+            selectProfesor.appendChild(op);
+
+        });
+
+    } catch(e) {
+        console.log(e);
+    }
+
+    if (!fechaInicio || !fechaFin) {
+        alert("Seleccione rango de fechas");
+        return;
+    }
+
+    contenedor.innerHTML = `
+        <tr>
+            <td colspan="3" style="text-align:center;padding:20px;">
+                Cargando historial...
+            </td>
+        </tr>
+    `;
+
+    try {
+
+        const snapshot = await get(
+            ref(db, `KARDEXREGISTRO/${cursoActual}`)
+        );
+
+        let registros = [];
+
+        if (snapshot.exists()) {
+
+            snapshot.forEach(regSnap => {
+
+                const data = regSnap.val();
+
+                if (
+                    data.cambios &&
+                    data.cambios[estudiante]
+                ) {
+
+                    const fechaDB = data.fecha_asis || "";
+
+                    const partes = fechaDB.split("-");
+
+                    if (partes.length === 3) {
+
+                        const fechaISO =
+                            partes[2] + "-" +
+                            String(partes[1]).padStart(2, "0") + "-" +
+                            String(partes[0]).padStart(2, "0");
+
+                        const fechaRegistro = new Date(fechaISO);
+
+                        const inicio = new Date(fechaInicio);
+                        const fin = new Date(fechaFin);
+
+                        fin.setHours(23,59,59,999);
+
+                        if (
+                            fechaRegistro >= inicio &&
+                            fechaRegistro <= fin &&
+                            (
+                                filtroProfesor === "TODOS" ||
+                                (data.profesor || "") === filtroProfesor
+                            )
+                        ) {
+
+                            registros.push({
+
+                                fecha: fechaDB,
+
+                                profesor:
+                                    data.profesor || "",
+
+                                incidencia:
+                                    data.cambios[estudiante] || ""
+
+                            });
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+        registros.sort((a,b)=>{
+
+            const pa = a.fecha.split("-");
+            const pb = b.fecha.split("-");
+
+            const fa = new Date(pa[2], pa[1]-1, pa[0]);
+            const fb = new Date(pb[2], pb[1]-1, pb[0]);
+
+            return fb - fa;
+
+        });
+
+        if (registros.length === 0) {
+
+            contenedor.innerHTML = `
+                <tr>
+                    <td colspan="3"
+                        style="text-align:center;padding:30px;color:#999;font-weight:bold;">
+                        NO HAY INCIDENCIAS
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        contenedor.innerHTML = registros.map(r => `
+
+            <tr>
+
+                <td><strong>${r.fecha}</strong></td>
+
+                <td>${r.profesor}</td>
+
+                <td class="incidencia-verde">
+                    ${r.incidencia}
+                </td>
+
+            </tr>
+
+        `).join("");
+
+    } catch (error) {
+
+        console.error(error);
+
+        contenedor.innerHTML = `
+            <tr>
+                <td colspan="3"
+                    style="text-align:center;padding:30px;color:red;font-weight:bold;">
+                    ERROR AL CARGAR HISTORIAL
+                </td>
+            </tr>
+        `;
+
+    }
+
+};
+
+
 </script>
+
+
+<!-- MODAL HISTORIAL ESTUDIANTE -->
+
+<!-- ======================================= -->
+<!-- MODAL HISTORIAL ESTUDIANTE ESTILO APP -->
+<!-- ======================================= -->
+
+<div class="modal" id="historialEstudianteModal">
+
+    <div class="historial-app-modal">
+
+        <div class="historial-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+
+            <h2 id="tituloHistorialEstudiante">
+                HISTORIAL
+            </h2>
+
+            <button
+                onclick="cerrarModalHistorialEstudiante()"
+                style="background:none;border:none;font-size:28px;font-weight:bold;cursor:pointer;color:#6750A4;">
+                ×
+            </button>
+
+        </div>
+
+        <div class="historial-fechas">
+
+            <div>
+                <label>Desde:</label>
+                <input type="date" id="fechaInicioHistorial">
+            </div>
+
+            <div>
+                <label>Hasta:</label>
+                <input type="date" id="fechaFinHistorial">
+            </div>
+        </div>
+
+        <div class="tabla-historial">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>FECHA</th>
+                        <th>
+        <select id="filtroProfesorTabla"
+            onchange="buscarHistorialPorFecha()"
+            style="border:none;background:transparent;font-weight:bold;font-size:14px;cursor:pointer;">
+            <option value="TODOS">PROFE ▼</option>
+        </select>
+    </th>
+                        <th>INCIDENCIAS</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="contenidoHistorialEstudiante">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="historial-botones">
+
+            
+
+            <button
+                class="btn-buscar-historial"
+                onclick="buscarHistorialPorFecha()">
+
+                BUSCAR
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 </body>
 </html>
