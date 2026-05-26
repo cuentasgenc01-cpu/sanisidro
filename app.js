@@ -99,7 +99,7 @@ btnLogin.addEventListener("click", async ()=>{
         const datos =
         snapshot.val();
 
-        if(datos.CONTRASENA === clave){
+        if(String(datos.CONTRASENA) === clave){
 
             mensaje.style.color = "green";
 
