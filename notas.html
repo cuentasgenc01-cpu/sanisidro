@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calificaciones - San María Auxiliadora</title>
+    <title>Calificaciones - San Isidro C</title>
     <style>
         * {
             margin: 0;
@@ -693,6 +693,14 @@ label{
 }
 </style>
 
+
+<style>
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 </head>
 <body>
     <!-- Sidebar -->
@@ -743,25 +751,38 @@ style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:non
                 <div class="form-group"
                     style="display:flex;align-items:center;min-height:90px;">
 
-                    <div class="header-premium"><h1 style="color:white;font-size:32px;">📊 SISTEMA DE CALIFICACIONES</h1><div>Gestión Académica Premium</div></div>
+                    <div class="header-premium"><h1 style="color:white;font-size:32px;">📊 SISTEMA DE CALIFICACIONES</h1><div>San Isidro C</div></div>
 
                 </div>
 
-                <div class="form-group"
-                    style="display:flex;flex-direction:column;justify-content:center;min-height:90px;">
+               <div class="form-group"
+    style="display:flex;flex-direction:column;justify-content:center;min-height:90px;position:relative;">
 
-                    <div class="total-label"
-                        style="font-size:14px;font-weight:bold;">
-                        NOTA FINAL CALCULADA
-                    </div>
+    <div class="total-label">
+        NOTA FINAL CALCULADA
+    </div>
 
-                    <div class="total-value"
-                        id="totalValue"
-                        style="font-size:34px;margin-top:5px;">
-                        -
-                    </div>
+    <div class="total-value"
+        id="totalValue">
+        -
+    </div>
 
-                </div>
+    <button
+    id="btnInferior"
+    class="btn btn-primary"
+    disabled
+    onclick="exportarExcel()"
+    style="
+        position:absolute;
+        left:10px;
+        bottom:10px;
+        padding:6px 12px;
+        font-size:12px;
+    ">
+    DESCARGA NOTA TRIMESTRAL
+</button>
+
+</div>
 
                 <div class="form-group"
                     style="display:flex;align-items:center;justify-content:center;min-height:90px;">
@@ -804,11 +825,29 @@ style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:non
                         <option value="">Seleccionar Estudiante</option>
                     </select>
                 </div>
-                <div class="form-group" style="background: white; padding: 15px; border-radius: 14px; display: flex; align-items: center; justify-content: flex-start; min-height: 80px;">
+                <div class="form-group" style="background: white; padding: 15px; border-radius: 24px; display: flex; align-items: center; justify-content: flex-start; min-height: 80px;">
                     <div class="checkbox-group" style="margin-top:0;">
-                        <input type="checkbox" id="soloAsistentes" onchange="toggleSoloAsistentes()">
-                        <label for="soloAsistentes" style="margin-bottom: 0; font-weight: normal; font-size: 14px;">Solo asistentes</label>
-                    </div>
+    <input
+        type="checkbox"
+        id="soloAsistentes"
+        onchange="toggleSoloAsistentes()"
+        style="
+            width:28px;
+            height:28px;
+            cursor:pointer;
+        ">
+
+    <label
+        for="soloAsistentes"
+        style="
+            margin-bottom:0;
+            font-weight:bold;
+            font-size:18px;
+            cursor:pointer;
+        ">
+        Solo Asistencias Y Atrasos
+    </label>
+</div>
                 </div>
             </div>
 
@@ -886,7 +925,7 @@ oninput="
 
     calcularTotal();
 "
-placeholder="0-5">
+placeholder="COLOCA LA NOTA DE 1 A 5">
                 </div>
 
                 <!-- NOTAS EXTRAS / NOTA TRIMESTRAL -->
@@ -894,7 +933,33 @@ placeholder="0-5">
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <div style="flex: 1;">
                             <label id="extrasLabel" for="notasExtras">NOTAS EXTRAS (20 puntos)</label>
-                            <input type="number" id="notasExtras" min="0" max="20" oninput="calcularTotal()" placeholder="0-20">
+                            <input type="number"
+id="notasExtras"
+min="0"
+max="20"
+oninput="
+this.value=this.value.replace(/[^0-9]/g,'');
+
+const esTrimestral =
+document.getElementById('esNotaTrimestral').checked;
+
+const maximo = esTrimestral ? 100 : 20;
+
+if(parseInt(this.value) > maximo){
+
+    alert(
+        esTrimestral
+        ? 'CORREGIR NOTA. MÁXIMO 100'
+        : 'CORREGIR NOTA. MÁXIMO 20'
+    );
+
+    this.value='';
+
+}
+
+calcularTotal();
+"
+placeholder="COLOCA LA NOTA DE 1 A 20">
                         </div>
                         <div style="display: flex; align-items: center; gap: 5px; padding-top: 20px;">
                             <input type="checkbox" id="esNotaTrimestral" onchange="toggleNotaTrimestral()">
@@ -943,7 +1008,7 @@ placeholder="0-5">
         const firebaseConfig = {
             apiKey: "AIzaSyAbDDHUnzSI_7QoqdDCrMMYP8dWiAP93F0",
             authDomain: "sanisidro-933a9.firebaseapp.com",
-            databaseURL: "https://pruebamaria-80f86-default-rtdb.firebaseio.com",
+            databaseURL: "https://sanisidro-933a9-default-rtdb.firebaseio.com",
             projectId: "sanisidro-933a9",
             storageBucket: "sanisidro-933a9.firebasestorage.app",
             messagingSenderId: "700964200967",
@@ -954,11 +1019,13 @@ placeholder="0-5">
         const db = getDatabase(app);
 
         // Global State
-        let profesor = localStorage.getItem('profesor') || 'Invitado';
-        let tienePermiso = false;
-        let trimestres = [];
-        let cursos = [];
-        let estudiantes = [];
+       let profesor = localStorage.getItem('profesor') || 'Invitado';
+let tienePermiso = false;
+let soloNotaTrimestral = false;
+let trimestres = [];
+let cursos = [];
+let estudiantes = [];
+
         let notasData = {};
         let deleteTarget = null;
 let actividadesEliminadas = [];
@@ -986,35 +1053,66 @@ let actividadesEliminadas = [];
             verificarPermiso();
         }
 
-        async function verificarPermiso() {
-            try {
-                const permRef = ref(db, `PROFESORES/${profesor}/CALIFICACIONES`);
-                const snapshot = await get(permRef);
-                tienePermiso = snapshot.exists() && snapshot.val() === true;
+      async function verificarPermiso() {
 
-                const permCheckEl = document.getElementById('permissionCheck');
-                const accessDeniedEl = document.getElementById('accessDenied');
-                const mainContentEl = document.getElementById('mainContent');
+    try {
 
-                if (tienePermiso) {
-                    permCheckEl.classList.add('hidden');
-                    accessDeniedEl.classList.add('hidden');
-                    mainContentEl.classList.remove('hidden');
-                    cargarTrimestres();
-                } else {
-                    permCheckEl.classList.add('hidden');
-                    accessDeniedEl.classList.remove('hidden');
-                    mainContentEl.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('Error verificando permiso:', error);
-            }
+        const permRef =
+            ref(db, `PROFESORES/${profesor}/CALIFICACIONES`);
+
+        const snapshot =
+            await get(permRef);
+
+        const permCheckEl =
+            document.getElementById('permissionCheck');
+
+        const accessDeniedEl =
+            document.getElementById('accessDenied');
+
+        const mainContentEl =
+            document.getElementById('mainContent');
+
+        // NO EXISTE CALIFICACIONES
+        if (!snapshot.exists()) {
+
+            tienePermiso = false;
+
+            permCheckEl.classList.add('hidden');
+            accessDeniedEl.classList.remove('hidden');
+            mainContentEl.classList.add('hidden');
+
+            return;
         }
+
+        // EXISTE CALIFICACIONES
+        tienePermiso = true;
+
+        // SI ES FALSE → SOLO NOTA TRIMESTRAL
+        soloNotaTrimestral =
+            snapshot.val() === false;
+
+        permCheckEl.classList.add('hidden');
+        accessDeniedEl.classList.add('hidden');
+        mainContentEl.classList.remove('hidden');
+
+        cargarTrimestres();
+
+    } catch (error) {
+
+        console.error(
+            'Error verificando permiso:',
+            error
+        );
+
+    }
+}
 
         async function cargarTrimestres() {
             try {
-                const trimRef = ref(db, 'TRIMESTRE');
-                const snapshot = await get(trimRef);
+              const trimRef = ref(db, 'TRIMESTRE');
+const snapshot = await get(trimRef);
+
+
                 trimestres = [];
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -1089,7 +1187,19 @@ let actividadesEliminadas = [];
         }
 
         async function onCursoChange() {
-            const curso = document.getElementById('curso').value;
+              const curso =
+        document.getElementById('curso').value;
+
+    // ACTIVAR / DESACTIVAR BOTÓN
+
+    const btn =
+        document.getElementById('btnInferior');
+
+    if (btn) {
+
+        btn.disabled = !curso;
+
+    }
 
             // LIMPIAR PANTALLA AL CAMBIAR CURSO
             document.getElementById('dimensionsSection').style.display = 'none';
@@ -1132,8 +1242,8 @@ let actividadesEliminadas = [];
                 actualizarSelectEstudiante();
                 document.getElementById('estudiante').disabled = false;
                 document.getElementById('studentRowContainer').style.display = 'grid';
-                document.getElementById('soloAsistentes').checked = false;
                 setTimeout(marcarEstudiantesConCeros,300);
+                document.getElementById('soloAsistentes').checked = false;
             } catch (error) {
                 console.error('Error cargando estudiantes:', error);
             }
@@ -1195,29 +1305,75 @@ let actividadesEliminadas = [];
             }
         }
 
-        function renderizarDimensiones() {
-            renderizarDimension('ser', 'SER', MAXIMOS.ser);
-            renderizarDimension('saber', 'SABER', MAXIMOS.saber);
-            renderizarDimension('hacer', 'HACER', MAXIMOS.hacer);
+     function renderizarDimensiones() {
 
-            document.getElementById('autoevaluacion').value = notasData.autoevaluacion;
+    renderizarDimension('ser', 'SER', MAXIMOS.ser);
+    renderizarDimension('saber', 'SABER', MAXIMOS.saber);
+    renderizarDimension('hacer', 'HACER', MAXIMOS.hacer);
 
-            const esTrimestraElCheck = document.getElementById('esNotaTrimestral');
-            esTrimestraElCheck.checked = notasData.esNotaTrimestral;
+    document.getElementById('autoevaluacion').value =
+        notasData.autoevaluacion;
 
-            const notasExtrasInput = document.getElementById('notasExtras');
-            if (notasData.esNotaTrimestral) {
-                document.getElementById('extrasLabel').textContent = 'NOTA TRIMESTRAL (100 puntos)';
-                notasExtrasInput.max = 100;
-                notasExtrasInput.value = notasData.notaTrimestralAnterior || '';
-            } else {
-                document.getElementById('extrasLabel').textContent = 'NOTAS EXTRAS (20 puntos)';
-                notasExtrasInput.max = 20;
-                notasExtrasInput.value = notasData.notasExtras || '';
-            }
+    const esTrimestraElCheck =
+        document.getElementById('esNotaTrimestral');
 
-            calcularTotal();
-        }
+    esTrimestraElCheck.checked =
+        notasData.esNotaTrimestral;
+
+    bloquearDimensiones(
+        notasData.esNotaTrimestral
+    );
+
+  
+
+    const notasExtrasInput =
+        document.getElementById('notasExtras');
+
+    if (notasData.esNotaTrimestral) {
+
+        document.getElementById('extrasLabel').textContent =
+            'NOTA TRIMESTRAL (100 puntos)';
+
+        notasExtrasInput.max = 100;
+
+        notasExtrasInput.value =
+            notasData.notaTrimestralAnterior || '';
+
+    } else {
+
+        document.getElementById('extrasLabel').textContent =
+            'NOTAS EXTRAS (20 puntos)';
+
+        notasExtrasInput.max = 20;
+
+        notasExtrasInput.value =
+            notasData.notasExtras || '';
+
+    }
+
+    calcularTotal();
+
+
+    // NUEVO
+
+    if (soloNotaTrimestral) {
+
+        notasData.esNotaTrimestral = true;
+
+        esTrimestraElCheck.checked = true;
+
+        esTrimestraElCheck.disabled = true;
+
+        bloquearDimensiones(true);
+
+        document.getElementById('extrasLabel').textContent =
+            'NOTA TRIMESTRAL (100 puntos)';
+
+        notasExtrasInput.max = 100;
+  notasExtrasInput.placeholder = 'COLOCA LA NOTA DE 1 A 100';
+    }
+
+}
 
         function renderizarDimension(id, label, max) {
             const datos = notasData[id];
@@ -1227,17 +1383,20 @@ let actividadesEliminadas = [];
             for (const [nombre, valor] of Object.entries(datos)) {
                 const row = document.createElement('div');
                 row.className = 'activity-row';
-                row.innerHTML = `
-                    <input type="text"
+               row.innerHTML = `
+    <input type="text"
        value="${nombre}"
        readonly
        style="background:#F5F5F5;font-weight:bold;color:#333;border:2px solid #DDD;">
-                    <input type="number"
-       value="${valor}"
+
+    <input type="number"
+       value="${Number(valor)===0 ? '' : valor}"
        min="0"
        max="${max}"
        step="1"
+
        oninput="
+
             this.value=this.value.replace(/[^0-9]/g,'');
 
             if(parseInt(this.value) > ${max}){
@@ -1247,10 +1406,20 @@ let actividadesEliminadas = [];
                 this.value='';
 
             }
+
+            updateActivityValue('${id}','${nombre}',this.value);
+
+            calcularTotal();
+
        "
-       onchange="updateActivityValue('${id}', '${nombre}', this.value); calcularTotal();">
-                    <button class="btn btn-danger btn-sm" onclick="deleteActivity('${id}', '${nombre}')">🗑️</button>
-                `;
+
+       placeholder="COLOCA LA NOTA DE 1 A ${max}">
+
+    <button class="btn btn-danger btn-sm"
+        onclick="deleteActivity('${id}', '${nombre}')">
+        🗑️
+    </button>
+`;
                 container.appendChild(row);
             }
 
@@ -1281,14 +1450,35 @@ let actividadesEliminadas = [];
             document.getElementById('deleteModal').classList.add('show');
         }
 
-        function confirmDelete() {
+        async function confirmDelete() {
             if (deleteTarget) {
                 const { dimension, nombre } = deleteTarget;
 
-                actividadesEliminadas.push({
-                    dimension: dimension.toUpperCase(),
-                    nombre
-                });
+                try {
+
+                    const trimestre = document.getElementById('trimestre').value;
+                    const curso = document.getElementById('curso').value;
+
+                    if (trimestre && curso) {
+
+                        const cursoSnap = await get(ref(db, `CURSOS/${curso}`));
+                        const alumnos = cursoSnap.exists()
+                            ? Object.values(cursoSnap.val()).filter(v => typeof v === 'string')
+                            : [];
+
+                        const updates = {};
+
+                        alumnos.forEach(alumno => {
+                            updates[`NOTAS/${profesor}/${trimestre}/${curso}/${alumno}/${dimension.toUpperCase()}/${nombre}`] = null;
+                        });
+
+
+                        await update(ref(db), updates);
+                    }
+
+                } catch(err) {
+                    console.error(err);
+                }
 
                 delete notasData[dimension][nombre];
                 renderizarDimension(dimension, '', MAXIMOS[dimension]);
@@ -1358,74 +1548,303 @@ let actividadesEliminadas = [];
             document.getElementById('saveBtn').disabled = false;
         }
 
-        function calcularPromedio(dimension) {
-            const valores = Object.values(notasData[dimension])
-                .map(v => parseFloat(v))
-                .filter(v => !isNaN(v) && v > 0);
-            return valores.length > 0 ? valores.reduce((a, b) => a + b) / valores.length : null;
-        }
+       function calcularPromedio(dimension) {
+
+    const actividades =
+        Object.values(notasData[dimension]);
+
+    if (actividades.length === 0) return null;
+
+    const valores = actividades.map(v => {
+
+        const num = parseFloat(v);
+
+        return isNaN(num) ? 0 : num;
+
+    });
+
+    const suma =
+        valores.reduce((a,b)=>a+b,0);
+
+    return suma / valores.length;
+}
 
         
 async function guardarNotas() {
-    const trimestre = document.getElementById('trimestre').value;
-    const curso = document.getElementById('curso').value;
-    const estudiante = document.getElementById('estudiante').value;
+
+    const trimestre =
+        document.getElementById('trimestre').value;
+
+    const curso =
+        document.getElementById('curso').value;
+
+    const estudiante =
+        document.getElementById('estudiante').value;
 
     if (!trimestre || !curso || !estudiante) {
-        alert('Seleccione trimestre, curso y estudiante');
+
+        alert(
+            'Seleccione trimestre, curso y estudiante'
+        );
+
         return;
     }
 
+    // VALIDAR TOTAL
+
+    const totalActual =
+        parseInt(
+            document.getElementById('totalValue')
+            .textContent
+        ) || 0;
+
+    if (totalActual > 100) {
+
+        alert(
+            '❌ LA NOTA FINAL NO PUEDE SER MAYOR A 100'
+        );
+
+        return;
+    }
+
+    
+
+
+    // NUEVO
+    if (soloNotaTrimestral) {
+
+        const notaTrimestral =
+            parseInt(
+                document.getElementById('notasExtras').value
+            ) || 0;
+
+        try {
+
+            showLoading('Guardando...');
+
+            await update(
+                ref(db),
+                {
+                    [`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/ES_TRIMESTRAL`]:
+                        true,
+
+                    [`NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTA_TRIMESTRAL`]:
+                        notaTrimestral
+                }
+            );
+
+            hideLoading();
+
+            alert('✅ NOTA TRIMESTRAL GUARDADA');
+
+        } catch(error) {
+
+            hideLoading();
+
+            alert(
+                '❌ Error: ' + error.message
+            );
+
+        }
+
+        return;
+    }
+
+
     showLoading('Guardando...');
 
-    try {
+     try {
 
         const updates = {};
-        const cursoSnap = await get(ref(db, `CURSOS/${curso}`));
-        const alumnos = cursoSnap.exists()
-            ? Object.values(cursoSnap.val()).filter(v => typeof v === 'string')
-            : [];
 
-        ['SER','SABER','HACER'].forEach(dim => {
+const esTrimestral =
+    document.getElementById(
+        'esNotaTrimestral'
+    ).checked;
 
-            const datos = notasData[dim.toLowerCase()] || {};
+const valorNota =
+    parseInt(
+        document.getElementById('notasExtras').value
+    ) || 0;
 
-            Object.entries(datos).forEach(([act, valor]) => {
 
-                updates[`ACTIVIDADES/${trimestre}/${curso}/${dim}/${act}`] = true;
+// ========================================
+// MODO NOTA TRIMESTRAL
+// ========================================
 
-                alumnos.forEach(alumno => {
+if (esTrimestral) {
 
-                    const ruta = `NOTAS/${profesor}/${trimestre}/${curso}/${alumno}/${dim}/${act}`;
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/ES_TRIMESTRAL`
+    ] = true;
 
-                    if (alumno === estudiante) {
-                        updates[ruta] = parseInt(valor) || 0;
-                    } else {
-                        updates[ruta] ??= 0;
-                    }
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTA_TRIMESTRAL`
+    ] = valorNota;
 
-                });
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTAS_EXTRAS`
+    ] = null;
+
+    await update(ref(db), updates);
+
+    hideLoading();
+
+    setTimeout(async () => {
+
+        await marcarEstudiantesConCeros();
+
+    }, 500);
+
+    alert('✅ NOTA TRIMESTRAL GUARDADA');
+
+
+    // REINICIAR COMO EN EL MODO NORMAL
+
+    document.getElementById('estudiante').selectedIndex = 0;
+
+    document.getElementById('dimensionsSection').style.display = 'none';
+
+    document.getElementById('totalValue').textContent = '-';
+
+    document.getElementById('saveBtn').disabled = true;
+
+
+    return;
+}
+
+// ========================================
+// MODO NORMAL
+// ========================================
+
+const cursoSnap = await get(
+    ref(db, `CURSOS/${curso}`)
+);
+
+const alumnos = cursoSnap.exists()
+    ? Object.values(cursoSnap.val())
+        .filter(v => typeof v === 'string')
+    : [];
+
+const notasExistentesSnap = await get(
+    ref(db, `NOTAS/${profesor}/${trimestre}/${curso}`)
+);
+
+const notasExistentes =
+    notasExistentesSnap.exists()
+    ? notasExistentesSnap.val()
+    : {};
+
+['SER','SABER','HACER'].forEach(dim => {
+
+    const datos =
+        notasData[dim.toLowerCase()] || {};
+
+    Object.entries(datos).forEach(([act, valor]) => {
+
+        const existeActividad =
+            alumnos.some(alumno => {
+
+                return notasExistentes?.[alumno]?.[dim]?.[act]
+                    !== undefined;
 
             });
 
-        });
+        if (existeActividad) {
 
-        
-        actividadesEliminadas.forEach(item => {
+            updates[
+                `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/${dim}/${act}`
+            ] = parseInt(valor) || 0;
+
+        } else {
+
             alumnos.forEach(alumno => {
-                updates[`NOTAS/${profesor}/${trimestre}/${curso}/${alumno}/${item.dimension}/${item.nombre}`] = null;
+
+                const ruta =
+                    `NOTAS/${profesor}/${trimestre}/${curso}/${alumno}/${dim}/${act}`;
+
+                if (alumno === estudiante) {
+
+                    updates[ruta] =
+                        parseInt(valor) || 0;
+
+                } else {
+
+                    updates[ruta] = 0;
+
+                }
+
             });
 
-            updates[`ACTIVIDADES/${trimestre}/${curso}/${item.dimension}/${item.nombre}`] = null;
-        });
+        }
 
-        actividadesEliminadas = [];
+    });
 
-        await update(ref(db), updates);
+});
 
+
+// AUTOEVALUACION
+
+const autoeval =
+    parseInt(
+        document.getElementById(
+            'autoevaluacion'
+        ).value
+    ) || 0;
+
+if (autoeval > 0) {
+
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/AUTOEVALUACION`
+    ] = autoeval;
+
+} else {
+
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/AUTOEVALUACION`
+    ] = null;
+
+}
+
+
+// ES_TRIMESTRAL
+
+updates[
+    `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/ES_TRIMESTRAL`
+] = false;
+
+
+// ELIMINAR NOTA_TRIMESTRAL
+
+updates[
+    `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTA_TRIMESTRAL`
+] = null;
+
+
+// NOTAS_EXTRAS
+
+if (valorNota > 0) {
+
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTAS_EXTRAS`
+    ] = valorNota;
+
+} else {
+
+    updates[
+        `NOTAS/${profesor}/${trimestre}/${curso}/${estudiante}/NOTAS_EXTRAS`
+    ] = null;
+
+}
+
+
+await update(ref(db), updates);
 
         hideLoading();
-        await marcarEstudiantesConCeros();
+
+       setTimeout(async () => {
+          await marcarEstudiantesConCeros();
+        }, 500);
 
         alert('✅ Guardado correctamente');
 
@@ -1435,116 +1854,189 @@ async function guardarNotas() {
         document.getElementById('saveBtn').disabled = true;
 
     } catch (error) {
+
+
         console.error(error);
         hideLoading();
         alert('❌ Error: ' + error.message);
+
     }
 }
 
+
+
+
+
 function toggleNotaTrimestral() {
-            const checked = document.getElementById('esNotaTrimestral').checked;
-            notasData.esNotaTrimestral = checked;
-            if (checked) {
-                document.getElementById('extrasLabel').textContent = 'NOTA TRIMESTRAL (100 puntos)';
-                document.getElementById('notasExtras').max = 100;
-                document.getElementById('notasExtras').value = notasData.notaTrimestralAnterior || '';
-            } else {
-                document.getElementById('extrasLabel').textContent = 'NOTAS EXTRAS (20 puntos)';
-                document.getElementById('notasExtras').max = 20;
-                document.getElementById('notasExtras').value = notasData.notasExtras || '';
-            }
-            calcularTotal();
-        }
 
-        async function toggleSoloAsistentes() {
+    if (soloNotaTrimestral) {
+        return;
+    }
 
-            const soloAsistentes =
-                document.getElementById('soloAsistentes').checked;
+    const checkbox =
+    document.getElementById(
+        'esNotaTrimestral'
+    );
 
-            const curso =
-                document.getElementById('curso').value;
+    const checked =
+        checkbox.checked;
 
-            if (!curso) return;
+    
 
-            if (!soloAsistentes) {
+    notasData.esNotaTrimestral = checked;
 
-                actualizarSelectEstudiante();
+    const input =
+        document.getElementById('notasExtras');
 
-                return;
-            }
+    if (checked) {
 
-            try {
+        document.getElementById('extrasLabel').textContent =
+            'NOTA TRIMESTRAL (100 puntos)';
 
-                const historialRef =
-                    ref(db, `HISTORIAL_CAMBIOS/${curso}`);
+        input.max = 100;
+        input.placeholder = 'COLOCA LA NOTA DE 1 A 100';
 
-                const snapshot =
-                    await get(historialRef);
+        bloquearDimensiones(true);
 
-                const estudiantesOcultar =
-                    new Set();
+    } else {
 
-                if (snapshot.exists()) {
+        document.getElementById('extrasLabel').textContent =
+            'NOTAS EXTRAS (20 puntos)';
 
-                    const historial = snapshot.val();
+        input.max = 20;
+        input.placeholder = 'COLOCA LA NOTA DE 1 A 20';
 
-                    Object.values(historial).forEach(registro => {
+        bloquearDimensiones(false);
 
-                        if (registro.cambios) {
+    }
 
-                            Object.keys(registro.cambios)
-                                .forEach(nombre => {
+    input.value = '';
 
-                                    estudiantesOcultar.add(
-                                        nombre.trim().toUpperCase()
-                                    );
+    calcularTotal();
+}
+  async function toggleSoloAsistentes() {
 
-                                });
+    const soloAsistentes =
+        document.getElementById('soloAsistentes').checked;
 
-                        }
+    const curso =
+        document.getElementById('curso').value;
 
-                    });
+    if (!curso) return;
 
-                }
 
-                const select =
-                    document.getElementById('estudiante');
+    // REINICIAR HASTA LA SELECCIÓN DE ESTUDIANTE
 
-                select.innerHTML =
-                    '<option value="">Seleccionar Estudiante</option>';
+    document.getElementById('estudiante').selectedIndex = 0;
 
-                estudiantes.forEach((nombre, i) => {
+    document.getElementById('dimensionsSection').style.display = 'none';
 
-                    if (
-                        !estudiantesOcultar.has(
-                            nombre.trim().toUpperCase()
-                        )
-                    ) {
+    document.getElementById('totalValue').textContent = '-';
 
-                        const option =
-                            document.createElement('option');
+    document.getElementById('saveBtn').disabled = true;
 
-                        option.value = nombre;
+    notasData = {
+        ser: {},
+        saber: {},
+        hacer: {},
+        autoevaluacion: '',
+        notasExtras: '',
+        esNotaTrimestral: false,
+        notaTrimestralAnterior: 0
+    };
 
-                        option.textContent =
-                            `${i + 1}. ${nombre}`;
 
-                        select.appendChild(option);
+    const select =
+        document.getElementById('estudiante');
 
-                    }
+    select.innerHTML =
+        '<option value="">Seleccionar Estudiante</option>';
 
-                });
+    try {
 
-            } catch (error) {
+        // CHECKBOX DESMARCADO
+        // MOSTRAR TODOS LOS ESTUDIANTES
 
-                console.error(
-                    'Error filtrando asistentes:',
-                    error
-                );
+        if (!soloAsistentes) {
 
-            }
+            actualizarSelectEstudiante();
+
+            return;
 
         }
+
+        // CHECKBOX MARCADO
+        // MOSTRAR SOLO ASISTENTES DE HOY
+
+        const hoy = new Date();
+
+        const fechaActual =
+            hoy.getDate() +
+            '-' +
+            (hoy.getMonth() + 1) +
+            '-' +
+            hoy.getFullYear();
+
+        const asistenciaRef =
+            ref(
+                db,
+                `asistencia/${fechaActual}/${curso}`
+            );
+
+        const asistenciaSnap =
+            await get(asistenciaRef);
+
+        if (!asistenciaSnap.exists()) {
+
+            alert(
+                'No existe asistencia registrada para hoy'
+            );
+
+            return;
+
+        }
+
+        const asistencia =
+            asistenciaSnap.val();
+
+        let contador = 1;
+
+        Object.entries(asistencia)
+        .forEach(([nombre, estado]) => {
+
+            // SOLO A Y FA
+
+            if (
+                estado === 'A' ||
+                estado === 'FA'
+            ) {
+
+                const option =
+                    document.createElement('option');
+
+                option.value = nombre;
+
+                option.textContent =
+                    `${contador}. ${nombre}`;
+
+                select.appendChild(option);
+
+                contador++;
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Error cargando asistencia:',
+            error
+        );
+
+    }
+
+}
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('show');
@@ -1562,22 +2054,201 @@ function toggleNotaTrimestral() {
             l.classList.remove('show');
         }
 
-        window.updateActivityName = updateActivityName;
-        window.updateActivityValue = updateActivityValue;
-        window.deleteActivity = deleteActivity;
-        window.confirmDelete = confirmDelete;
-        window.addActivity = addActivity;
-        window.toggleDimension = toggleDimension;
-        window.calcularTotal = calcularTotal;
-        window.guardarNotas = guardarNotas;
-        window.toggleNotaTrimestral = toggleNotaTrimestral;
-        window.toggleSoloAsistentes = toggleSoloAsistentes;
-        window.closeModal = closeModal;
-        window.onTrimestreChange = onTrimestreChange;
-        window.onCursoChange = onCursoChange;
-        window.onEstudianteChange = onEstudianteChange;
+      window.updateActivityName = updateActivityName;
+window.updateActivityValue = updateActivityValue;
+window.deleteActivity = deleteActivity;
+window.confirmDelete = confirmDelete;
+window.addActivity = addActivity;
+window.toggleDimension = toggleDimension;
+window.calcularTotal = calcularTotal;
+window.guardarNotas = guardarNotas;
+window.toggleNotaTrimestral = toggleNotaTrimestral;
+window.toggleSoloAsistentes = toggleSoloAsistentes;
+window.closeModal = closeModal;
+window.onTrimestreChange = onTrimestreChange;
+window.onCursoChange = onCursoChange;
+window.onEstudianteChange = onEstudianteChange;
+window.exportarExcel = exportarExcel;
 
-        
+
+
+async function exportarExcel() {
+
+    const trimestre =
+        document.getElementById('trimestre').value;
+
+    const curso =
+        document.getElementById('curso').value;
+
+    if (!trimestre || !curso) {
+
+        alert(
+            'Seleccione trimestre y curso'
+        );
+
+        return;
+    }
+
+    const notasRef = ref(
+        db,
+        `NOTAS/${profesor}/${trimestre}/${curso}`
+    );
+
+    const snapshot =
+        await get(notasRef);
+
+    if (!snapshot.exists()) {
+
+        alert(
+            'No existen notas'
+        );
+
+        return;
+    }
+
+    const notasCurso =
+        snapshot.val();
+
+    const filas = [];
+
+    filas.push([
+        'N°',
+        'ESTUDIANTE',
+        'NOTA'
+    ]);
+
+    let contador = 1;
+
+    Object.entries(notasCurso)
+    .forEach(([nombre, datos]) => {
+
+        filas.push([
+            contador,
+            nombre,
+            calcularNotaExportacion(datos)
+        ]);
+
+        contador++;
+
+    });
+
+    const ws =
+        XLSX.utils.aoa_to_sheet(filas);
+
+    const wb =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        'NOTAS'
+    );
+
+    XLSX.writeFile(
+        wb,
+        `${curso}_${trimestre}.xlsx`
+    );
+
+}
+
+
+
+function calcularNotaExportacion(datos) {
+
+    if (
+        datos?.ES_TRIMESTRAL === true
+    ) {
+
+        return Number(
+            datos?.NOTA_TRIMESTRAL || 0
+        );
+
+    }
+
+    const promedio = (obj) => {
+
+        if (!obj) return 0;
+
+        const valores =
+            Object.values(obj)
+            .map(v => Number(v) || 0);
+
+        if (valores.length === 0)
+            return 0;
+
+        return (
+            valores.reduce(
+                (a,b)=>a+b,
+                0
+            ) / valores.length
+        );
+
+    };
+
+    const ser =
+        promedio(datos?.SER);
+
+    const saber =
+        promedio(datos?.SABER);
+
+    const hacer =
+        promedio(datos?.HACER);
+
+    const auto =
+        Number(
+            datos?.AUTOEVALUACION || 0
+        );
+
+    const extras =
+        Number(
+            datos?.NOTAS_EXTRAS || 0
+        );
+
+    return Math.round(
+        ser +
+        saber +
+        hacer +
+        auto +
+        extras
+    );
+
+}
+
+
+function bloquearDimensiones(esBloqueado){
+
+    // TARJETAS SER - SABER - HACER
+    document.querySelectorAll('.dimension-card')
+    .forEach(card => {
+
+        card.style.display =
+            esBloqueado ? 'none' : 'block';
+
+    });
+
+    // CONTENEDOR AUTOEVALUACIÓN
+    const autoContainer =
+        document.getElementById('autoevaluacion')
+        .closest('.form-group');
+
+    if(autoContainer){
+
+        autoContainer.style.display =
+            esBloqueado ? 'none' : 'block';
+
+    }
+
+    // BLOQUEAR INPUT AUTOEVALUACIÓN
+    const auto =
+        document.getElementById('autoevaluacion');
+
+    if(auto){
+
+        auto.disabled = esBloqueado;
+
+    }
+
+}
         async function marcarEstudiantesConCeros() {
 
             const trimestre = document.getElementById('trimestre').value;
@@ -1600,7 +2271,6 @@ function toggleNotaTrimestral() {
                     if(!op.value) return;
 
                     const datos = notasCurso[op.value];
-
                     let tieneCero = false;
 
                     if(datos){
@@ -1610,11 +2280,9 @@ function toggleNotaTrimestral() {
                             if(datos[dim]){
 
                                 Object.values(datos[dim]).forEach(v=>{
-
                                     if(Number(v) === 0){
                                         tieneCero = true;
                                     }
-
                                 });
 
                             }
@@ -1623,14 +2291,21 @@ function toggleNotaTrimestral() {
 
                     }
 
-                    if(tieneCero){
-                        op.style.color = 'red';
-                        op.style.fontWeight = 'bold';
-                        if(!op.textContent.includes('🔴')){
-                            op.textContent = '🔴 ' + op.textContent;
-                        }
-                    }
+                    const textoOriginal = op.textContent.replace('🔴 ','').trim();
 
+                        if(tieneCero){
+
+                         op.style.color = 'red';
+                         op.style.fontWeight = 'bold';
+                           op.textContent = '🔴 ' + textoOriginal;
+
+                        }else{
+
+                           op.style.color = '';
+                           op.style.fontWeight = '';
+                           op.textContent = textoOriginal;
+
+                        }
                 });
 
             }catch(err){
@@ -1639,15 +2314,25 @@ function toggleNotaTrimestral() {
         }
 
 
-        window.cerrarSesion = function() {
-            localStorage.removeItem('profesor');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 100);
-        };
-    </script>
-</body>
-</html>
+window.cerrarSesion = function() {
+    localStorage.removeItem('profesor');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 100);
+};
+</script>
+
+<script>
+document.addEventListener('wheel', function(e) {
+    if (
+        document.activeElement &&
+        document.activeElement.tagName === 'INPUT' &&
+        document.activeElement.type === 'number'
+    ) {
+        document.activeElement.blur();
+    }
+}, { passive: true });
+</script>
 
 <script>
 window.addEventListener('load',()=>{
@@ -1658,3 +2343,6 @@ window.addEventListener('load',()=>{
  }
 });
 </script>
+
+</body>
+</html>
