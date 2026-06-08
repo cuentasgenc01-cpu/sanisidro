@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descarga del Centralizador</title>
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
+.sidebar{width:250px;height:100vh;position:fixed;left:0;top:0;background:linear-gradient(180deg,#0D47A1,#1565C0,#1976D2);padding:20px 15px;color:white;display:flex;flex-direction:column}
+.profile{text-align:center;margin-bottom:20px}
+.profile img{width:100px;height:100px;border-radius:50%;border:4px solid rgba(255,255,255,.4);margin-bottom:10px}
+.profile h2{font-size:18px}
+.profile p{font-size:13px;opacity:.8}
+.menu{flex:1}
+.menu a{display:flex;gap:10px;color:white;text-decoration:none;padding:12px;border-radius:10px;margin-bottom:5px}
+.menu a:hover{background:rgba(255,255,255,.15)}
+#btnCerrarSesion{width:100%;padding:14px;border:none;border-radius:14px;background:#C62828;color:white;font-weight:bold;cursor:pointer}
+
+/* CAMBIOS EN EL CONTENEDOR PRINCIPAL PARA SOPORTAR UNA FILA ANCHA */
+.main{margin-left:250px;width:calc(100% - 250px);padding:40px}
+.contenedor{max-width:1000px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+
+/* NUEVA ESTRUCTURA EN FILA */
+.fila-descarga {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espacio entre los elementos */
+    flex-wrap: wrap; /* Por si la pantalla es muy pequeña, se adapta */
+}
+
+/* Ajustes individuales para que queden alineados */
+.fila-descarga h1 {
+    color: #0D47A1;
+    margin-bottom: 0; /* Quitamos el margen inferior */
+    font-size: 22px;
+    white-space: nowrap; /* Evita que el título se parta en dos líneas */
+}
+
+.estado{font-weight:bold;margin-bottom:20px}
+.habilitado{color:green}.restringido{color:red}
+
+/* Removido el margin-top de select y button para que no se desalinien */
+select, button.descarga{padding:14px;border-radius:12px;height:48px;}
+select { flex: 1; min-width: 180px; }
+button.descarga{ border:none;background:#0D47A1;color:white;flex: 1; min-width: 200px; cursor: pointer;}
+button.descarga:disabled{background:#999; cursor: not-allowed;}
+
+/* Primera fila, columnas C en adelante: texto vertical hacia arriba */
+table tr:first-child th:nth-child(n+3),
+table tr:first-child td:nth-child(n+3) {
+    display: inline-block;
+    white-space: nowrap;
+    transform: rotate(-90deg);
+    transform-origin: center center;
+    vertical-align: middle;
+}
+
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);justify-content:center;align-items:center;z-index:9999}
+.modal-content{width:560px;background:#ECE7F1;border-radius:30px;padding:25px}
+.titulo-modal{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:bold;color:#0D47A1;margin-bottom:20px}
+#btnCerrarModal{cursor:pointer;font-size:24px}
+.fila-campos{display:flex;gap:15px;align-items:end}
+.campo{flex:1}
+.campo label{display:block;margin-bottom:5px}
+.campo input,.campo select{width:100%;height:42px;border-radius:12px;border:1px solid #ccc;padding:0 10px}
+.acciones{display:flex;justify-content:flex-end;margin-top:20px}
+#btnProcesar{border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer}
+
+</style>
+</head>
+<body>
+<div class="sidebar">
+<div class="profile">
+<img src="logo.png" alt="Logo">
+<h2 id="nombreProfesor"></h2>
+<p>Profesor Académico</p>
+</div>
+
+<div class="menu">
+<a href="panel.html">🏠 Inicio</a>
+<a href="asistencia.html">📋 Asistencia</a>
+<a href="notas.html">📝 Notas</a>
+<a href="#">📅 Horario</a>
+<a href="kardex.html">⚖️ Kardex</a>
+<a href="descargas.html">⬇️ Descarga</a>
+</div>
+
+<button id="btnCerrarSesion">🚪 Cerrar Sesión</button>
+</div>
+
+<div class="main">
+<div class="contenedor">
+    <div id="estado" class="estado">Verificando permisos...</div>
+
+    <div id="contenido" class="fila-descarga" style="display:none;">
+        <h1>📥 CENTRALIZADOR</h1>
+        
+        <select id="trimestre">
+            <option value="">-- Seleccione Trimestre --</option>
+            <option value="PRIMERO">PRIMERO</option>
+            <option value="SEGUNDO">SEGUNDO</option>
+            <option value="TERCERO">TERCERO</option>
+        </select>
+
+        <button class="descarga" id="btnDescargar" disabled>
+            ⬇ Descargar Centralizador
+        </button>
+    </div>
+
+<hr style="margin:25px 0;">
+<div class="fila-descarga" id="filaAsistencia" style="display:none;">
+<h1>📋 REGISTRO DE ASISTENCIA</h1>
+<button class="descarga" id="btnAsistencia">⬇ DESCARGAR</button>
+</div>
+
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const profesor = localStorage.getItem("profesor");
+    document.getElementById("nombreProfesor").innerHTML = profesor || "Profesor";
+
+    document.getElementById("btnCerrarSesion").addEventListener("click", function() {
+        localStorage.removeItem("profesor");
+        window.location.href = "index.html";
+    });
+
+    const modalAsistencia = document.getElementById("modalAsistencia");
+    const cursoAsistencia = document.getElementById("cursoAsistencia");
+    const fechaDesde = document.getElementById("fechaDesde");
+    const fechaHasta = document.getElementById("fechaHasta");
+    const btnProcesar = document.getElementById("btnProcesar");
+
+    document.addEventListener("click", async (e) => {
+        if (e.target && e.target.id === "btnAsistencia") {
+            // Precargar fechas actuales cada vez que abre el modal
+            const hoy = new Date().toISOString().split("T")[0];
+fechaDesde.value = hoy;
+fechaHasta.value = hoy;
+
+            modalAsistencia.style.display = "flex";
+            cursoAsistencia.innerHTML = '<option value="">Seleccione Curso</option>';
+
+            try {
+                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
+                const response = await fetch(url);
+                const cursos = await response.json();
+
+                if (cursos) {
+                    Object.keys(cursos).forEach(curso => {
+                        const op = document.createElement("option");
+                        op.value = curso;
+                        op.textContent = curso;
+                        cursoAsistencia.appendChild(op);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (e.target && e.target.id === "btnCerrarModal") {
+            modalAsistencia.style.display = "none";
+        }
+    });
+
+    btnProcesar.addEventListener("click", async () => {
+        try {
+            const cursoSeleccionado = cursoAsistencia.value;
+            const desde = fechaDesde.value;
+            const hasta = fechaHasta.value;
+
+            if (!cursoSeleccionado) {
+                alert("Seleccione un curso");
+                return;
+            }
+            if (!desde || !hasta) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+
+            // Obtener lista de estudiantes del curso
+            const estudiantesUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const respEstudiantes = await fetch(estudiantesUrl);
+            const estudiantes = await respEstudiantes.json();
+
+            if (!estudiantes || Object.keys(estudiantes).length === 0) {
+                alert("No hay estudiantes en este curso");
+                return;
+            }
+
+            // Obtener historial de cambios del curso
+            const historialUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const respHistorial = await fetch(historialUrl);
+            const historial = await respHistorial.json();
+
+            // Filtrar registros por profesor y fechas
+            
+
+            // Construir datos para Excel
+    // Obtener únicamente las fechas que existen en Firebase
+const fechasSet = new Set();
+
+for (const idRegistro in historial) {
+
+    const registro = historial[idRegistro];
+
+    const profesorRegistro =
+        String(registro.profesor || "").trim();
+
+    if (profesorRegistro !== profesor) {
+        continue;
+    }
+
+    const fechaRegistro = convertirFecha(
+        registro.fecha_asis || ""
+    );
+
+    if (
+        fechaRegistro >= desde &&
+        fechaRegistro <= hasta
+    ) {
+        fechasSet.add(fechaRegistro);
+    }
+}
+
+const fechas = [...fechasSet].sort();
+
+const datos = [];
+datos.push(["N°", "ESTUDIANTE", ...fechas]);
+
+let contador = 1;
+
+const estudiantesOrdenados = Object.keys(estudiantes)
+    .sort((a, b) => Number(a) - Number(b));
+
+for (const idEstudiante of estudiantesOrdenados) {
+
+    const nombreEstudiante =
+        (estudiantes[idEstudiante] || "").trim();
+
+    if (!nombreEstudiante) continue;
+
+    const fila = [
+        contador,
+        nombreEstudiante
+    ];
+
+    for (const fecha of fechas) {
+
+        let estado = "A";
+
+        for (const idRegistro in historial) {
+
+            const registro = historial[idRegistro];
+
+            const profesorRegistro =
+                String(registro.profesor || "").trim();
+
+            if (profesorRegistro !== profesor) {
+                continue;
+            }
+
+            const fechaRegistro = convertirFecha(
+                registro.fecha_asis || ""
+            );
+
+            if (fechaRegistro !== fecha) {
+                continue;
+            }
+
+            const cambios = registro.cambios || {};
+
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    cambios,
+                    nombreEstudiante
+                )
+            ) {
+
+               const valorOriginal = String(
+    cambios[nombreEstudiante] || ""
+).trim().toUpperCase();
+
+let estadoFinal = valorOriginal;
+
+// Obtiene lo que está después del último "A"
+if (valorOriginal.includes(" A ")) {
+
+    estadoFinal =
+        valorOriginal.split(" A ").pop().trim();
+}
+
+if (
+    ["A", "F", "FA", "L"].includes(estadoFinal)
+) {
+    estado = estadoFinal;
+}
+
+                break;
+            }
+        }
+
+        fila.push(estado);
+    }
+
+    datos.push(fila);
+    contador++;
+}
+
+            // Crear PDF
+       const columnas = [
+    { header: "N°", dataKey: "numero" },
+    { header: "ESTUDIANTE", dataKey: "estudiante" },
+
+    ...fechas.map((fecha, index) => ({
+        header: fecha.split("-").reverse().slice(0,2).join("/"),
+        dataKey: `d${index}`
+    })),
+
+    { header: "TOTAL F", dataKey: "totalF" }
+];
+
+            const filasPdf = datos.slice(1).map((fila) => {
+              const nombreCorto =
+    fila[1].length > 25
+        ? fila[1].substring(0, 25) + "..."
+        : fila[1];
+
+const filaObjeto = {
+    numero: fila[0],
+    estudiante: fila[1]
+};
+
+let totalF = 0;
+
+for (let i = 0; i < fechas.length; i++) {
+
+    const valor = fila[2 + i];
+
+    filaObjeto[`d${i}`] = valor;
+
+    if (valor === "F") {
+        totalF++;
+    }
+}
+
+filaObjeto.totalF = totalF;
+
+return filaObjeto;
+            });
+
+            let materia = "";
+            try {
+                const materiaUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
+                const respMateria = await fetch(materiaUrl);
+                materia = await respMateria.json();
+                if (!materia || typeof materia !== "string") {
+                    materia = "";
+                }
+            } catch (err) {
+                console.error("Error al cargar materia:", err);
+                materia = "";
+            }
+
+           const doc = new window.jspdf.jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4"
+});
+            doc.setFontSize(12);
+           const anchoPagina = doc.internal.pageSize.getWidth();
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, "bold");
+
+            doc.text(
+                `Asistencia - ${cursoSeleccionado}`,
+                14,
+                16
+            );
+
+            doc.text(
+                `MATERIA: ${materia || "--"}`,
+                anchoPagina / 2,
+                16,
+                { align: "center" }
+            );
+
+            doc.text(
+                `PROFESOR: ${profesor}`,
+                anchoPagina - 14,
+                16,
+                { align: "right" }
+            );
+
+            doc.autoTable({
+                startY: 22,
+                margin: { left: 8, right: 8, top: 26, bottom: 8 },
+
+    head: [
+        columnas.map(col => col.header)
+    ],
+
+    body: filasPdf.map(row =>
+        columnas.map(col =>
+            row[col.dataKey] || ""
+        )
+    ),
+
+styles: {
+    fontSize: 7,
+    cellPadding: 1,
+    minCellHeight: 5,
+    halign: "center",
+    valign: "middle"
+},
+
+    headStyles: {
+    fillColor: [13, 71, 161],
+    textColor: 255,
+    halign: "center",
+    valign: "middle",
+    minCellHeight: 14
+},
+
+    columnStyles: {
+    0: {cellWidth: 8},
+    1: {cellWidth: 45,
+        overflow: "ellipsize"}
+},
+
+   didParseCell: function(data) {
+
+    // ENCABEZADOS DE FECHA
+    if (
+        data.section === "head" &&
+        data.column.index >= 2
+    ) {
+
+        data.cell.styles.minCellHeight = 14;
+
+        // ELIMINA EL TEXTO QUE AUTOTABLE DIBUJA HORIZONTAL
+        data.cell.text = [];
+    }
+
+    // COLORES DE ASISTENCIA
+    if (data.section !== "body")
+        return;
+
+    const valor =
+        String(data.cell.raw || "")
+        .trim()
+        .toUpperCase();
+
+    // F = ROJO
+    if (valor === "F") {
+
+        data.cell.styles.fillColor =
+            [255, 199, 206];
+
+        data.cell.styles.textColor =
+            [156, 0, 6];
+
+        data.cell.styles.fontStyle =
+            "bold";
+    }
+
+    // FA = CELESTE
+    if (valor === "FA") {
+
+        data.cell.styles.fillColor =
+            [189, 215, 238];
+
+        data.cell.styles.textColor =
+            [0, 70, 140];
+
+        data.cell.styles.fontStyle =
+            "bold";
+    }
+
+    // L = VERDE
+    if (valor === "L") {
+
+        data.cell.styles.fillColor =
+            [198, 239, 206];
+
+        data.cell.styles.textColor =
+            [0, 97, 0];
+
+        data.cell.styles.fontStyle =
+            "bold";
+    }
+},
+
+didDrawCell: function(data) {
+
+    if (
+        data.section === "head" &&
+        data.column.index >= 2
+    ) {
+
+        const texto = String(data.cell.raw);
+
+        doc.saveGraphicsState();
+
+      doc.text(
+    texto,
+    data.cell.x + (data.cell.width / 2),
+    data.cell.y + data.cell.height - 1,
+    {
+        angle: 90
+    }
+);
+
+        doc.restoreGraphicsState();
+    }
+},
+
+    theme: "grid"
+});
+
+            doc.save(`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`);
+            alert("PDF descargado correctamente");
+            modalAsistencia.style.display = "none";
+        } catch (ex) {
+            console.error(ex);
+            alert("Error al descargar: " + ex.message);
+        }
+    });
+
+    function generarFechas(desde, hasta) {
+        const fechas = [];
+        const d = new Date(desde);
+        const h = new Date(hasta);
+
+        while (d <= h) {
+            fechas.push(d.toISOString().split("T")[0]);
+            d.setDate(d.getDate() + 1);
+        }
+
+        return fechas;
+    }
+
+
+    function convertirFecha(fechaBoliviana) {
+
+    if (!fechaBoliviana) return "";
+
+    const partes = fechaBoliviana.split("-");
+
+    if (partes.length !== 3) return "";
+
+    const dia = partes[0].padStart(2, "0");
+    const mes = partes[1].padStart(2, "0");
+    const anio = partes[2];
+
+    return `${anio}-${mes}-${dia}`;
+}
+    const estado = document.getElementById("estado");
+    const contenido = document.getElementById("contenido");
+    const trimestre = document.getElementById("trimestre");
+    const btnDescargar = document.getElementById("btnDescargar");
+    const filaAsistencia = document.getElementById("filaAsistencia");
+
+    fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`)
+        .then(r => r.json())
+        .then(data => {
+            if (data === true) {
+                estado.innerHTML = "✅ Descarga habilitada";
+                estado.className = "estado habilitado";
+                contenido.style.display = "flex";
+                filaAsistencia.style.display = "flex";
+            } else {
+                estado.innerHTML = "⛔ Acceso restringido";
+                estado.className = "estado restringido";
+            }
+        })
+        .catch(() => {
+            estado.innerHTML = "⛔ Error al verificar permisos";
+        });
+
+    trimestre.addEventListener("change", () => {
+        btnDescargar.disabled = trimestre.value === "";
+    });
+
+    btnDescargar.addEventListener("click", async function() {
+        try {
+            const trimestreSeleccionado = trimestre.value;
+            if (!trimestreSeleccionado) { alert("Seleccione un trimestre."); return; }
+
+            const rutaFirebase =
+                `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
+
+            const response = await fetch(rutaFirebase);
+            const cursos = await response.json();
+
+            if (!cursos) { alert("No hay cursos registrados."); return; }
+
+            const wb = XLSX.utils.book_new();
+
+            for (const curso in cursos) {
+                const estudiantes = cursos[curso];
+                const datos = [["ESTUDIANTE", "NOTA_TRIMESTRAL"]];
+
+                for (const nombreEstudiante in estudiantes) {
+                    const datosEstudiante = estudiantes[nombreEstudiante];
+                    const nota = datosEstudiante?.NOTA_TRIMESTRAL || "";
+                    datos.push([nombreEstudiante, nota]);
+                }
+
+                const ws = XLSX.utils.aoa_to_sheet(datos);
+                XLSX.utils.book_append_sheet(wb, ws, curso.substring(0, 31));
+            }
+
+            const nombreSeguro = (profesor || "Profesor").replace(/[\\/:*?"<>|]/g, "-");
+            const archivo = `${nombreSeguro}_${trimestreSeleccionado}.xlsx`;
+
+            XLSX.writeFile(wb, archivo);
+            alert("Excel guardado correctamente.");
+        }
+        catch (ex) {
+            alert("Error al exportar: " + ex.message);
+        }
+    });
+});
+</script>
+
+<div id="modalAsistencia" class="modal">
+<div class="modal-content">
+<div class="titulo-modal">
+<span>📋 DESCARGA DE ASISTENCIA</span>
+<span id="btnCerrarModal">✖</span>
+</div>
+<div class="fila-campos">
+<div class="campo">
+<label>Desde:</label>
+<input type="date" id="fechaDesde">
+</div>
+<div class="campo">
+<label>Hasta:</label>
+<input type="date" id="fechaHasta">
+</div>
+<div class="campo">
+<label>Curso</label>
+<select id="cursoAsistencia">
+<option value="">Seleccione Curso</option>
+</select>
+</div>
+</div>
+<div class="acciones">
+<button id="btnProcesar">DESCARGA</button>
+</div>
+</div>
+</div>
+
+</body>
+</html>
