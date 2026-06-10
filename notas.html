@@ -123,14 +123,21 @@
             cursor: not-allowed;
         }
 
-        .btn-success {
-            background: #2E7D32;
-            color: white;
-        }
+       .btn-success {
+    background: #2E7D32;
+    color: white;
+}
 
-        .btn-success:hover {
-            background: #388E3C;
-        }
+.btn-success:hover {
+    background: #388E3C;
+}
+
+.btn-success:disabled {
+    background: #ccc !important;
+    color: white !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
 
         .btn-danger {
             background: #D32F2F;
@@ -234,13 +241,13 @@
             display: block;
         }
 
-        .activity-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
+      .activity-row{
+    display:grid;
+    grid-template-columns:1fr 55px 40px;
+    gap:8px;
+    margin-bottom:10px;
+    align-items:center;
+}
 
         .activity-row input {
             padding: 8px;
@@ -524,6 +531,52 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
+
+        .burbuja {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            background: #2E7D32;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.4);
+            transition: all 0.3s ease;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-weight: bold;
+            padding: 0;
+        }
+
+        .burbuja:hover {
+            background: #388E3C;
+            box-shadow: 0 12px 32px rgba(46, 125, 50, 0.6);
+            transform: scale(1.1);
+        }
+
+        .burbuja:active {
+            transform: scale(0.95);
+        }
+
+        .burbuja:disabled {
+            background: #999;
+            cursor: not-allowed;
+            box-shadow: 0 4px 12px rgba(153, 153, 153, 0.3);
+            transform: scale(1);
+        }
+
+        .burbuja-text {
+            font-size: 10px;
+            line-height: 1.2;
+            text-align: center;
+        }
     </style>
 
 <style>
@@ -539,6 +592,8 @@ select,input{
     border:2px solid #e8edf7 !important;
     background:#fafcff !important;
 }
+
+
 .dimension-header{
     background:linear-gradient(90deg,#f7faff,#eef4ff) !important;
     padding:14px !important;
@@ -679,9 +734,9 @@ label{
  transform:translateY(-4px);
 }
 .header-premium{
- margin-bottom:20px;
- padding:25px;
- border-radius:20px;
+ margin-bottom:0;
+ padding:15px;
+ border-radius:16px;
  background:linear-gradient(135deg,#0D47A1,#1976D2);
  color:white;
  box-shadow:0 15px 35px rgba(13,71,161,.25);
@@ -739,70 +794,144 @@ style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:non
             <h2>ACCESO DENEGADO</h2>
             <p>No tienes permiso para utilizar el módulo de calificaciones.</p>
             <p style="font-size: 12px; color: #999;">Contacta al administrador para solicitar acceso.</p>
-            <button class="btn btn-primary" onclick="window.location.href='panel.html'">Volver al Menú</button>
+          
         </div>
 
         <!-- Main Content Area -->
         <div class="content-area hidden" id="mainContent">
             
             <!-- FILA SUPERIOR -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-bottom:20px;">
+<div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-bottom:20px;">
 
-                <div class="form-group"
-                    style="display:flex;align-items:center;min-height:90px;">
+    <div class="form-group"
+style="
+display:flex;
+align-items:center;
+padding:10px;
+">
 
-                    <div class="header-premium"><h1 style="color:white;font-size:32px;">📊 SISTEMA DE CALIFICACIONES</h1><div>San Isidro C</div></div>
+        <div class="header-premium">
+            <h1 style="color:white;font-size:24px;">
+                📊 SISTEMA DE CALIFICACIONES
+            </h1>
+            <div>San Isidro C</div>
+        </div>
 
-                </div>
-
-               <div class="form-group"
-    style="display:flex;flex-direction:column;justify-content:center;min-height:90px;position:relative;">
-
-    <div class="total-label">
-        NOTA FINAL CALCULADA
     </div>
 
-    <div class="total-value"
-        id="totalValue">
-        -
+    <!-- SEGUNDO CUADRO -->
+   <div class="form-group"
+style="
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+padding:10px;
+">
+
+        <div class="total-label">
+            NOTA FINAL CALCULADA
+        </div>
+
+        <div class="total-value"
+            id="totalValue">
+            -
+        </div>
+
     </div>
+
+    <!-- TERCER CUADRO -->
+<div class="form-group"
+style="
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:6px;
+padding:10px;
+">
+ 
+ 
+
+
+<div style="text-align:center;margin-bottom:20px;">
+
+   <div style="
+    font-size:14px;
+    font-weight:900;
+    color:#1976D2;
+    text-shadow:
+        2px 2px 4px rgba(0,0,0,.15);
+    letter-spacing:1px;
+">
+        SELECCIONA EL TRIMESTRE Y CURSO
+    </div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <button
-    id="btnInferior"
-    class="btn btn-primary"
+        id="btnInferior"
+        class="btn btn-primary"
+        disabled
+        onclick="exportarExcel()"
+        style="
+            padding:16px 30px;
+            font-size:16px;
+            font-weight:800;
+            border-radius:16px;
+            min-width:280px;
+        ">
+        DESCARGA NOTA TRIMESTRAL
+    </button>
+
+   <button
+    id="btnRegistroNotas"
+    class="btn btn-success"
     disabled
-    onclick="exportarExcel()"
+    onclick="abrirRegistroNotas()"
     style="
-        position:absolute;
-        left:10px;
-        bottom:10px;
-        padding:6px 12px;
-        font-size:12px;
+        padding:16px 30px;
+        font-size:16px;
+        font-weight:800;
+        border-radius:16px;
+        min-width:280px;
     ">
-    DESCARGA NOTA TRIMESTRAL
+    REGISTRO DE NOTAS
 </button>
 
 </div>
 
-                <div class="form-group"
-                    style="display:flex;align-items:center;justify-content:center;min-height:90px;">
+    <button class="burbuja"
+        onclick="guardarNotas()"
+        id="saveBtn"
+        disabled
+        title="Guardar Calificaciones">
+        <span>💾</span>
+        <span class="burbuja-text">GUARDAR</span>
+    </button>
 
-                    <button class="btn btn-success"
-                        onclick="guardarNotas()"
-                        style="width:100%;padding:16px;font-size:16px;font-weight:bold;"
-                        id="saveBtn"
-                        disabled>
+</div>
 
-                        💾 GUARDAR CALIFICACIONES
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            <!-- Filters Row -->
-            <div class="row">
+            <!-- Filters Row - 4 Columns -->
+            <div style="display: grid; grid-template-columns: 0.8fr 0.8fr 2fr 0.5fr; gap: 15px; margin-bottom: 15px;">
                 <div class="form-group">
                     <label for="trimestre">TRIMESTRE</label>
                     <select id="trimestre" onchange="onTrimestreChange()">
@@ -815,159 +944,234 @@ style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:non
                         <option value="">Seleccionar Curso</option>
                     </select>
                 </div>
-            </div>
-
-            <!-- Student and Options Row -->
-            <div class="row" id="studentRowContainer" style="display: none;">
-                <div class="form-group">
+                <div class="form-group" id="studentRowContainer" style="display: none;">
                     <label for="estudiante">ESTUDIANTE</label>
                     <select id="estudiante" onchange="onEstudianteChange()" disabled>
                         <option value="">Seleccionar Estudiante</option>
                     </select>
                 </div>
-                <div class="form-group" style="background: white; padding: 15px; border-radius: 24px; display: flex; align-items: center; justify-content: flex-start; min-height: 80px;">
-                    <div class="checkbox-group" style="margin-top:0;">
-    <input
-        type="checkbox"
-        id="soloAsistentes"
-        onchange="toggleSoloAsistentes()"
-        style="
-            width:28px;
-            height:28px;
-            cursor:pointer;
-        ">
+               <div class="form-group" id="checkboxContainer"
+style="
+    background:white;
+    padding:15px;
+    border-radius:24px;
+    align-items:flex-end;
+    justify-content:flex-start;
+    min-height:80px;
+    display:none;
+">
 
-    <label
-        for="soloAsistentes"
-        style="
-            margin-bottom:0;
-            font-weight:bold;
-            font-size:18px;
-            cursor:pointer;
-        ">
-        Solo Asistencias Y Atrasos
-    </label>
+    <div class="checkbox-group" style="margin-top:0;">
+
+        <input
+            type="checkbox"
+            id="soloAsistentes"
+            onchange="toggleSoloAsistentes()"
+            style="
+                width:28px;
+                height:28px;
+                cursor:pointer;
+            ">
+
+        <label
+            for="soloAsistentes"
+            style="
+                margin-bottom:0;
+                font-weight:bold;
+                font-size:16px;
+                cursor:pointer;
+            ">
+            Solo Asistencias Y Atrasos
+        </label>
+
+    </div>
+
 </div>
-                </div>
             </div>
 
             
             
             <!-- Dimensions Section -->
 
-            <div id="dimensionsSection" style="display: none;">
-                <!-- SER Dimension -->
-                <div class="dimension-card">
-                    <div class="dimension-header" onclick="toggleDimension('ser')">
-                        <span class="dimension-title">SER (10 puntos)</span>
-                        <span class="dimension-info">Prom: <span id="promSer">-</span></span>
-                    </div>
-                    <div class="dimension-content" id="serContent">
-                        <div id="serActivities"></div>
-                        <div class="add-activity"
-style="background:#E3F2FD;border:2px dashed #1565C0;color:#1565C0;"
-onclick="addActivity('ser')">
-+ COLOCAR ACTIVIDADES SER
+         <!-- Dimensions Section -->
+
+<div id="dimensionsSection" style="display: none;">
+
+    <!-- SER - SABER - HACER -->
+    <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        gap:15px;
+        margin-bottom:15px;
+    ">
+
+        <!-- SER -->
+        <div class="dimension-card">
+            <div class="dimension-header" onclick="toggleDimension('ser')">
+                <span class="dimension-title">SER (10 puntos)</span>
+                <span class="dimension-info">
+                    Prom: <span id="promSer">-</span>
+                </span>
+            </div>
+
+            <div class="dimension-content" id="serContent">
+                <div id="serActivities"></div>
+
+                <div class="add-activity"
+                    style="background:#E3F2FD;border:2px dashed #1565C0;color:#1565C0;"
+                    onclick="addActivity('ser')">
+                    + COLOCAR ACTIVIDADES SER
+                </div>
+            </div>
+        </div>
+
+        <!-- SABER -->
+        <div class="dimension-card">
+            <div class="dimension-header" onclick="toggleDimension('saber')">
+                <span class="dimension-title">SABER (45 puntos)</span>
+                <span class="dimension-info">
+                    Prom: <span id="promSaber">-</span>
+                </span>
+            </div>
+
+            <div class="dimension-content" id="saberContent">
+                <div id="saberActivities"></div>
+
+                <div class="add-activity"
+                    style="background:#FFF3E0;border:2px dashed #EF6C00;color:#EF6C00;"
+                    onclick="addActivity('saber')">
+                    + COLOCAR ACTIVIDADES SABER
+                </div>
+            </div>
+        </div>
+
+        <!-- HACER -->
+        <div class="dimension-card">
+            <div class="dimension-header" onclick="toggleDimension('hacer')">
+                <span class="dimension-title">HACER (40 puntos)</span>
+                <span class="dimension-info">
+                    Prom: <span id="promHacer">-</span>
+                </span>
+            </div>
+
+            <div class="dimension-content" id="hacerContent">
+                <div id="hacerActivities"></div>
+
+                <div class="add-activity"
+                    style="background:#E8F5E9;border:2px dashed #2E7D32;color:#2E7D32;"
+                    onclick="addActivity('hacer')">
+                    + COLOCAR ACTIVIDADES HACER
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+  
+
+               <div style="
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-top:15px;
+">
+
+    <!-- AUTOEVALUACION -->
+    <div class="form-group">
+
+        <label for="autoevaluacion">
+            AUTOEVALUACIÓN (5 puntos)
+        </label>
+
+        <input type="number"
+            id="autoevaluacion"
+            min="0"
+            max="5"
+            step="1"
+            oninput="
+                this.value=this.value.replace(/[^0-9]/g,'');
+
+                if(parseInt(this.value)>5){
+
+                    alert('CORREGIR NOTA');
+
+                    this.value='';
+
+                }
+
+                calcularTotal();
+            "
+            placeholder="COLOCA LA NOTA DE 1 A 5">
+
+    </div>
+
+    <!-- NOTAS EXTRAS / NOTA TRIMESTRAL -->
+    <div class="form-group">
+
+        <div style="display:flex;gap:10px;align-items:center;">
+
+            <div style="flex:1;">
+
+                <label id="extrasLabel" for="notasExtras">
+                    NOTAS EXTRAS (20 puntos)
+                </label>
+
+                <input type="number"
+                    id="notasExtras"
+                    min="0"
+                    max="20"
+                    oninput="
+                        this.value=this.value.replace(/[^0-9]/g,'');
+
+                        const esTrimestral =
+                        document.getElementById('esNotaTrimestral').checked;
+
+                        const maximo =
+                        esTrimestral ? 100 : 20;
+
+                        if(parseInt(this.value) > maximo){
+
+                            alert(
+                                esTrimestral
+                                ? 'CORREGIR NOTA. MÁXIMO 100'
+                                : 'CORREGIR NOTA. MÁXIMO 20'
+                            );
+
+                            this.value='';
+
+                        }
+
+                        calcularTotal();
+                    "
+                    placeholder="COLOCA LA NOTA DE 1 A 20">
+
+            </div>
+
+            <div style="
+                display:flex;
+                align-items:center;
+                gap:5px;
+                padding-top:20px;
+            ">
+
+                <input
+                    type="checkbox"
+                    id="esNotaTrimestral"
+                    onchange="toggleNotaTrimestral()">
+
+                <label
+                    for="esNotaTrimestral"
+                    style="margin-bottom:0;">
+                    Nota Trimestral
+                </label>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
-                    </div>
-                </div>
-
-                <!-- SABER Dimension -->
-                <div class="dimension-card">
-                    <div class="dimension-header" onclick="toggleDimension('saber')">
-                        <span class="dimension-title">SABER (45 puntos)</span>
-                        <span class="dimension-info">Prom: <span id="promSaber">-</span></span>
-                    </div>
-                    <div class="dimension-content" id="saberContent">
-                        <div id="saberActivities"></div>
-                        <div class="add-activity"
-style="background:#FFF3E0;border:2px dashed #EF6C00;color:#EF6C00;"
-onclick="addActivity('saber')">
-+ COLOCAR ACTIVIDADES SABER
-</div>
-                    </div>
-                </div>
-
-                <!-- HACER Dimension -->
-                <div class="dimension-card">
-                    <div class="dimension-header" onclick="toggleDimension('hacer')">
-                        <span class="dimension-title">HACER (40 puntos)</span>
-                        <span class="dimension-info">Prom: <span id="promHacer">-</span></span>
-                    </div>
-                    <div class="dimension-content" id="hacerContent">
-                        <div id="hacerActivities"></div>
-                        <div class="add-activity"
-style="background:#E8F5E9;border:2px dashed #2E7D32;color:#2E7D32;"
-onclick="addActivity('hacer')">
-+ COLOCAR ACTIVIDADES HACER
-</div>
-                    </div>
-                </div>
-
-                <!-- AUTOEVALUACION -->
-                <div class="form-group">
-                    <label for="autoevaluacion">AUTOEVALUACIÓN (5 puntos)</label>
-                    <input type="number"
-id="autoevaluacion"
-min="0"
-max="5"
-step="1"
-oninput="
-    this.value=this.value.replace(/[^0-9]/g,'');
-
-    if(parseInt(this.value)>5){
-
-        alert('CORREGIR NOTA');
-
-        this.value='';
-
-    }
-
-    calcularTotal();
-"
-placeholder="COLOCA LA NOTA DE 1 A 5">
-                </div>
-
-                <!-- NOTAS EXTRAS / NOTA TRIMESTRAL -->
-                <div class="form-group">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <div style="flex: 1;">
-                            <label id="extrasLabel" for="notasExtras">NOTAS EXTRAS (20 puntos)</label>
-                            <input type="number"
-id="notasExtras"
-min="0"
-max="20"
-oninput="
-this.value=this.value.replace(/[^0-9]/g,'');
-
-const esTrimestral =
-document.getElementById('esNotaTrimestral').checked;
-
-const maximo = esTrimestral ? 100 : 20;
-
-if(parseInt(this.value) > maximo){
-
-    alert(
-        esTrimestral
-        ? 'CORREGIR NOTA. MÁXIMO 100'
-        : 'CORREGIR NOTA. MÁXIMO 20'
-    );
-
-    this.value='';
-
-}
-
-calcularTotal();
-"
-placeholder="COLOCA LA NOTA DE 1 A 20">
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 5px; padding-top: 20px;">
-                            <input type="checkbox" id="esNotaTrimestral" onchange="toggleNotaTrimestral()">
-                            <label for="esNotaTrimestral" style="margin-bottom: 0;">Nota Trimestral</label>
-                        </div>
-                    </div>
-                </div>
-
                 
             </div>
         </div>
@@ -1139,15 +1343,29 @@ const snapshot = await get(trimRef);
             });
         }
 
-        async function onTrimestreChange() {
-            const trimestre = document.getElementById('trimestre').value;
+       async function onTrimestreChange() {
 
-            document.getElementById('dimensionsSection').style.display = 'none';
-            document.getElementById('studentRowContainer').style.display = 'none';
-            document.getElementById('estudiante').innerHTML = '<option value="">Seleccionar Estudiante</option>';
-            document.getElementById('estudiante').disabled = true;
-            document.getElementById('totalValue').textContent = '-';
-            document.getElementById('saveBtn').disabled = true;
+    const trimestre =
+        document.getElementById('trimestre').value;
+
+    document.getElementById('btnInferior').disabled = true;
+
+    document.getElementById('btnRegistroNotas').disabled = true;
+
+    document.getElementById('dimensionsSection').style.display = 'none';
+
+document.getElementById('checkboxContainer').style.display = 'none';
+
+document.getElementById('soloAsistentes').checked = false;
+
+document.getElementById('estudiante').innerHTML =
+    '<option value="">Seleccionar Estudiante</option>';
+
+document.getElementById('estudiante').disabled = true;
+
+document.getElementById('totalValue').textContent = '-';
+
+document.getElementById('saveBtn').disabled = true;
             if (!trimestre) {
                 document.getElementById('curso').disabled = true;
                 document.getElementById('curso').innerHTML = '<option value="">Seleccionar Curso</option>';
@@ -1186,20 +1404,22 @@ const snapshot = await get(trimRef);
             });
         }
 
-        async function onCursoChange() {
-              const curso =
+      async function onCursoChange() {
+
+    const curso =
         document.getElementById('curso').value;
 
-    // ACTIVAR / DESACTIVAR BOTÓN
+    const trimestre =
+        document.getElementById('trimestre').value;
 
-    const btn =
-        document.getElementById('btnInferior');
+    const habilitar =
+        trimestre && curso;
 
-    if (btn) {
+    document.getElementById('btnInferior').disabled =
+        !habilitar;
 
-        btn.disabled = !curso;
-
-    }
+    document.getElementById('btnRegistroNotas').disabled =
+        !habilitar;
 
             // LIMPIAR PANTALLA AL CAMBIAR CURSO
             document.getElementById('dimensionsSection').style.display = 'none';
@@ -1217,14 +1437,25 @@ const snapshot = await get(trimRef);
                 esNotaTrimestral: false,
                 notaTrimestralAnterior: 0
             };
-            if (!curso) {
-                document.getElementById('estudiante').disabled = true;
-                document.getElementById('estudiante').innerHTML = '<option value="">Seleccionar Estudiante</option>';
-                document.getElementById('studentRowContainer').style.display = 'none';
-                document.getElementById('dimensionsSection').style.display = 'none';
-                estudiantes = [];
-                return;
-            }
+          if (!curso) {
+
+    document.getElementById('estudiante').disabled = true;
+
+    document.getElementById('estudiante').innerHTML =
+        '<option value="">Seleccionar Estudiante</option>';
+
+    document.getElementById('studentRowContainer').style.display = 'none';
+
+    document.getElementById('checkboxContainer').style.display = 'none';
+
+    document.getElementById('soloAsistentes').checked = false;
+
+    document.getElementById('dimensionsSection').style.display = 'none';
+
+    estudiantes = [];
+
+    return;
+}
 
             try {
                 const cursosRef = ref(db, `CURSOS/${curso}`);
@@ -1239,11 +1470,12 @@ const snapshot = await get(trimRef);
                     }
                 }
                 estudiantes.sort();
-                actualizarSelectEstudiante();
-                document.getElementById('estudiante').disabled = false;
-                document.getElementById('studentRowContainer').style.display = 'grid';
-                setTimeout(marcarEstudiantesConCeros,300);
-                document.getElementById('soloAsistentes').checked = false;
+              actualizarSelectEstudiante();
+document.getElementById('estudiante').disabled = false;
+document.getElementById('studentRowContainer').style.display = 'grid';
+document.getElementById('checkboxContainer').style.display = 'flex';
+setTimeout(marcarEstudiantesConCeros,300);
+document.getElementById('soloAsistentes').checked = false;
             } catch (error) {
                 console.error('Error cargando estudiantes:', error);
             }
@@ -1265,10 +1497,16 @@ const snapshot = await get(trimRef);
             const trimestre = document.getElementById('trimestre').value;
             const curso = document.getElementById('curso').value;
 
-            if (!estudiante || !trimestre || !curso) {
-                document.getElementById('dimensionsSection').style.display = 'none';
-                return;
-            }
+          if (!estudiante || !trimestre || !curso) {
+
+    document.getElementById('dimensionsSection').style.display = 'none';
+
+    document.getElementById('checkboxContainer').style.display = 'none';
+
+    return;
+}
+
+document.getElementById('checkboxContainer').style.display = 'flex';
 
             try {
                 showLoading('Cargando notas del estudiante...');
@@ -1957,13 +2195,17 @@ function toggleNotaTrimestral() {
         // CHECKBOX DESMARCADO
         // MOSTRAR TODOS LOS ESTUDIANTES
 
-        if (!soloAsistentes) {
+       if (!soloAsistentes) {
 
-            actualizarSelectEstudiante();
+    actualizarSelectEstudiante();
 
-            return;
+    setTimeout(() => {
+        marcarEstudiantesConCeros();
+    }, 100);
 
-        }
+    return;
+
+}
 
         // CHECKBOX MARCADO
         // MOSTRAR SOLO ASISTENTES DE HOY
@@ -2001,31 +2243,34 @@ function toggleNotaTrimestral() {
 
         let contador = 1;
 
-        Object.entries(asistencia)
-        .forEach(([nombre, estado]) => {
+       Object.entries(asistencia)
+.forEach(([nombre, estado]) => {
 
-            // SOLO A Y FA
+    if (
+        estado === 'A' ||
+        estado === 'FA'
+    ) {
 
-            if (
-                estado === 'A' ||
-                estado === 'FA'
-            ) {
+        const option =
+            document.createElement('option');
 
-                const option =
-                    document.createElement('option');
+        option.value = nombre;
 
-                option.value = nombre;
+        option.textContent =
+            `${contador}. ${nombre}`;
 
-                option.textContent =
-                    `${contador}. ${nombre}`;
+        select.appendChild(option);
 
-                select.appendChild(option);
+        contador++;
 
-                contador++;
+    }
 
-            }
+});
 
-        });
+// VOLVER A PINTAR LOS ROJOS
+setTimeout(() => {
+    marcarEstudiantesConCeros();
+}, 100);
 
     } catch (error) {
 

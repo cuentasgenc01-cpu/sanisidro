@@ -98,7 +98,7 @@ table tr:first-child td:nth-child(n+3) {
     <div id="estado" class="estado">Verificando permisos...</div>
 
     <div id="contenido" class="fila-descarga" style="display:none;">
-        <h1>📥 CENTRALIZADOR</h1>
+        <h1>📥 CENTRALIZADOR TRIMESTRAL</h1>
         
         <select id="trimestre">
             <option value="">-- Seleccione Trimestre --</option>
@@ -106,6 +106,10 @@ table tr:first-child td:nth-child(n+3) {
             <option value="SEGUNDO">SEGUNDO</option>
             <option value="TERCERO">TERCERO</option>
         </select>
+
+ <select id="TUTOR">
+    <option value="">-- Seleccione Su Curso Tutor --</option>
+</select>
 
         <button class="descarga" id="btnDescargar" disabled>
             ⬇ Descargar Centralizador
@@ -125,6 +129,52 @@ table tr:first-child td:nth-child(n+3) {
 document.addEventListener("DOMContentLoaded", () => {
     const profesor = localStorage.getItem("profesor");
     document.getElementById("nombreProfesor").innerHTML = profesor || "Profesor";
+
+const tutorSelect = document.getElementById("TUTOR");
+
+async function cargarCursoTutor() {
+
+    try {
+
+        const url =
+            `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/TUTORIA.json`;
+
+        const response = await fetch(url);
+
+        const tutoria = await response.json();
+
+        tutorSelect.innerHTML =
+            '<option value="">-- Seleccione Su Curso Tutor --</option>';
+
+        if (!tutoria) return;
+
+        Object.keys(tutoria).forEach(curso => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = curso;
+            option.textContent = curso;
+
+            tutorSelect.appendChild(option);
+
+        });
+
+     
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando tutoría:",
+            error
+        );
+
+    }
+
+}
+
+cargarCursoTutor();
+
 
     document.getElementById("btnCerrarSesion").addEventListener("click", function() {
         localStorage.removeItem("profesor");
@@ -148,7 +198,7 @@ fechaHasta.value = hoy;
             cursoAsistencia.innerHTML = '<option value="">Seleccione Curso</option>';
 
             try {
-                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
+                const url = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
                 const response = await fetch(url);
                 const cursos = await response.json();
 
@@ -186,7 +236,7 @@ fechaHasta.value = hoy;
             }
 
             // Obtener lista de estudiantes del curso
-            const estudiantesUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const estudiantesUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respEstudiantes = await fetch(estudiantesUrl);
             const estudiantes = await respEstudiantes.json();
 
@@ -196,7 +246,7 @@ fechaHasta.value = hoy;
             }
 
             // Obtener historial de cambios del curso
-            const historialUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const historialUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respHistorial = await fetch(historialUrl);
             const historial = await respHistorial.json();
 
@@ -358,7 +408,7 @@ return filaObjeto;
 
             let materia = "";
             try {
-                const materiaUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
+                const materiaUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
                 const respMateria = await fetch(materiaUrl);
                 materia = await respMateria.json();
                 if (!materia || typeof materia !== "string") {
@@ -564,31 +614,101 @@ didDrawCell: function(data) {
     return `${anio}-${mes}-${dia}`;
 }
     const estado = document.getElementById("estado");
-    const contenido = document.getElementById("contenido");
-    const trimestre = document.getElementById("trimestre");
-    const btnDescargar = document.getElementById("btnDescargar");
-    const filaAsistencia = document.getElementById("filaAsistencia");
+const contenido = document.getElementById("contenido");
 
-    fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`)
-        .then(r => r.json())
-        .then(data => {
-            if (data === true) {
-                estado.innerHTML = "✅ Descarga habilitada";
-                estado.className = "estado habilitado";
-                contenido.style.display = "flex";
-                filaAsistencia.style.display = "flex";
-            } else {
-                estado.innerHTML = "⛔ Acceso restringido";
-                estado.className = "estado restringido";
-            }
-        })
-        .catch(() => {
-            estado.innerHTML = "⛔ Error al verificar permisos";
-        });
+const trimestre =
+    document.getElementById("trimestre");
 
-    trimestre.addEventListener("change", () => {
-        btnDescargar.disabled = trimestre.value === "";
-    });
+const tutor =
+    document.getElementById("TUTOR");
+
+const btnDescargar =
+    document.getElementById("btnDescargar");
+
+const filaAsistencia =
+    document.getElementById("filaAsistencia");
+
+
+// ESTADO INICIAL
+
+tutor.disabled = true;
+btnDescargar.disabled = true;
+
+
+// VERIFICAR PERMISOS
+
+fetch(
+    `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`
+)
+.then(r => r.json())
+.then(data => {
+
+    if (data === true) {
+
+        estado.innerHTML =
+            "✅ Descarga habilitada";
+
+        estado.className =
+            "estado habilitado";
+
+        contenido.style.display =
+            "flex";
+
+        filaAsistencia.style.display =
+            "flex";
+
+    } else {
+
+        estado.innerHTML =
+            "⛔ Acceso restringido";
+
+        estado.className =
+            "estado restringido";
+    }
+
+})
+.catch(() => {
+
+    estado.innerHTML =
+        "⛔ Error al verificar permisos";
+
+});
+
+
+// CONTROL DEL TRIMESTRE
+
+trimestre.addEventListener("change", () => {
+
+    if (trimestre.value === "") {
+
+        tutor.value = "";
+
+        tutor.disabled = true;
+
+        btnDescargar.disabled = true;
+
+    } else {
+
+        tutor.disabled = false;
+
+        btnDescargar.disabled =
+            tutor.value === "";
+    }
+
+});
+
+
+// CONTROL DEL CURSO TUTOR
+
+tutor.addEventListener("change", () => {
+
+    btnDescargar.disabled =
+
+        trimestre.value === "" ||
+
+        tutor.value === "";
+
+});
 
     btnDescargar.addEventListener("click", async function() {
         try {
@@ -596,7 +716,7 @@ didDrawCell: function(data) {
             if (!trimestreSeleccionado) { alert("Seleccione un trimestre."); return; }
 
             const rutaFirebase =
-                `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
+                `https://pruebamaria-80f86-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
 
             const response = await fetch(rutaFirebase);
             const cursos = await response.json();
