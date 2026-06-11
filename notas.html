@@ -18,60 +18,138 @@
             display: flex;
         }
 
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background: #0D47A1;
-            position: fixed;
-            color: white;
-            padding: 20px;
-            overflow-y: auto;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
+       /* SIDEBAR PROFESIONAL */
 
-        .sidebar h2 {
-            margin-bottom: 30px;
-            font-size: 18px;
-        }
+.sidebar{
 
-        .sidebar a {
-            display: block;
-            color: white;
-            text-decoration: none;
-            padding: 15px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            transition: 0.2s;
-        }
+    width:250px;
+    height:100vh;
 
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.1);
-        }
+    position:fixed;
+    top:0;
+    left:0;
 
-        .sidebar a.active {
-            background: white;
-            color: #0D47A1;
-            font-weight: bold;
-        }
+    background:
+    linear-gradient(
+        180deg,
+        #0D47A1,
+        #1565C0,
+        #1976D2
+    );
 
-        .sidebar button {
-            width: 100%;
-            margin-top: 50px;
-            background: #C62828;
-            padding: 15px;
-            border: none;
-            color: white;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: 0.2s;
-        }
+    color:white;
 
-        .sidebar button:hover {
-            background: #B71C1C;
-        }
+    padding:20px 15px;
+
+    box-shadow:
+    5px 0 20px rgba(0,0,0,0.15);
+
+    display:flex;
+    flex-direction:column;
+
+    z-index:100;
+}
+
+.profile{
+
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.profile img{
+
+    width:100px;
+    height:100px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:4px solid rgba(255,255,255,0.4);
+
+    margin-bottom:10px;
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,0.25);
+}
+
+.profile h2{
+
+    font-size:18px;
+    font-weight:600;
+}
+
+.profile p{
+
+    font-size:13px;
+    opacity:0.8;
+    margin-top:3px;
+}
+
+.menu{
+
+    flex:1;
+}
+
+.menu a{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:10px 12px;
+
+    margin-bottom:4px;
+
+    border-radius:12px;
+
+    transition:0.3s;
+
+    font-size:15px;
+
+    font-weight:500;
+}
+
+.menu a:hover{
+
+    background:rgba(255,255,255,0.15);
+
+    transform:translateX(5px);
+}
+
+#btnCerrarSesion{
+
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#C62828;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.3s;
+}
+
+#btnCerrarSesion:hover{
+
+    background:#E53935;
+
+    transform:translateY(-2px);
+}
 
         .container {
             margin-left: 250px;
@@ -763,18 +841,59 @@ input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
     
 <div class="sidebar">
 
-<h2 id="sidebarProfesor"></h2>
+    <!-- PERFIL -->
 
-<a href="panel.html">🏠 Inicio</a>
-<a href="asistencia.html">📋 Asistencia</a>
-<a href="notas.html" class="active">📝 Notas</a>
-<a href="#">📅 Horario</a>
-<a href="kardex.html">⚖️ Kardex Disciplinario</a>
+    <div class="profile">
 
-<button onclick="cerrarSesion()"
-style="width:100%; margin-top:50px; background:#C62828; padding:15px; border:none; color:white; border-radius:10px; cursor:pointer; font-size:16px;">
-🚪 Cerrar Sesión
-</button>
+        <img src="logo.png" alt="Logo">
+
+        <h2 id="sidebarProfesor"></h2>
+
+        <p>Profesor Académico</p>
+
+    </div>
+
+    <!-- MENÚ -->
+
+    <div class="menu">
+
+        <a href="panel.html">
+            🏠 <span>Inicio</span>
+        </a>
+
+        <a href="asistencia.html">
+            📋 <span>Asistencia</span>
+        </a>
+
+        <a href="notas.html"
+           style="
+             background:rgba(255,255,255,0.20);
+             font-weight:600;
+           ">
+            📝 <span>Notas</span>
+        </a>
+
+        <a href="#">
+            📅 <span>Horario</span>
+        </a>
+
+        <a href="kardex.html">
+            ⚖️ <span>Kardex</span>
+        </a>
+
+        <a href="descargas.html">
+            ⬇️ <span>Descarga</span>
+        </a>
+
+    </div>
+
+    <!-- BOTÓN -->
+
+    <button id="btnCerrarSesion">
+
+        🚪 Cerrar Sesión
+
+    </button>
 
 </div>
 
@@ -2566,6 +2685,13 @@ window.cerrarSesion = function() {
         window.location.href = 'index.html';
     }, 100);
 };
+
+document
+.getElementById("btnCerrarSesion")
+.addEventListener(
+    "click",
+    cerrarSesion
+);
 </script>
 
 <script>
