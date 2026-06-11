@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
@@ -137,7 +137,7 @@ async function cargarCursoTutor() {
     try {
 
         const url =
-            `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/TUTORIA.json`;
+            `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/TUTORIA.json`;
 
         const response = await fetch(url);
 
@@ -198,7 +198,7 @@ fechaHasta.value = hoy;
             cursoAsistencia.innerHTML = '<option value="">Seleccione Curso</option>';
 
             try {
-                const url = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
+                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
                 const response = await fetch(url);
                 const cursos = await response.json();
 
@@ -236,7 +236,7 @@ fechaHasta.value = hoy;
             }
 
             // Obtener lista de estudiantes del curso
-            const estudiantesUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const estudiantesUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respEstudiantes = await fetch(estudiantesUrl);
             const estudiantes = await respEstudiantes.json();
 
@@ -246,7 +246,7 @@ fechaHasta.value = hoy;
             }
 
             // Obtener historial de cambios del curso
-            const historialUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const historialUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respHistorial = await fetch(historialUrl);
             const historial = await respHistorial.json();
 
@@ -408,7 +408,7 @@ return filaObjeto;
 
             let materia = "";
             try {
-                const materiaUrl = `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
+                const materiaUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
                 const respMateria = await fetch(materiaUrl);
                 materia = await respMateria.json();
                 if (!materia || typeof materia !== "string") {
@@ -419,40 +419,30 @@ return filaObjeto;
                 materia = "";
             }
 
-           const doc = new window.jspdf.jsPDF({
+      const doc = new window.jspdf.jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4"
 });
-            doc.setFontSize(12);
-           const anchoPagina = doc.internal.pageSize.getWidth();
 
-            doc.setFontSize(12);
-            doc.setFont(undefined, "bold");
+doc.setFontSize(12);
 
-            doc.text(
-                `Asistencia - ${cursoSeleccionado}`,
-                14,
-                16
-            );
+const anchoPagina =
+    doc.internal.pageSize.getWidth();
 
-            doc.text(
-                `MATERIA: ${materia || "--"}`,
-                anchoPagina / 2,
-                16,
-                { align: "center" }
-            );
+doc.setFontSize(12);
+doc.setFont(undefined, "bold");
 
-            doc.text(
-                `PROFESOR: ${profesor}`,
-                anchoPagina - 14,
-                16,
-                { align: "right" }
-            );
+doc.autoTable({
 
-            doc.autoTable({
-                startY: 22,
-                margin: { left: 8, right: 8, top: 26, bottom: 8 },
+    startY: 22,
+
+    margin: {
+        left: 8,
+        right: 8,
+        top: 26,
+        bottom: 8
+    },
 
     head: [
         columnas.map(col => col.header)
@@ -464,119 +454,154 @@ return filaObjeto;
         )
     ),
 
-styles: {
-    fontSize: 7,
-    cellPadding: 1,
-    minCellHeight: 5,
-    halign: "center",
-    valign: "middle"
-},
+    styles: {
+        fontSize: 7,
+        cellPadding: 1,
+        minCellHeight: 5,
+        halign: "center",
+        valign: "middle"
+    },
 
     headStyles: {
-    fillColor: [13, 71, 161],
-    textColor: 255,
-    halign: "center",
-    valign: "middle",
-    minCellHeight: 14
-},
+        fillColor: [13, 71, 161],
+        textColor: 255,
+        halign: "center",
+        valign: "middle",
+        minCellHeight: 14
+    },
 
     columnStyles: {
-    0: {cellWidth: 8},
-    1: {cellWidth: 45,
-        overflow: "ellipsize"}
-},
+        0: {cellWidth: 8},
+        1: {
+            cellWidth: 45,
+            overflow: "ellipsize"
+        }
+    },
 
-   didParseCell: function(data) {
+    didParseCell: function(data) {
 
-    // ENCABEZADOS DE FECHA
-    if (
-        data.section === "head" &&
-        data.column.index >= 2
-    ) {
+        if (
+            data.section === "head" &&
+            data.column.index >= 2
+        ) {
 
-        data.cell.styles.minCellHeight = 14;
+            data.cell.styles.minCellHeight = 14;
+            data.cell.text = [];
+        }
 
-        // ELIMINA EL TEXTO QUE AUTOTABLE DIBUJA HORIZONTAL
-        data.cell.text = [];
-    }
+        if (data.section !== "body")
+            return;
 
-    // COLORES DE ASISTENCIA
-    if (data.section !== "body")
-        return;
+        const valor =
+            String(data.cell.raw || "")
+            .trim()
+            .toUpperCase();
 
-    const valor =
-        String(data.cell.raw || "")
-        .trim()
-        .toUpperCase();
+        if (valor === "F") {
 
-    // F = ROJO
-    if (valor === "F") {
+            data.cell.styles.fillColor =
+                [255,199,206];
 
-        data.cell.styles.fillColor =
-            [255, 199, 206];
+            data.cell.styles.textColor =
+                [156,0,6];
 
-        data.cell.styles.textColor =
-            [156, 0, 6];
+            data.cell.styles.fontStyle =
+                "bold";
+        }
 
-        data.cell.styles.fontStyle =
-            "bold";
-    }
+        if (valor === "FA") {
 
-    // FA = CELESTE
-    if (valor === "FA") {
+            data.cell.styles.fillColor =
+                [189,215,238];
 
-        data.cell.styles.fillColor =
-            [189, 215, 238];
+            data.cell.styles.textColor =
+                [0,70,140];
 
-        data.cell.styles.textColor =
-            [0, 70, 140];
+            data.cell.styles.fontStyle =
+                "bold";
+        }
 
-        data.cell.styles.fontStyle =
-            "bold";
-    }
+        if (valor === "L") {
 
-    // L = VERDE
-    if (valor === "L") {
+            data.cell.styles.fillColor =
+                [198,239,206];
 
-        data.cell.styles.fillColor =
-            [198, 239, 206];
+            data.cell.styles.textColor =
+                [0,97,0];
 
-        data.cell.styles.textColor =
-            [0, 97, 0];
+            data.cell.styles.fontStyle =
+                "bold";
+        }
+    },
 
-        data.cell.styles.fontStyle =
-            "bold";
-    }
-},
+    didDrawCell: function(data) {
 
-didDrawCell: function(data) {
+        if (
+            data.section === "head" &&
+            data.column.index >= 2
+        ) {
 
-    if (
-        data.section === "head" &&
-        data.column.index >= 2
-    ) {
+            const texto =
+                String(data.cell.raw);
 
-        const texto = String(data.cell.raw);
+            doc.saveGraphicsState();
 
-        doc.saveGraphicsState();
+            doc.text(
+                texto,
+                data.cell.x +
+                (data.cell.width / 2),
+                data.cell.y +
+                data.cell.height - 1,
+                {
+                    angle: 90
+                }
+            );
 
-      doc.text(
-    texto,
-    data.cell.x + (data.cell.width / 2),
-    data.cell.y + data.cell.height - 1,
-    {
-        angle: 90
-    }
-);
+            doc.restoreGraphicsState();
+        }
+    },
 
-        doc.restoreGraphicsState();
-    }
-},
+    didDrawPage: function() {
 
-    theme: "grid"
+        const ancho =
+            doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(12);
+        doc.setFont(undefined,"bold");
+
+        doc.text(
+            `Asistencia - ${cursoSeleccionado}`,
+            14,
+            16
+        );
+
+        doc.text(
+            `MATERIA: ${materia || "--"}`,
+            ancho / 2,
+            16,
+            {align:"center"}
+        );
+
+        doc.text(
+            `PROFESOR: ${profesor}`,
+            ancho - 14,
+            16,
+            {align:"right"}
+        );
+    },
+
+  horizontalPageBreak: true,
+
+horizontalPageBreakRepeat: [0,1],
+
+showHead: "everyPage",
+
+theme: "grid"
 });
 
-            doc.save(`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`);
+doc.save(
+`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`
+);
             alert("PDF descargado correctamente");
             modalAsistencia.style.display = "none";
         } catch (ex) {
@@ -638,7 +663,7 @@ btnDescargar.disabled = true;
 // VERIFICAR PERMISOS
 
 fetch(
-    `https://pruebamaria-80f86-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`
+    `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`
 )
 .then(r => r.json())
 .then(data => {
@@ -716,7 +741,7 @@ tutor.addEventListener("change", () => {
             if (!trimestreSeleccionado) { alert("Seleccione un trimestre."); return; }
 
             const rutaFirebase =
-                `https://pruebamaria-80f86-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
+                `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
 
             const response = await fetch(rutaFirebase);
             const cursos = await response.json();
