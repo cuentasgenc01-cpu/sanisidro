@@ -21,22 +21,31 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 .menu a:hover{background:rgba(255,255,255,.15)}
 #btnCerrarSesion{width:100%;padding:14px;border:none;border-radius:14px;background:#C62828;color:white;font-weight:bold;cursor:pointer}
 
-/* CAMBIOS EN EL CONTENEDOR PRINCIPAL PARA SOPORTAR UNA FILA ANCHA */
 .main{margin-left:250px;width:calc(100% - 250px);padding:40px}
-.contenedor{max-width:1000px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+.contenedor{max-width:1100px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 
-/* NUEVA ESTRUCTURA EN FILA */
-.fila-descarga {
-    display: flex;
+/* ESTRUCTURA EN GRID */
+#contenido.fila-descarga, #filaAsistencia.fila-descarga {
+    display: none; /* Se activa por JS con display: grid */
     align-items: center;
-    gap: 15px; /* Espacio entre los elementos */
-    flex-wrap: wrap; /* Por si la pantalla es muy pequeña, se adapta */
+    gap: 15px;
+    width: 100%;
 }
 
-/* Ajustes individuales para que queden alineados */
+/* 5 COLUMNAS PARA CONTENIDO (INCLUYE BOTÓN ANUAL) */
+#contenido.fila-descarga {
+    grid-template-columns: max-content 1fr 1fr max-content max-content;
+}
+
+/* 4 COLUMNAS PARA ASISTENCIA */
+#filaAsistencia.fila-descarga {
+    grid-template-columns: max-content 1fr 1fr max-content;
+}
+
+/* Ajustes individuales */
 .fila-descarga h1 {
     color: #0D47A1;
-    margin-bottom: 0; /* Quitamos el margen inferior */
+    margin-bottom: 0;
     font-size: 22px;
     white-space: nowrap; /* Evita que el título se parta en dos líneas */
 }
@@ -44,11 +53,17 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 .estado{font-weight:bold;margin-bottom:20px}
 .habilitado{color:green}.restringido{color:red}
 
-/* Removido el margin-top de select y button para que no se desalinien */
-select, button.descarga{padding:14px;border-radius:12px;height:48px;}
-select { flex: 1; min-width: 180px; }
-button.descarga{ border:none;background:#0D47A1;color:white;flex: 1; min-width: 200px; cursor: pointer;}
+select, button.descarga{padding:14px;border-radius:12px;height:48px; width: 100%;}
+select { min-width: 180px; }
+button.descarga{ border:none;background:#0D47A1;color:white; min-width: 200px; cursor: pointer; padding: 0 20px;}
 button.descarga:disabled{background:#999; cursor: not-allowed;}
+button#btnDescargarAnual:not(:disabled) {
+    background: #28a745;
+}
+
+button#btnDescargarAnual:not(:disabled):hover {
+    background: #218838;
+}
 
 /* Primera fila, columnas C en adelante: texto vertical hacia arriba */
 table tr:first-child th:nth-child(n+3),
@@ -71,12 +86,20 @@ table tr:first-child td:nth-child(n+3) {
 .acciones{display:flex;justify-content:flex-end;margin-top:20px}
 #btnProcesar{border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer}
 
+/* Responsividad para pantallas pequeñas */
+@media (max-width: 1150px) {
+    #contenido.fila-descarga, #filaAsistencia.fila-descarga {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+    }
+    .fila-descarga h1 { text-align: center; }
+}
 </style>
 </head>
 <body>
 <div class="sidebar">
 <div class="profile">
-<img src="logo.png" alt="Logo">
+<img src="logo.png" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2NjYyIvPjwvc3ZnPg=='">
 <h2 id="nombreProfesor"></h2>
 <p>Profesor Académico</p>
 </div>
@@ -97,8 +120,9 @@ table tr:first-child td:nth-child(n+3) {
 <div class="contenedor">
     <div id="estado" class="estado">Verificando permisos...</div>
 
+    <!-- EL GRID DE 5 COLUMNAS -->
     <div id="contenido" class="fila-descarga" style="display:none;">
-        <h1>📥 CENTRALIZADOR TRIMESTRAL</h1>
+        <h1>📥CENTRALIZADOR</h1>
         
         <select id="trimestre">
             <option value="">-- Seleccione Trimestre --</option>
@@ -107,12 +131,16 @@ table tr:first-child td:nth-child(n+3) {
             <option value="TERCERO">TERCERO</option>
         </select>
 
- <select id="TUTOR">
-    <option value="">-- Seleccione Su Curso Tutor --</option>
-</select>
+        <select id="TUTOR">
+            <option value="">-- Seleccione Su Curso Tutor --</option>
+        </select>
 
         <button class="descarga" id="btnDescargar" disabled>
-            ⬇ Descargar Centralizador
+            ⬇ Descargar Trimestre
+        </button>
+
+        <button class="descarga" id="btnDescargarAnual" disabled>
+            ⬇ Descargar Anual
         </button>
     </div>
 
@@ -130,51 +158,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const profesor = localStorage.getItem("profesor");
     document.getElementById("nombreProfesor").innerHTML = profesor || "Profesor";
 
-const tutorSelect = document.getElementById("TUTOR");
+    const tutorSelect = document.getElementById("TUTOR");
 
-async function cargarCursoTutor() {
+    async function cargarCursoTutor() {
+        try {
+            const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/TUTORIA.json`;
+            const response = await fetch(url);
+            const tutoria = await response.json();
 
-    try {
+            tutorSelect.innerHTML = '<option value="">-- Seleccione Su Curso Tutor --</option>';
 
-        const url =
-            `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/TUTORIA.json`;
+            if (!tutoria) return;
 
-        const response = await fetch(url);
-
-        const tutoria = await response.json();
-
-        tutorSelect.innerHTML =
-            '<option value="">-- Seleccione Su Curso Tutor --</option>';
-
-        if (!tutoria) return;
-
-        Object.keys(tutoria).forEach(curso => {
-
-            const option =
-                document.createElement("option");
-
-            option.value = curso;
-            option.textContent = curso;
-
-            tutorSelect.appendChild(option);
-
-        });
-
-     
-
-    } catch (error) {
-
-        console.error(
-            "Error cargando tutoría:",
-            error
-        );
-
+            Object.keys(tutoria).forEach(curso => {
+                const option = document.createElement("option");
+                option.value = curso;
+                option.textContent = curso;
+                tutorSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error cargando tutoría:", error);
+        }
     }
 
-}
-
-cargarCursoTutor();
-
+    cargarCursoTutor();
 
     document.getElementById("btnCerrarSesion").addEventListener("click", function() {
         localStorage.removeItem("profesor");
@@ -189,10 +196,9 @@ cargarCursoTutor();
 
     document.addEventListener("click", async (e) => {
         if (e.target && e.target.id === "btnAsistencia") {
-            // Precargar fechas actuales cada vez que abre el modal
             const hoy = new Date().toISOString().split("T")[0];
-fechaDesde.value = hoy;
-fechaHasta.value = hoy;
+            fechaDesde.value = hoy;
+            fechaHasta.value = hoy;
 
             modalAsistencia.style.display = "flex";
             cursoAsistencia.innerHTML = '<option value="">Seleccione Curso</option>';
@@ -235,7 +241,6 @@ fechaHasta.value = hoy;
                 return;
             }
 
-            // Obtener lista de estudiantes del curso
             const estudiantesUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respEstudiantes = await fetch(estudiantesUrl);
             const estudiantes = await respEstudiantes.json();
@@ -245,165 +250,107 @@ fechaHasta.value = hoy;
                 return;
             }
 
-            // Obtener historial de cambios del curso
             const historialUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
             const respHistorial = await fetch(historialUrl);
             const historial = await respHistorial.json();
 
-            // Filtrar registros por profesor y fechas
-            
+            const fechasSet = new Set();
 
-            // Construir datos para Excel
-    // Obtener únicamente las fechas que existen en Firebase
-const fechasSet = new Set();
+            for (const idRegistro in historial) {
+                const registro = historial[idRegistro];
+                const profesorRegistro = String(registro.profesor || "").trim();
 
-for (const idRegistro in historial) {
+                if (profesorRegistro !== profesor) {
+                    continue;
+                }
 
-    const registro = historial[idRegistro];
+                const fechaRegistro = convertirFecha(registro.fecha_asis || "");
 
-    const profesorRegistro =
-        String(registro.profesor || "").trim();
-
-    if (profesorRegistro !== profesor) {
-        continue;
-    }
-
-    const fechaRegistro = convertirFecha(
-        registro.fecha_asis || ""
-    );
-
-    if (
-        fechaRegistro >= desde &&
-        fechaRegistro <= hasta
-    ) {
-        fechasSet.add(fechaRegistro);
-    }
-}
-
-const fechas = [...fechasSet].sort();
-
-const datos = [];
-datos.push(["N°", "ESTUDIANTE", ...fechas]);
-
-let contador = 1;
-
-const estudiantesOrdenados = Object.keys(estudiantes)
-    .sort((a, b) => Number(a) - Number(b));
-
-for (const idEstudiante of estudiantesOrdenados) {
-
-    const nombreEstudiante =
-        (estudiantes[idEstudiante] || "").trim();
-
-    if (!nombreEstudiante) continue;
-
-    const fila = [
-        contador,
-        nombreEstudiante
-    ];
-
-    for (const fecha of fechas) {
-
-        let estado = "A";
-
-        for (const idRegistro in historial) {
-
-            const registro = historial[idRegistro];
-
-            const profesorRegistro =
-                String(registro.profesor || "").trim();
-
-            if (profesorRegistro !== profesor) {
-                continue;
+                if (fechaRegistro >= desde && fechaRegistro <= hasta) {
+                    fechasSet.add(fechaRegistro);
+                }
             }
 
-            const fechaRegistro = convertirFecha(
-                registro.fecha_asis || ""
-            );
+            const fechas = [...fechasSet].sort();
 
-            if (fechaRegistro !== fecha) {
-                continue;
+            const datos = [];
+            datos.push(["N°", "ESTUDIANTE", ...fechas]);
+
+            let contador = 1;
+
+            const estudiantesOrdenados = Object.keys(estudiantes)
+                .sort((a, b) => Number(a) - Number(b));
+
+            for (const idEstudiante of estudiantesOrdenados) {
+                const nombreEstudiante = (estudiantes[idEstudiante] || "").trim();
+
+                if (!nombreEstudiante) continue;
+
+                const fila = [contador, nombreEstudiante];
+
+                for (const fecha of fechas) {
+                    let estado = "A";
+
+                    for (const idRegistro in historial) {
+                        const registro = historial[idRegistro];
+                        const profesorRegistro = String(registro.profesor || "").trim();
+
+                        if (profesorRegistro !== profesor) continue;
+
+                        const fechaRegistro = convertirFecha(registro.fecha_asis || "");
+                        if (fechaRegistro !== fecha) continue;
+
+                        const cambios = registro.cambios || {};
+
+                        if (Object.prototype.hasOwnProperty.call(changes, nombreEstudiante)) {
+                            const valorOriginal = String(cambios[nombreEstudiante] || "").trim().toUpperCase();
+                            let estadoFinal = valorOriginal;
+
+                            if (valorOriginal.includes(" A ")) {
+                                estadoFinal = valorOriginal.split(" A ").pop().trim();
+                            }
+
+                            if (["A", "F", "FA", "L"].includes(estadoFinal)) {
+                                estado = estadoFinal;
+                            }
+                            break;
+                        }
+                    }
+
+                    fila.push(estado);
+                }
+
+                datos.push(fila);
+                contador++;
             }
 
-            const cambios = registro.cambios || {};
-
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    cambios,
-                    nombreEstudiante
-                )
-            ) {
-
-               const valorOriginal = String(
-    cambios[nombreEstudiante] || ""
-).trim().toUpperCase();
-
-let estadoFinal = valorOriginal;
-
-// Obtiene lo que está después del último "A"
-if (valorOriginal.includes(" A ")) {
-
-    estadoFinal =
-        valorOriginal.split(" A ").pop().trim();
-}
-
-if (
-    ["A", "F", "FA", "L"].includes(estadoFinal)
-) {
-    estado = estadoFinal;
-}
-
-                break;
-            }
-        }
-
-        fila.push(estado);
-    }
-
-    datos.push(fila);
-    contador++;
-}
-
-            // Crear PDF
-       const columnas = [
-    { header: "N°", dataKey: "numero" },
-    { header: "ESTUDIANTE", dataKey: "estudiante" },
-
-    ...fechas.map((fecha, index) => ({
-        header: fecha.split("-").reverse().slice(0,2).join("/"),
-        dataKey: `d${index}`
-    })),
-
-    { header: "TOTAL F", dataKey: "totalF" }
-];
+            const columnas = [
+                { header: "N°", dataKey: "numero" },
+                { header: "ESTUDIANTE", dataKey: "estudiante" },
+                ...fechas.map((fecha, index) => ({
+                    header: fecha.split("-").reverse().slice(0,2).join("/"),
+                    dataKey: `d${index}`
+                })),
+                { header: "TOTAL F", dataKey: "totalF" }
+            ];
 
             const filasPdf = datos.slice(1).map((fila) => {
-              const nombreCorto =
-    fila[1].length > 25
-        ? fila[1].substring(0, 25) + "..."
-        : fila[1];
+                const filaObjeto = {
+                    numero: fila[0],
+                    estudiante: fila[1]
+                };
 
-const filaObjeto = {
-    numero: fila[0],
-    estudiante: fila[1]
-};
+                let totalF = 0;
+                for (let i = 0; i < fechas.length; i++) {
+                    const valor = fila[2 + i];
+                    filaObjeto[`d${i}`] = valor;
+                    if (valor === "F") {
+                        totalF++;
+                    }
+                }
 
-let totalF = 0;
-
-for (let i = 0; i < fechas.length; i++) {
-
-    const valor = fila[2 + i];
-
-    filaObjeto[`d${i}`] = valor;
-
-    if (valor === "F") {
-        totalF++;
-    }
-}
-
-filaObjeto.totalF = totalF;
-
-return filaObjeto;
+                filaObjeto.totalF = totalF;
+                return filaObjeto;
             });
 
             let materia = "";
@@ -419,189 +366,77 @@ return filaObjeto;
                 materia = "";
             }
 
-      const doc = new window.jspdf.jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4"
-});
+            const doc = new window.jspdf.jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4"
+            });
 
-doc.setFontSize(12);
+            doc.setFontSize(12);
+            const anchoPagina = doc.internal.pageSize.getWidth();
 
-const anchoPagina =
-    doc.internal.pageSize.getWidth();
+            doc.setFontSize(12);
+            doc.setFont(undefined, "bold");
 
-doc.setFontSize(12);
-doc.setFont(undefined, "bold");
+            doc.autoTable({
+                startY: 22,
+                margin: { left: 8, right: 8, top: 26, bottom: 8 },
+                head: [ columnas.map(col => col.header) ],
+                body: filasPdf.map(row => columnas.map(col => row[col.dataKey] || "")),
+                styles: { fontSize: 7, cellPadding: 1, minCellHeight: 5, halign: "center", valign: "middle" },
+                headStyles: { fillColor: [13, 71, 161], textColor: 255, halign: "center", valign: "middle", minCellHeight: 14 },
+                columnStyles: {
+                    0: {cellWidth: 8},
+                    1: { cellWidth: 45, overflow: "ellipsize" }
+                },
+                didParseCell: function(data) {
+                    if (data.section === "head" && data.column.index >= 2) {
+                        data.cell.styles.minCellHeight = 14;
+                        data.cell.text = [];
+                    }
 
-doc.autoTable({
+                    if (data.section !== "body") return;
 
-    startY: 22,
+                    const valor = String(data.cell.raw || "").trim().toUpperCase();
+                    if (valor === "F") {
+                        data.cell.styles.fillColor = [255,199,206];
+                        data.cell.styles.textColor = [156,0,6];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                    if (valor === "FA") {
+                        data.cell.styles.fillColor = [189,215,238];
+                        data.cell.styles.textColor = [0,70,140];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                    if (valor === "L") {
+                        data.cell.styles.fillColor = [198,239,206];
+                        data.cell.styles.textColor = [0,97,0];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                },
+                didDrawCell: function(data) {
+                    if (data.section === "head" && data.column.index >= 2) {
+                        const texto = String(data.cell.raw);
+                        doc.saveGraphicsState();
+                        doc.text( texto, data.cell.x + (data.cell.width / 2), data.cell.y + data.cell.height - 1, { angle: 90 });
+                        doc.restoreGraphicsState();
+                    }
+                },
+                didDrawPage: function() {
+                    const ancho = doc.internal.pageSize.getWidth();
+                    doc.setFontSize(12);
+                    doc.setFont(undefined,"bold");
+                    doc.text(`Asistencia - ${cursoSeleccionado}`, 14, 16);
+                    doc.text(`MATERIA: ${materia || "--"}`, ancho / 2, 16, {align:"center"});
+                    doc.text(`PROFESOR: ${profesor}`, ancho - 14, 16, {align:"right"});
+                },
+                horizontalPageBreak: true,
+                horizontalPageBreakRepeat: [0,1],
+                showHead: "everyPage",
+                theme: "grid"
+            });
 
-    margin: {
-        left: 8,
-        right: 8,
-        top: 26,
-        bottom: 8
-    },
-
-    head: [
-        columnas.map(col => col.header)
-    ],
-
-    body: filasPdf.map(row =>
-        columnas.map(col =>
-            row[col.dataKey] || ""
-        )
-    ),
-
-    styles: {
-        fontSize: 7,
-        cellPadding: 1,
-        minCellHeight: 5,
-        halign: "center",
-        valign: "middle"
-    },
-
-    headStyles: {
-        fillColor: [13, 71, 161],
-        textColor: 255,
-        halign: "center",
-        valign: "middle",
-        minCellHeight: 14
-    },
-
-    columnStyles: {
-        0: {cellWidth: 8},
-        1: {
-            cellWidth: 45,
-            overflow: "ellipsize"
-        }
-    },
-
-    didParseCell: function(data) {
-
-        if (
-            data.section === "head" &&
-            data.column.index >= 2
-        ) {
-
-            data.cell.styles.minCellHeight = 14;
-            data.cell.text = [];
-        }
-
-        if (data.section !== "body")
-            return;
-
-        const valor =
-            String(data.cell.raw || "")
-            .trim()
-            .toUpperCase();
-
-        if (valor === "F") {
-
-            data.cell.styles.fillColor =
-                [255,199,206];
-
-            data.cell.styles.textColor =
-                [156,0,6];
-
-            data.cell.styles.fontStyle =
-                "bold";
-        }
-
-        if (valor === "FA") {
-
-            data.cell.styles.fillColor =
-                [189,215,238];
-
-            data.cell.styles.textColor =
-                [0,70,140];
-
-            data.cell.styles.fontStyle =
-                "bold";
-        }
-
-        if (valor === "L") {
-
-            data.cell.styles.fillColor =
-                [198,239,206];
-
-            data.cell.styles.textColor =
-                [0,97,0];
-
-            data.cell.styles.fontStyle =
-                "bold";
-        }
-    },
-
-    didDrawCell: function(data) {
-
-        if (
-            data.section === "head" &&
-            data.column.index >= 2
-        ) {
-
-            const texto =
-                String(data.cell.raw);
-
-            doc.saveGraphicsState();
-
-            doc.text(
-                texto,
-                data.cell.x +
-                (data.cell.width / 2),
-                data.cell.y +
-                data.cell.height - 1,
-                {
-                    angle: 90
-                }
-            );
-
-            doc.restoreGraphicsState();
-        }
-    },
-
-    didDrawPage: function() {
-
-        const ancho =
-            doc.internal.pageSize.getWidth();
-
-        doc.setFontSize(12);
-        doc.setFont(undefined,"bold");
-
-        doc.text(
-            `Asistencia - ${cursoSeleccionado}`,
-            14,
-            16
-        );
-
-        doc.text(
-            `MATERIA: ${materia || "--"}`,
-            ancho / 2,
-            16,
-            {align:"center"}
-        );
-
-        doc.text(
-            `PROFESOR: ${profesor}`,
-            ancho - 14,
-            16,
-            {align:"right"}
-        );
-    },
-
-  horizontalPageBreak: true,
-
-horizontalPageBreakRepeat: [0,1],
-
-showHead: "everyPage",
-
-theme: "grid"
-});
-
-doc.save(
-`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`
-);
+            doc.save(`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`);
             alert("PDF descargado correctamente");
             modalAsistencia.style.display = "none";
         } catch (ex) {
@@ -610,170 +445,738 @@ doc.save(
         }
     });
 
-    function generarFechas(desde, hasta) {
-        const fechas = [];
-        const d = new Date(desde);
-        const h = new Date(hasta);
-
-        while (d <= h) {
-            fechas.push(d.toISOString().split("T")[0]);
-            d.setDate(d.getDate() + 1);
-        }
-
-        return fechas;
-    }
-
-
     function convertirFecha(fechaBoliviana) {
+        if (!fechaBoliviana) return "";
+        const partes = fechaBoliviana.split("-");
+        if (partes.length !== 3) return "";
+        const dia = partes[0].padStart(2, "0");
+        const mes = partes[1].padStart(2, "0");
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
+    }
 
-    if (!fechaBoliviana) return "";
-
-    const partes = fechaBoliviana.split("-");
-
-    if (partes.length !== 3) return "";
-
-    const dia = partes[0].padStart(2, "0");
-    const mes = partes[1].padStart(2, "0");
-    const anio = partes[2];
-
-    return `${anio}-${mes}-${dia}`;
-}
     const estado = document.getElementById("estado");
-const contenido = document.getElementById("contenido");
+    const contenido = document.getElementById("contenido");
+    const trimestre = document.getElementById("trimestre");
+    const tutor = document.getElementById("TUTOR");
+    const btnDescargar = document.getElementById("btnDescargar");
+    const btnDescargarAnual = document.getElementById("btnDescargarAnual");
+    const filaAsistencia = document.getElementById("filaAsistencia");
 
-const trimestre =
-    document.getElementById("trimestre");
+    // ESTADO INICIAL
+    tutor.disabled = true;
+    btnDescargar.disabled = true;
+    btnDescargarAnual.disabled = true;
 
-const tutor =
-    document.getElementById("TUTOR");
-
-const btnDescargar =
-    document.getElementById("btnDescargar");
-
-const filaAsistencia =
-    document.getElementById("filaAsistencia");
-
-
-// ESTADO INICIAL
-
-tutor.disabled = true;
-btnDescargar.disabled = true;
-
-
-// VERIFICAR PERMISOS
-
-fetch(
-    `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`
-)
-.then(r => r.json())
-.then(data => {
-
-    if (data === true) {
-
-        estado.innerHTML =
-            "✅ Descarga habilitada";
-
-        estado.className =
-            "estado habilitado";
-
-        contenido.style.display =
-            "flex";
-
-        filaAsistencia.style.display =
-            "flex";
-
-    } else {
-
-        estado.innerHTML =
-            "⛔ Acceso restringido";
-
-        estado.className =
-            "estado restringido";
+    function calcPromedioInterno(notaRoot, key) {
+        const nodo = notaRoot[key];
+        if (nodo === undefined || nodo === null) return null;
+        if (typeof nodo === 'number') return nodo;
+        if (typeof nodo === 'string') {
+            const v = parseFloat(nodo);
+            return isNaN(v) ? null : v;
+        }
+        if (typeof nodo === 'object') {
+            let s = 0, c = 0;
+            for (const k in nodo) {
+                const val = parseFloat(nodo[k]);
+                if (!isNaN(val)) { s += val; c++; }
+            }
+            return c > 0 ? (s / c) : null;
+        }
+        return null;
     }
 
-})
-.catch(() => {
-
-    estado.innerHTML =
-        "⛔ Error al verificar permisos";
-
-});
-
-
-// CONTROL DEL TRIMESTRE
-
-trimestre.addEventListener("change", () => {
-
-    if (trimestre.value === "") {
-
-        tutor.value = "";
-
-        tutor.disabled = true;
-
-        btnDescargar.disabled = true;
-
-    } else {
-
-        tutor.disabled = false;
-
-        btnDescargar.disabled =
-            tutor.value === "";
+    // FUNCIÓN AUXILIAR DE SUMA
+    function calcSumaInterna(notaRoot, key) {
+        const nodo = notaRoot[key];
+        if (nodo === undefined || nodo === null) return null;
+        if (typeof nodo === 'number') return nodo;
+        if (typeof nodo === 'string') {
+            const v = parseFloat(nodo);
+            return isNaN(v) ? null : v;
+        }
+        if (typeof nodo === 'object') {
+            let s = 0, ex = false;
+            for (const k in nodo) {
+                const val = parseFloat(nodo[k]);
+                if (!isNaN(val)) { s += val; ex = true; }
+            }
+            return ex ? s : null;
+        }
+        return null;
     }
 
-});
+    // FUNCIÓN GENERAL PARA AMBOS BOTONES
+    function actualizarBotones() {
+        const habilitar = trimestre.value.trim() !== "" && tutor.value.trim() !== "";
+        btnDescargar.disabled = !habilitar;
+        btnDescargarAnual.disabled = !habilitar;
+    }
 
+    // VERIFICAR PERMISOS
+    fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`)
+    .then(r => r.json())
+    .then(data => {
+        if (data === true) {
+            estado.innerHTML = "✅ Descarga habilitada";
+            estado.className = "estado habilitado";
+            contenido.style.display = "grid";
+            filaAsistencia.style.display = "grid";
+        } else {
+            estado.innerHTML = "⛔ Acceso restringido";
+            estado.className = "estado restringido";
+        }
+    })
+    .catch(() => {
+        estado.innerHTML = "⛔ Error al verificar permisos";
+    });
 
-// CONTROL DEL CURSO TUTOR
+    trimestre.addEventListener("change", () => {
+        if (trimestre.value === "") {
+            tutor.value = "";
+            tutor.disabled = true;
+        } else {
+            tutor.disabled = false;
+        }
+        actualizarBotones();
+    });
 
-tutor.addEventListener("change", () => {
+    tutor.addEventListener("change", () => {
+        actualizarBotones();
+    });
 
-    btnDescargar.disabled =
+    actualizarBotones();
 
-        trimestre.value === "" ||
-
-        tutor.value === "";
-
-});
-
+    // ==========================================
+    // LOGICA DESCARGA TRIMESTRAL (ORIGINAL)
+    // ==========================================
     btnDescargar.addEventListener("click", async function() {
         try {
             const trimestreSeleccionado = trimestre.value;
-            if (!trimestreSeleccionado) { alert("Seleccione un trimestre."); return; }
+            const cursoSeleccionado = tutor.value;
 
-            const rutaFirebase =
-                `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(profesor)}/${encodeURIComponent(trimestreSeleccionado)}.json`;
-
-            const response = await fetch(rutaFirebase);
-            const cursos = await response.json();
-
-            if (!cursos) { alert("No hay cursos registrados."); return; }
-
-            const wb = XLSX.utils.book_new();
-
-            for (const curso in cursos) {
-                const estudiantes = cursos[curso];
-                const datos = [["ESTUDIANTE", "NOTA_TRIMESTRAL"]];
-
-                for (const nombreEstudiante in estudiantes) {
-                    const datosEstudiante = estudiantes[nombreEstudiante];
-                    const nota = datosEstudiante?.NOTA_TRIMESTRAL || "";
-                    datos.push([nombreEstudiante, nota]);
-                }
-
-                const ws = XLSX.utils.aoa_to_sheet(datos);
-                XLSX.utils.book_append_sheet(wb, ws, curso.substring(0, 31));
+            if (!trimestreSeleccionado || !cursoSeleccionado) { 
+                alert("Seleccione un trimestre y curso."); 
+                return; 
             }
 
-            const nombreSeguro = (profesor || "Profesor").replace(/[\\/:*?"<>|]/g, "-");
-            const archivo = `${nombreSeguro}_${trimestreSeleccionado}.xlsx`;
+            btnDescargar.disabled = true;
+            btnDescargar.innerText = "⏳ Generando...";
 
-            XLSX.writeFile(wb, archivo);
-            alert("Excel guardado correctamente.");
-        }
-        catch (ex) {
-            alert("Error al exportar: " + ex.message);
+            const respEst = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`);
+            const estudiantesData = await respEst.json();
+
+            if (!estudiantesData || Object.keys(estudiantesData).length === 0) {
+                alert("No hay estudiantes en este curso.");
+                btnDescargar.innerText = "⬇ Descargar Trimestre";
+                btnDescargar.disabled = false;
+                return;
+            }
+
+            const listaEstudiantes = [];
+            if (Array.isArray(estudiantesData)) {
+                estudiantesData.forEach((val, index) => {
+                    if (val) listaEstudiantes.push(String(val).includes(":") ? String(val) : `${index}:${val}`);
+                });
+            } else {
+                for (const key in estudiantesData) {
+                    const val = estudiantesData[key];
+                    if (key.includes(":")) listaEstudiantes.push(key);
+                    else listaEstudiantes.push(`${key}:${val}`);
+                }
+            }
+
+            const estudiantesOrdenados = listaEstudiantes.sort((a, b) => {
+                const numA = parseInt(a.split(":")[0]) || 9999;
+                const numB = parseInt(b.split(":")[0]) || 9999;
+                return numA - numB;
+            });
+
+            const respProf = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES.json`);
+            const todosProfes = await respProf.json();
+            const profesoresCurso = [];
+
+            if (todosProfes) {
+                for (const nomProf in todosProfes) {
+                    const profUpp = String(nomProf).toUpperCase();
+                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
+                        const materia = pData.CURSO[cursoSeleccionado];
+                        const matUpp = String(materia).toUpperCase();
+                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
+                }
+            }
+
+            if (profesoresCurso.length === 0) {
+                alert("No se encontraron profesores asignados a este curso.");
+                btnDescargar.innerText = "⬇ Descargar Trimestre";
+                btnDescargar.disabled = false;
+                return;
+            }
+
+            const cacheNotas = {};
+            for (const p of profesoresCurso) {
+                const rNota = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${encodeURIComponent(trimestreSeleccionado)}/${encodeURIComponent(cursoSeleccionado)}.json`);
+                const nData = await rNota.json();
+                if (nData) cacheNotas[p.nombre] = nData;
+            }
+
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet("REGISTRO");
+
+            ws.pageSetup.orientation = 'portrait';
+            ws.pageSetup.fitToPage = true;
+            ws.pageSetup.fitToWidth = 1;
+            ws.pageSetup.fitToHeight = 1; 
+            ws.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
+
+            ws.getCell('C1').value = "CURSO:";
+            ws.getCell('D1').value = cursoSeleccionado;
+            ws.getCell('G1').value = "TRIMESTRE:";
+            ws.getCell('J1').value = trimestreSeleccionado;
+            ws.getRow(1).font = { bold: true };
+
+            ws.mergeCells('B3:B4');
+            const cellNombres = ws.getCell('B3');
+            cellNombres.value = "APELLIDO Y NOMBRE";
+            cellNombres.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellNombres.font = { bold: true, size: 12 };
+
+            ws.mergeCells('A3:A4');
+            const cellNum = ws.getCell('A3');
+            cellNum.value = "N°";
+            cellNum.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellNum.font = { bold: true };
+
+            let col = 3;
+            profesoresCurso.forEach(p => {
+                const cellProf = ws.getCell(3, col);
+                cellProf.value = p.nombre.toUpperCase();
+                cellProf.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+                cellProf.font = { bold: true };
+
+                const cellMat = ws.getCell(4, col);
+                cellMat.value = p.materia.toUpperCase();
+                cellMat.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+                cellMat.font = { bold: true };
+
+                ws.getColumn(col).width = 4;
+                col++;
+            });
+
+            const colPromedio = col;
+            ws.mergeCells(3, colPromedio, 4, colPromedio);
+            const cellPromHeader = ws.getCell(3, colPromedio);
+            cellPromHeader.value = "PROMEDIO";
+            cellPromHeader.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+            cellPromHeader.font = { bold: true };
+            
+            // SE AJUSTA EL ANCHO DE LA COLUMNA PROMEDIO A 6 COMO SE SOLICITÓ
+            ws.getColumn(colPromedio).width = 6;
+            ws.getRow(4).height = 120;
+
+            let fila = 5;
+            let numero = 1;
+            const listaCeldasPromedio = [];
+
+            for (let i = 0; i < estudiantesOrdenados.length; i++) {
+                const estudianteItem = estudiantesOrdenados[i];
+                const partes = estudianteItem.split(":");
+                const nombreEstudiante = (partes.length >= 2 ? partes[1] : estudianteItem).trim().toUpperCase();
+
+                ws.getCell(fila, 1).value = numero;
+                ws.getCell(fila, 2).value = nombreEstudiante;
+                ws.getRow(fila).height = 12;
+
+                let colNotas = 3;
+                let sumaNotasEstudiante = 0;
+                let cantidadMateriasValidas = 0;
+
+                profesoresCurso.forEach((p) => {
+                    let notaFinal = null;
+                    if (cacheNotas[p.nombre]) {
+                        const cursoDoc = cacheNotas[p.nombre];
+                        let notaRoot = cursoDoc[nombreEstudiante];
+                        
+                        if (!notaRoot) {
+                            for (const k in cursoDoc) {
+                                if (k.trim().toUpperCase() === nombreEstudiante) {
+                                    notaRoot = cursoDoc[k];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (notaRoot) {
+                            const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
+                            if (nt !== null) {
+                                notaFinal = nt;
+                            } else {
+                                const ser = calcPromedioInterno(notaRoot, "SER");
+                                const sab = calcPromedioInterno(notaRoot, "SABER");
+                                const hac = calcPromedioInterno(notaRoot, "HACER");
+                                const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+                                if (ser !== null && sab !== null && hac !== null && aut !== null) {
+                                    const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
+                                    notaFinal = ser + sab + hac + aut + ext;
+                                }
+                            }
+                        }
+                    }
+
+                    if (notaFinal !== null && notaFinal > 0) {
+                        const valorRedondeado = Math.round(notaFinal);
+                        const cellNota = ws.getCell(fila, colNotas);
+                        cellNota.value = valorRedondeado;
+
+                        sumaNotasEstudiante += valorRedondeado;
+                        cantidadMateriasValidas++;
+
+                        if (valorRedondeado < 30) {
+                            cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9370DB' } };
+                            cellNota.font = { color: { argb: 'FFFFFFFF' } };
+                        } else if (valorRedondeado < 51) {
+                            cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+                            cellNota.font = { color: { argb: 'FFFFFFFF' } };
+                        }
+                    }
+                    colNotas++;
+                });
+
+                if (cantidadMateriasValidas === profesoresCurso.length && profesoresCurso.length > 0) {
+                    const promedioGral = sumaNotasEstudiante / cantidadMateriasValidas;
+                    const promVal = Math.round(promedioGral * 100) / 100;
+                    
+                    const cellProm = ws.getCell(fila, colPromedio);
+                    cellProm.value = promVal;
+                    cellProm.font = { bold: true };
+                    if (promVal < 51) cellProm.font = { bold: true, color: { argb: 'FFFF0000' } };
+                    
+                    listaCeldasPromedio.push({ cell: cellProm, value: promVal });
+                } else {
+                    const cellNombre = ws.getCell(fila, 2);
+                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo brillante
+                }
+
+                fila++;
+                numero++;
+            }
+
+            listaCeldasPromedio.sort((a, b) => b.value - a.value);
+            const mejores3 = listaCeldasPromedio.slice(0, 3);
+            mejores3.forEach(item => {
+                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } };
+                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            });
+
+            const borderOpts = { style: 'thin', color: { argb: 'FF000000' } };
+            for (let r = 3; r < fila; r++) {
+                for (let c = 1; c <= colPromedio; c++) {
+                    const celdaFinal = ws.getCell(r, c);
+                    celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
+                    if (c > 2 && r > 4) celdaFinal.alignment = { horizontal: 'center', vertical: 'middle' };
+                }
+            }
+
+            ws.getColumn(1).width = 6;
+            ws.getColumn(2).width = 35;
+
+            const buffer = await wb.xlsx.writeBuffer();
+            const nombreArchivo = `${trimestreSeleccionado}_${cursoSeleccionado}.xlsx`;
+            saveAs(new Blob([buffer]), nombreArchivo);
+            
+            alert("Excel generado correctamente. Promedios incompletos o en cero se dejaron en blanco.");
+
+        } catch (ex) {
+            console.error(ex);
+            alert("Error al exportar a Excel: " + ex.message);
+        } finally {
+            btnDescargar.innerText = "⬇ Descargar Trimestre";
+            btnDescargar.disabled = false;
         }
     });
+
+    // ==========================================
+    // NUEVA LOGICA: DESCARGA ANUAL
+    // ==========================================
+    btnDescargarAnual.addEventListener("click", async () => {
+        try {
+            const cursoSeleccionado = tutor.value;
+            const trimestreSeleccionado = trimestre.value; // Capturar el trimestre seleccionado
+
+            if (!cursoSeleccionado) { 
+                alert("Seleccione un curso."); 
+                return; 
+            }
+
+            btnDescargarAnual.disabled = true;
+            btnDescargarAnual.innerText = "⏳ Generando...";
+
+            // 1. ESTUDIANTES
+            const respEst = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`);
+            const estudiantesData = await respEst.json();
+
+            if (!estudiantesData || Object.keys(estudiantesData).length === 0) {
+                alert("No hay estudiantes en este curso.");
+                btnDescargarAnual.innerText = "⬇ Descargar Anual";
+                btnDescargarAnual.disabled = false;
+                return;
+            }
+
+            const listaEstudiantes = [];
+            if (Array.isArray(estudiantesData)) {
+                estudiantesData.forEach((val, index) => {
+                    if (val) listaEstudiantes.push(String(val).includes(":") ? String(val) : `${index}:${val}`);
+                });
+            } else {
+                for (const key in estudiantesData) {
+                    const val = estudiantesData[key];
+                    if (key.includes(":")) listaEstudiantes.push(key);
+                    else listaEstudiantes.push(`${key}:${val}`);
+                }
+            }
+
+            const estudiantesOrdenados = listaEstudiantes.sort((a, b) => {
+                const numA = parseInt(a.split(":")[0]) || 9999;
+                const numB = parseInt(b.split(":")[0]) || 9999;
+                return numA - numB;
+            });
+
+            // 2. PROFESORES
+            const respProf = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES.json`);
+            const todosProfes = await respProf.json();
+            const profesoresCurso = [];
+
+            if (todosProfes) {
+                for (const nomProf in todosProfes) {
+                    const profUpp = String(nomProf).toUpperCase();
+                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
+                        const materia = pData.CURSO[cursoSeleccionado];
+                        const matUpp = String(materia).toUpperCase();
+                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
+                }
+            }
+
+            if (profesoresCurso.length === 0) {
+                alert("No se encontraron profesores asignados a este curso.");
+                btnDescargarAnual.innerText = "⬇ Descargar Anual";
+                btnDescargarAnual.disabled = false;
+                return;
+            }
+
+            // 3. CARGAR NOTAS (LOS 3 TRIMESTRES)
+            const cacheNotasAnual = {};
+            const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
+
+            for (const p of profesoresCurso) {
+                cacheNotasAnual[p.nombre] = {};
+                for (const trim of trimestres) {
+                    const rNota = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`);
+                    const nData = await rNota.json();
+                    cacheNotasAnual[p.nombre][trim] = nData || null;
+                }
+            }
+
+            // EXCEL CONFIG
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet("ANUAL");
+            
+            // Landscape por la cantidad de columnas
+            ws.pageSetup.orientation = 'landscape';
+            ws.pageSetup.fitToPage = true;
+            ws.pageSetup.fitToWidth = 1;
+            ws.pageSetup.fitToHeight = 0; 
+            ws.pageSetup.margins = { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 };
+
+            ws.getCell('C1').value = "CURSO:";
+            ws.getCell('D1').value = cursoSeleccionado;
+            ws.getCell('G1').value = "REPORTE:";
+            ws.getCell('J1').value = "CENTRALIZADOR ANUAL";
+            ws.getRow(1).font = { bold: true };
+
+            ws.mergeCells('B3:B5');
+            const cellNombres = ws.getCell('B3');
+            cellNombres.value = "APELLIDO Y NOMBRE";
+            cellNombres.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellNombres.font = { bold: true, size: 10 };
+
+            ws.mergeCells('A3:A5');
+            const cellNum = ws.getCell('A3');
+            cellNum.value = "N°";
+            cellNum.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellNum.font = { bold: true, size: 10 };
+
+            let col = 3;
+            // Paleta de colores pasteles para diferenciar las materias
+            const headerColors = [
+                'FFB3E5FC', 'FFC8E6C9', 'FFFFE0B2', 'FFE1BEE7',
+                'FFFFCCBC', 'FFD7CCC8', 'FFCFD8DC', 'FFF0F4C3',
+                'FFB2DFDB', 'FFFFD54F', 'FFD1C4E9', 'FFC5CAE9'
+            ];
+
+            // 4. CREAR CABECERAS PARA CADA MATERIA/PROFESOR
+            profesoresCurso.forEach((p, idx) => {
+                const color = headerColors[idx % headerColors.length];
+                const startCol = col;
+                const endCol = col + 3;
+
+                // Fila 3: Profesor
+                ws.mergeCells(3, startCol, 3, endCol);
+                const cellProf = ws.getCell(3, startCol);
+                cellProf.value = p.nombre.toUpperCase();
+                cellProf.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cellProf.font = { bold: true, size: 8 };
+                cellProf.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+
+                // Fila 4: Materia (Rotada a 90 grados y con Ajuste de Texto habilitado)
+                ws.mergeCells(4, startCol, 4, endCol);
+                const cellMat = ws.getCell(4, startCol);
+                cellMat.value = p.materia.toUpperCase();
+                cellMat.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle', wrapText: true };
+                cellMat.font = { bold: true, size: 7 };
+                cellMat.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+
+                // Fila 5: Trimestres 1T, 2T, 3T, A
+                const headersT = ['1T', '2T', '3T', 'A'];
+                headersT.forEach((t, i) => {
+                    const cCol = startCol + i;
+                    const cT = ws.getCell(5, cCol);
+                    cT.value = t;
+                    cT.alignment = { horizontal: 'center', vertical: 'middle' };
+                    cT.font = { bold: true, size: 9 };
+                    cT.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+                    ws.getColumn(cCol).width = 4.5;
+
+                    // LOGICA DE OCULTAMIENTO DE COLUMNAS SEGÚN TRIMESTRE
+                    if (trimestreSeleccionado === "PRIMERO" && (t === "2T" || t === "3T" || t === "A")) {
+                        ws.getColumn(cCol).hidden = true;
+                    } else if (trimestreSeleccionado === "SEGUNDO" && (t === "3T" || t === "A")) {
+                        ws.getColumn(cCol).hidden = true;
+                    }
+                });
+
+                col += 4;
+            });
+
+            // COLUMNA PROMEDIO ANUAL GENERAL (SIEMPRE VISIBLE)
+            const colPromedio = col;
+            ws.mergeCells(3, colPromedio, 5, colPromedio);
+            const cellPromHeader = ws.getCell(3, colPromedio);
+            cellPromHeader.value = "PROM.\nANUAL";
+            cellPromHeader.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cellPromHeader.font = { bold: true, size: 9 };
+            cellPromHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo para el final
+            ws.getColumn(colPromedio).width = 6.5;
+
+            ws.getRow(3).height = 25;
+            ws.getRow(4).height = 57; // Alto de fila de la materia a 57 exactamente
+            ws.getRow(5).height = 20;
+
+            // Definimos los trimestres que se van a acumular según la selección
+            let trimestresActivos = [];
+            if (trimestreSeleccionado === "PRIMERO") {
+                trimestresActivos = ["PRIMERO"];
+            } else if (trimestreSeleccionado === "SEGUNDO") {
+                trimestresActivos = ["PRIMERO", "SEGUNDO"];
+            } else {
+                trimestresActivos = ["PRIMERO", "SEGUNDO", "TERCERO"];
+            }
+
+            let fila = 6;
+            let numero = 1;
+            const listaCeldasPromedio = [];
+
+            // 5. LLENAR DATOS CON VERIFICACIÓN ESTRICTA DE NOTAS Y FORMATOS DE COLORES SOLICITADOS
+            for (let i = 0; i < estudiantesOrdenados.length; i++) {
+                const estudianteItem = estudiantesOrdenados[i];
+                const partes = estudianteItem.split(":");
+                const nombreEstudiante = (partes.length >= 2 ? partes[1] : estudianteItem).trim().toUpperCase();
+
+                ws.getCell(fila, 1).value = numero;
+                ws.getCell(fila, 2).value = nombreEstudiante;
+                ws.getRow(fila).height = 14;
+
+                let colNotas = 3;
+                let sumaAnualGeneral = 0;
+                let materiasValidasGeneral = 0;
+                let promedioCompleto = true; // Flag para validar si el alumno tiene todas sus notas completas
+
+                profesoresCurso.forEach((p, idx) => {
+                    const color = headerColors[idx % headerColors.length];
+                    let sumaAnualMateria = 0;
+                    let trimestresValidos = 0;
+                    let tieneNotasCompletasMateria = true; // Validador por materia activa
+
+                    // Trimestres 1T, 2T, 3T
+                    trimestres.forEach((trim, tIdx) => {
+                        const cellNota = ws.getCell(fila, colNotas + tIdx);
+                        // Aplicar el mismo color de fondo de la cabecera a toda la columna por defecto
+                        cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+
+                        // Solo procesamos y tomamos notas para los trimestres activos
+                        if (trimestresActivos.includes(trim)) {
+                            let notaFinal = null;
+                            const cursoDoc = cacheNotasAnual[p.nombre][trim];
+                            
+                            if (cursoDoc) {
+                                let notaRoot = cursoDoc[nombreEstudiante];
+                                if (!notaRoot) {
+                                    for (const k in cursoDoc) {
+                                        if (k.trim().toUpperCase() === nombreEstudiante) {
+                                            notaRoot = cursoDoc[k];
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (notaRoot) {
+                                    const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
+                                    if (nt !== null) {
+                                        notaFinal = nt;
+                                    } else {
+                                        const ser = calcPromedioInterno(notaRoot, "SER");
+                                        const sab = calcPromedioInterno(notaRoot, "SABER");
+                                        const hac = calcPromedioInterno(notaRoot, "HACER");
+                                        const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+                                        if (ser !== null && sab !== null && hac !== null && aut !== null) {
+                                            const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
+                                            notaFinal = ser + sab + hac + aut + ext;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (notaFinal !== null && notaFinal > 0) {
+                                const valorRedondeado = Math.round(notaFinal);
+                                cellNota.value = valorRedondeado;
+                                
+                                // FORMATO DE COLORES SOLICITADO
+                                if (valorRedondeado < 30) {
+                                    // Menores a 30: Fondo lila con letras blancas
+                                    cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9370DB' } };
+                                    cellNota.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                                } else if (valorRedondeado < 51) {
+                                    // Menores a 51 (entre 30 y 50): Fondo rojo con letras blancas
+                                    cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+                                    cellNota.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                                }
+                                
+                                sumaAnualMateria += valorRedondeado;
+                                trimestresValidos++;
+                            } else {
+                                // El trimestre está activo para la selección actual pero no tiene nota
+                                tieneNotasCompletasMateria = false;
+                            }
+                        }
+                    });
+
+                    // Calculo Promedio Anual de la Materia (Columna A)
+                    const cellA = ws.getCell(fila, colNotas + 3);
+                    // Sombreado leve a la columna "A" para separarla, aplicado siempre
+                    cellA.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
+
+                    // Solo calculamos el promedio de la materia si se registraron notas en TODOS los trimestres activos
+                    if (tieneNotasCompletasMateria && trimestresValidos === trimestresActivos.length) {
+                        const notaA = Math.round(sumaAnualMateria / trimestresValidos); 
+                        cellA.value = notaA;
+                        cellA.font = { bold: true };
+                        
+                        if (notaA < 51) {
+                            cellA.font = { bold: true, color: { argb: 'FFFF0000' } };
+                        }
+
+                        sumaAnualGeneral += notaA;
+                        materiasValidasGeneral++;
+                    } else {
+                        // Dejar en blanco la nota anual de esta materia si le falta alguna requerida
+                        cellA.value = "";
+                        promedioCompleto = false; // Al faltar una materia, el promedio general anual se cancela
+                    }
+
+                    colNotas += 4; // Saltar 4 columnas para el siguiente profesor
+                });
+
+                // Promedio Anual General del Estudiante (PROM. ANUAL)
+                const cellProm = ws.getCell(fila, colPromedio);
+                if (promedioCompleto && materiasValidasGeneral === profesoresCurso.length && materiasValidasGeneral > 0) {
+                    const promGral = Math.round((sumaAnualGeneral / materiasValidasGeneral) * 100) / 100;
+                    cellProm.value = promGral;
+                    cellProm.font = { bold: true };
+                    
+                    if (promGral < 51) {
+                        cellProm.font = { bold: true, color: { argb: 'FFFF0000' } };
+                    }
+                    
+                    listaCeldasPromedio.push({ cell: cellProm, value: promGral });
+                } else {
+                    // Si falta una nota de alguna materia en los trimestres activos, se deja totalmente en blanco
+                    cellProm.value = "";
+                    const cellNombre = ws.getCell(fila, 2);
+                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo brillante
+                }
+
+                fila++;
+                numero++;
+            }
+
+            // Resaltar los 3 mejores de todo el año
+            listaCeldasPromedio.sort((a, b) => b.value - a.value);
+            const mejores3 = listaCeldasPromedio.slice(0, 3);
+            mejores3.forEach(item => {
+                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } }; // Azul oscuro
+                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // Letras blancas
+            });
+
+            // 6. BORDES FINALES
+            const borderOpts = { style: 'thin', color: { argb: 'FF000000' } };
+            for (let r = 3; r < fila; r++) {
+                for (let c = 1; c <= colPromedio; c++) {
+                    const celdaFinal = ws.getCell(r, c);
+                    // Inicializar si el estilo de borde es nulo
+                    if (!celdaFinal.border) celdaFinal.border = {};
+                    
+                    // Asegurarnos de no poner bordes en columnas ocultas para mejorar el rendimiento y vista
+                    if (!ws.getColumn(c).hidden) {
+                        celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
+                    }
+                    
+                    if (c > 2 && r > 5) {
+                        celdaFinal.alignment = { horizontal: 'center', vertical: 'middle' };
+                    }
+                }
+            }
+
+            ws.getColumn(1).width = 5;
+            ws.getColumn(2).width = 30;
+
+            // 7. GUARDAR
+            const buffer = await wb.xlsx.writeBuffer();
+            const nombreArchivo = `ANUAL_${trimestreSeleccionado}_${cursoSeleccionado}.xlsx`;
+            saveAs(new Blob([buffer]), nombreArchivo);
+            
+            alert("Excel Anual generado correctamente.");
+
+        } catch (ex) {
+            console.error(ex);
+            alert("Error al exportar a Excel Anual: " + ex.message);
+        } finally {
+            btnDescargarAnual.innerText = "⬇ Descargar Anual";
+            btnDescargarAnual.disabled = false;
+        }
+    });
+
 });
 </script>
 
