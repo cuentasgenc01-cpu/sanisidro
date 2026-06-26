@@ -302,7 +302,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         const cambios = registro.cambios || {};
 
-                        if (Object.prototype.hasOwnProperty.call(changes, nombreEstudiante)) {
+                        // AQUÍ ESTABA EL ERROR: se usaba "changes" en lugar de "cambios"
+                        if (Object.prototype.hasOwnProperty.call(cambios, nombreEstudiante)) {
                             const valorOriginal = String(cambios[nombreEstudiante] || "").trim().toUpperCase();
                             let estadoFinal = valorOriginal;
 
