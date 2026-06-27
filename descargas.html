@@ -4,10 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Descarga del Centralizador</title>
+
+<!-- Librerías Originales -->
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Nuevas Librerías para el Boletín PDF -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Desactivamos el "preflight" de Tailwind para que no arruine tus estilos base
+  tailwind.config = {
+    corePlugins: {
+      preflight: false,
+    }
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
@@ -25,8 +41,8 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 .contenedor{max-width:1100px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 
 /* ESTRUCTURA EN GRID */
-#contenido.fila-descarga, #filaAsistencia.fila-descarga {
-    display: none; /* Se activa por JS con display: grid */
+#contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga {
+    display: none; 
     align-items: center;
     gap: 15px;
     width: 100%;
@@ -37,8 +53,8 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
     grid-template-columns: max-content 1fr 1fr max-content max-content;
 }
 
-/* 4 COLUMNAS PARA ASISTENCIA */
-#filaAsistencia.fila-descarga {
+/* 4 COLUMNAS PARA ASISTENCIA Y BOLETIN */
+#filaAsistencia.fila-descarga, #filaBoletin.fila-descarga {
     grid-template-columns: max-content 1fr 1fr max-content;
 }
 
@@ -47,7 +63,7 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
     color: #0D47A1;
     margin-bottom: 0;
     font-size: 22px;
-    white-space: nowrap; /* Evita que el título se parta en dos líneas */
+    white-space: nowrap; 
 }
 
 .estado{font-weight:bold;margin-bottom:20px}
@@ -65,7 +81,6 @@ button#btnDescargarAnual:not(:disabled):hover {
     background: #218838;
 }
 
-/* Primera fila, columnas C en adelante: texto vertical hacia arriba */
 table tr:first-child th:nth-child(n+3),
 table tr:first-child td:nth-child(n+3) {
     display: inline-block;
@@ -76,9 +91,9 @@ table tr:first-child td:nth-child(n+3) {
 }
 
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);justify-content:center;align-items:center;z-index:9999}
-.modal-content{width:560px;background:#ECE7F1;border-radius:30px;padding:25px}
+.modal-content{width:560px;background:#ECE7F1;border-radius:30px;padding:25px;max-height: 90vh;display: flex;flex-direction: column;}
 .titulo-modal{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:bold;color:#0D47A1;margin-bottom:20px}
-#btnCerrarModal{cursor:pointer;font-size:24px}
+#btnCerrarModal, #btnCerrarModalBoletin{cursor:pointer;font-size:24px}
 .fila-campos{display:flex;gap:15px;align-items:end}
 .campo{flex:1}
 .campo label{display:block;margin-bottom:5px}
@@ -86,9 +101,14 @@ table tr:first-child td:nth-child(n+3) {
 .acciones{display:flex;justify-content:flex-end;margin-top:20px}
 #btnProcesar{border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer}
 
-/* Responsividad para pantallas pequeñas */
+.lista-est { list-style:none; padding:0; margin:0; }
+.lista-est li { display:flex; justify-content:space-between; align-items:center; padding:12px 10px; border-bottom:1px solid #dcdcdc; background: white; border-radius: 8px; margin-bottom: 8px; }
+.btn-pdf-est { background:#28a745; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold; transition: background 0.3s; }
+.btn-pdf-est:hover { background:#218838; }
+.btn-pdf-est:disabled { background:#999; cursor:not-allowed; }
+
 @media (max-width: 1150px) {
-    #contenido.fila-descarga, #filaAsistencia.fila-descarga {
+    #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga {
         grid-template-columns: 1fr;
         justify-items: stretch;
     }
@@ -99,7 +119,7 @@ table tr:first-child td:nth-child(n+3) {
 <body>
 <div class="sidebar">
 <div class="profile">
-<img src="logo.png" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2NjYyIvPjwvc3ZnPg=='">
+<img src="logo.jpg" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2NjYyIvPjwvc3ZnPg=='">
 <h2 id="nombreProfesor"></h2>
 <p>Profesor Académico</p>
 </div>
@@ -150,7 +170,72 @@ table tr:first-child td:nth-child(n+3) {
 <button class="descarga" id="btnAsistencia">⬇ DESCARGAR</button>
 </div>
 
+<!-- NUEVA FILA: BOLETIN -->
+<hr style="margin:25px 0;">
+<div class="fila-descarga" id="filaBoletin" style="display:none;">
+<h1>📝 BOLETÍN (LIBRETAS)</h1>
+<button class="descarga" id="btnBoletin">⬇ DESCARGAR</button>
 </div>
+
+</div>
+</div>
+
+<!-- Modal Original: Asistencia -->
+<div id="modalAsistencia" class="modal">
+<div class="modal-content">
+<div class="titulo-modal">
+<span>📋 DESCARGA DE ASISTENCIA</span>
+<span id="btnCerrarModal">✖</span>
+</div>
+<div class="fila-campos">
+<div class="campo">
+<label>Desde:</label>
+<input type="date" id="fechaDesde">
+</div>
+<div class="campo">
+<label>Hasta:</label>
+<input type="date" id="fechaHasta">
+</div>
+<div class="campo">
+<label>Curso</label>
+<select id="cursoAsistencia">
+<option value="">Seleccione Curso</option>
+</select>
+</div>
+</div>
+<div class="acciones">
+<button id="btnProcesar">DESCARGA</button>
+</div>
+</div>
+</div>
+
+<!-- NUEVO MODAL: BOLETIN -->
+<div id="modalBoletin" class="modal">
+    <div class="modal-content" style="width: 650px;">
+        <div class="titulo-modal">
+            <span>📝 GENERAR LIBRETA DE CALIFICACIONES</span>
+            <span id="btnCerrarModalBoletin">✖</span>
+        </div>
+        <div class="fila-campos" style="margin-bottom: 15px; align-items: flex-end;">
+            <div class="campo">
+                <label>Seleccione el Curso:</label>
+                <select id="cursoBoletin">
+                    <option value="">Seleccione Curso</option>
+                </select>
+            </div>
+            <button id="btnDescargarTodoBoletines" style="background:#0D47A1; color:white; border:none; padding:0 20px; border-radius:12px; cursor:pointer; font-weight:bold; height: 42px; display:none; transition: background 0.3s;">
+                ⬇ Descargar Todo
+            </button>
+        </div>
+        
+        <div id="loadingBoletin" style="display:none; text-align:center; color:#0D47A1; font-weight:bold; margin: 10px 0;">
+            ⏳ Cargando estudiantes...
+        </div>
+        
+        <div style="flex: 1; overflow-y:auto; padding-right: 5px;">
+            <ul id="listaEstudiantesBoletin" class="lista-est"></ul>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -159,6 +244,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nombreProfesor").innerHTML = profesor || "Profesor";
 
     const tutorSelect = document.getElementById("TUTOR");
+    
+    // Variables agregadas para descarga de todo
+    const btnDescargarTodoBoletines = document.getElementById("btnDescargarTodoBoletines");
+    let estudiantesActualesParaBoletin = [];
 
     async function cargarCursoTutor() {
         try {
@@ -194,6 +283,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const fechaHasta = document.getElementById("fechaHasta");
     const btnProcesar = document.getElementById("btnProcesar");
 
+    const modalBoletin = document.getElementById("modalBoletin");
+    const cursoBoletin = document.getElementById("cursoBoletin");
+    const btnCerrarModalBoletin = document.getElementById("btnCerrarModalBoletin");
+    const listaEstudiantesBoletin = document.getElementById("listaEstudiantesBoletin");
+    const loadingBoletin = document.getElementById("loadingBoletin");
+
     document.addEventListener("click", async (e) => {
         if (e.target && e.target.id === "btnAsistencia") {
             const hoy = new Date().toISOString().split("T")[0];
@@ -223,6 +318,118 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (e.target && e.target.id === "btnCerrarModal") {
             modalAsistencia.style.display = "none";
+        }
+
+        if (e.target && e.target.id === "btnBoletin") {
+            modalBoletin.style.display = "flex";
+            cursoBoletin.innerHTML = '<option value="">Seleccione Curso</option>';
+            listaEstudiantesBoletin.innerHTML = '';
+            btnDescargarTodoBoletines.style.display = "none";
+            estudiantesActualesParaBoletin = [];
+
+            try {
+                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
+                const response = await fetch(url);
+                const cursos = await response.json();
+
+                if (cursos) {
+                    Object.keys(cursos).forEach(curso => {
+                        const op = document.createElement("option");
+                        op.value = curso;
+                        op.textContent = curso;
+                        cursoBoletin.appendChild(op);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (e.target && e.target.id === "btnCerrarModalBoletin") {
+            modalBoletin.style.display = "none";
+        }
+
+        if (e.target && e.target.classList.contains("btn-pdf-est")) {
+            const estudianteSeleccionado = e.target.getAttribute("data-estudiante");
+            const numLista = e.target.getAttribute("data-numero");
+            const cursoSelecc = cursoBoletin.value;
+            if (cursoSelecc && estudianteSeleccionado) {
+                generarPDFLibreta(cursoSelecc, estudianteSeleccionado, e.target, numLista);
+            }
+        }
+    });
+
+    // Modificado para capturar la lista de estudiantes
+    cursoBoletin.addEventListener("change", async () => {
+        const cursoSeleccionado = cursoBoletin.value;
+        listaEstudiantesBoletin.innerHTML = "";
+        btnDescargarTodoBoletines.style.display = "none";
+        estudiantesActualesParaBoletin = [];
+        
+        if (!cursoSeleccionado) return;
+
+        loadingBoletin.style.display = "block";
+
+        try {
+            const respEst = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`);
+            const estudiantesData = await respEst.json();
+
+            if (!estudiantesData || Object.keys(estudiantesData).length === 0) {
+                listaEstudiantesBoletin.innerHTML = "<li style='justify-content:center;color:red;'>No hay estudiantes en este curso.</li>";
+                loadingBoletin.style.display = "none";
+                return;
+            }
+
+            const listaEstudiantes = [];
+            if (Array.isArray(estudiantesData)) {
+                estudiantesData.forEach((val, index) => {
+                    if (val) listaEstudiantes.push(String(val).includes(":") ? String(val) : `${index}:${val}`);
+                });
+            } else {
+                for (const key in estudiantesData) {
+                    const val = estudiantesData[key];
+                    if (key.includes(":")) listaEstudiantes.push(key);
+                    else listaEstudiantes.push(`${key}:${val}`);
+                }
+            }
+
+            const estudiantesOrdenados = listaEstudiantes.sort((a, b) => {
+                const numA = parseInt(a.split(":")[0]) || 9999;
+                const numB = parseInt(b.split(":")[0]) || 9999;
+                return numA - numB;
+            });
+
+            // Guardamos la lista en la variable global para el nuevo botón
+            estudiantesActualesParaBoletin = estudiantesOrdenados.map((estItem, index) => {
+                const partes = estItem.split(":");
+                const nombreEstudiante = (partes.length >= 2 ? partes[1] : estItem).trim().toUpperCase();
+                return { nombre: nombreEstudiante, numero: index + 1 };
+            });
+
+            estudiantesActualesParaBoletin.forEach((est) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span style="font-size: 14px; width: 70%;"><b>${est.numero}.</b> ${est.nombre}</span>
+                    <button class="btn-pdf-est" data-estudiante="${est.nombre}" data-numero="${est.numero}">📄 Descargar Libreta</button>
+                `;
+                listaEstudiantesBoletin.appendChild(li);
+            });
+
+            btnDescargarTodoBoletines.style.display = "block"; // Mostramos el botón descargar todo
+
+        } catch (error) {
+            console.error(error);
+            listaEstudiantesBoletin.innerHTML = "<li style='justify-content:center;color:red;'>Error al cargar la lista de estudiantes.</li>";
+        } finally {
+            loadingBoletin.style.display = "none";
+        }
+    });
+
+    // Nuevo Evento para Descargar Todos
+    btnDescargarTodoBoletines.addEventListener("click", async () => {
+        const cursoSeleccionado = cursoBoletin.value;
+        if (cursoSeleccionado && estudiantesActualesParaBoletin.length > 0) {
+            generarPDFLibretaTodos(cursoSeleccionado, estudiantesActualesParaBoletin, btnDescargarTodoBoletines);
         }
     });
 
@@ -302,7 +509,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         const cambios = registro.cambios || {};
 
-                        // AQUÍ ESTABA EL ERROR: se usaba "changes" en lugar de "cambios"
                         if (Object.prototype.hasOwnProperty.call(cambios, nombreEstudiante)) {
                             const valorOriginal = String(cambios[nombreEstudiante] || "").trim().toUpperCase();
                             let estadoFinal = valorOriginal;
@@ -463,8 +669,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnDescargar = document.getElementById("btnDescargar");
     const btnDescargarAnual = document.getElementById("btnDescargarAnual");
     const filaAsistencia = document.getElementById("filaAsistencia");
+    const filaBoletin = document.getElementById("filaBoletin"); 
 
-    // ESTADO INICIAL
     tutor.disabled = true;
     btnDescargar.disabled = true;
     btnDescargarAnual.disabled = true;
@@ -488,7 +694,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
-    // FUNCIÓN AUXILIAR DE SUMA
     function calcSumaInterna(notaRoot, key) {
         const nodo = notaRoot[key];
         if (nodo === undefined || nodo === null) return null;
@@ -508,14 +713,752 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
-    // FUNCIÓN GENERAL PARA AMBOS BOTONES
+    // --- GENERADOR DE PDF PARA LIBRETAS CON DISEÑO MEJORADO ---
+    async function generarPDFLibreta(curso, estudiante, btnElement, numLista) {
+        btnElement.innerText = "⏳ Generando...";
+        btnElement.disabled = true;
+
+        try {
+            // 1. Obtener todos los profesores del curso para sacar todas las materias
+            const respProf = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES.json`);
+            const todosProfes = await respProf.json();
+            const profesoresCurso = [];
+
+            if (todosProfes) {
+                for (const nomProf in todosProfes) {
+                    const profUpp = String(nomProf).toUpperCase();
+                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[curso]) {
+                        const materia = pData.CURSO[curso];
+                        const matUpp = String(materia).toUpperCase();
+                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
+                }
+            }
+
+            if (profesoresCurso.length === 0) {
+                alert("No se encontraron profesores asignados a este curso para generar el boletín.");
+                btnElement.innerText = "📄 Descargar Libreta";
+                btnElement.disabled = false;
+                return;
+            }
+
+            // 2. Extraer notas del estudiante en los 3 trimestres y calcular rankings
+            const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
+            let filasHTML = '';
+            
+            // Para promedios generales del estudiante seleccionado
+            let sumaTrim = [0, 0, 0];
+            let matTrim = [0, 0, 0];
+            
+            // Estructura para el cálculo del ranking (guarda los datos de todos los estudiantes del curso)
+            let rankingData = [{}, {}, {}];
+
+            for (const p of profesoresCurso) {
+                let htmlRow = `<tr><td class="text-left font-semibold pl-2 border border-gray-700" style="text-align: left; padding-left: 0.5rem; border: 1px solid #374151; font-weight: 600;">${p.materia.toUpperCase()}</td>`;
+                let sumaAnualMateria = 0;
+                let trimestresValidos = 0;
+
+                for (let i = 0; i < 3; i++) {
+                    const trim = trimestres[i];
+                    const rNota = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`);
+                    const cursoDoc = await rNota.json();
+                    
+                    let notaFinalEstudiante = "";
+
+                    if (cursoDoc) {
+                        // Iteramos sobre todos los estudiantes para guardar los promedios y definir el ranking
+                        for (const keyEst in cursoDoc) {
+                            const estNombre = keyEst.trim().toUpperCase();
+                            const notaRoot = cursoDoc[keyEst];
+                            
+                            let notaVal = "";
+                            if (notaRoot) {
+                                const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
+                                if (nt !== null) {
+                                    notaVal = Math.round(nt);
+                                } else {
+                                    const ser = calcPromedioInterno(notaRoot, "SER");
+                                    const sab = calcPromedioInterno(notaRoot, "SABER");
+                                    const hac = calcPromedioInterno(notaRoot, "HACER");
+                                    const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+                                    if (ser !== null && sab !== null && hac !== null && aut !== null) {
+                                        const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
+                                        notaVal = Math.round(ser + sab + hac + aut + ext);
+                                    }
+                                }
+                            }
+
+                            if (notaVal !== "") {
+                                // Sumar a los datos globales para calcular ranking
+                                if (!rankingData[i][estNombre]) {
+                                    rankingData[i][estNombre] = { suma: 0, materias: 0 };
+                                }
+                                rankingData[i][estNombre].suma += parseInt(notaVal);
+                                rankingData[i][estNombre].materias++;
+                                
+                                // Si es el estudiante actual, capturamos su nota para pintar la fila
+                                if (estNombre === estudiante.toUpperCase()) {
+                                    notaFinalEstudiante = notaVal;
+                                }
+                            }
+                        }
+                    }
+
+                    if (notaFinalEstudiante !== "") {
+                        sumaAnualMateria += parseInt(notaFinalEstudiante);
+                        trimestresValidos++;
+                        
+                        sumaTrim[i] += parseInt(notaFinalEstudiante);
+                        matTrim[i]++;
+                    }
+
+                    let estiloRojo = (notaFinalEstudiante !== "" && parseInt(notaFinalEstudiante) < 51) ? "color: #dc2626; font-weight: bold;" : "";
+                    htmlRow += `<td style="border: 1px solid #374151; ${estiloRojo}">${notaFinalEstudiante !== "" ? notaFinalEstudiante : ""}</td>`;
+                }
+
+                // Calcular promedio anual de la materia específica
+                let promedioAnualMat = "";
+                if (trimestresValidos === 3) {
+                    promedioAnualMat = Math.round(sumaAnualMateria / 3);
+                }
+
+                let estiloRojoAnual = (promedioAnualMat !== "" && promedioAnualMat < 51) ? "color: #dc2626;" : "";
+                htmlRow += `<td class="font-bold bg-gray-100" style="background-color: #f3f4f6; border: 1px solid #374151; font-weight: bold; ${estiloRojoAnual}">${promedioAnualMat}</td><td class="bg-gray-100" style="background-color: #f3f4f6; border: 1px solid #374151; text-align: left;"></td></tr>`;
+                
+                filasHTML += htmlRow;
+            }
+
+            // Función auxiliar para deducir el lugar exacto en el ranking de todo el curso
+            function obtenerLugarRanking(trimIndex) {
+                const datosTrim = rankingData[trimIndex];
+                const promedios = [];
+                for (const est in datosTrim) {
+                    if (datosTrim[est].materias > 0) {
+                        promedios.push({
+                            nombre: est,
+                            promedio: datosTrim[est].suma / datosTrim[est].materias
+                        });
+                    }
+                }
+                
+                if (promedios.length === 0) return "";
+                
+                // Ordenar promedios de mayor a menor
+                promedios.sort((a, b) => b.promedio - a.promedio);
+                
+                let lugar = 1;
+                let ultimoProm = promedios[0].promedio;
+                
+                for (let i = 0; i < promedios.length; i++) {
+                    if (promedios[i].promedio < ultimoProm) {
+                        lugar++;
+                        ultimoProm = promedios[i].promedio;
+                    }
+                    if (promedios[i].nombre === estudiante.toUpperCase()) {
+                        return `${lugar}º`;
+                    }
+                }
+                return "";
+            }
+
+            // Calculando el promedio general y el ranking para cada trimestre
+            const promTrim1 = matTrim[0] > 0 ? (sumaTrim[0] / matTrim[0]).toFixed(2) : "";
+            const promTrim2 = matTrim[1] > 0 ? (sumaTrim[1] / matTrim[1]).toFixed(2) : "";
+            const promTrim3 = matTrim[2] > 0 ? (sumaTrim[2] / matTrim[2]).toFixed(2) : "";
+
+            const rankTrim1 = obtenerLugarRanking(0);
+            const rankTrim2 = obtenerLugarRanking(1);
+            const rankTrim3 = obtenerLugarRanking(2);
+
+            // 3. Crear el contenedor temporal para HTML2PDF
+            const contenedorHTML = document.createElement('div');
+            contenedorHTML.id = "temp-pdf-container";
+            contenedorHTML.style.position = 'absolute';
+            contenedorHTML.style.visibility = 'hidden';
+            contenedorHTML.style.top = '0';
+            contenedorHTML.style.left = '0';
+            contenedorHTML.style.zIndex = '-9999';
+            
+            const anioActual = new Date().getFullYear();
+
+            // Insertamos la plantilla de Boletín con los datos inyectados usando estilos inline para que html2pdf los procese seguro
+            contenedorHTML.innerHTML = `
+                <style>
+                    #boletin-content-render table, #boletin-content-render th, #boletin-content-render td { border: 1px solid #374151; }
+                    #boletin-content-render th { background-color: #f9fafb; }
+                    #boletin-content-render .compact-table td, #boletin-content-render .compact-table th { padding: 0.2rem; }
+                    
+                    /* FIX: Prevenimos que elementos específicos hereden el "rotate(-90deg)" del CSS global principal */
+                    #boletin-content-render table th, 
+                    #boletin-content-render table td {
+                        transform: none !important;
+                        display: table-cell !important;
+                        white-space: normal !important;
+                    }
+                </style>
+                <div class="bg-white text-gray-900" id="boletin-content-render" style="font-family: Arial, sans-serif; font-size: 10px; width: 297mm; height: 209mm; padding: 8mm 15mm 10mm 15mm; box-sizing: border-box; display: flex; flex-direction: column; background: white;">
+                    
+                    <header class="flex justify-between items-center mb-1" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                        <div style="width: 3.5rem; height: 3.5rem; display: flex; align-items: center; justify-content: center; background-color: #f9fafb; border-radius: 0.25rem; overflow: hidden; border: 1px dashed #9ca3af;">
+                            <img src="logo.jpg" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                        </div>
+                        
+                        <div class="text-center flex-1 px-2" style="text-align: center; flex: 1; padding: 0 0.5rem;">
+                            <h3 class="font-bold text-base mt-1" style="font-size: 16px; font-weight: bold; margin-top: 0.25rem; margin-bottom: 0;">Boletin Interno Escolar San Isidro "C"</h3>
+                            <h4 class="text-[11px] font-semibold text-gray-600" style="font-size: 11px; font-weight: 600; color: #4b5563; margin-top: 0;">Educación Secundaria Comunitaria Productiva</h4>
+                        </div>
+                        
+                        <div class="w-48 text-[7px] leading-tight shrink-0" style="width: 12rem; font-size: 7px; line-height: 1.25;">
+                            <table class="w-full border-collapse text-center border border-gray-700" style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #374151;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3" class="p-0.5 text-left bg-gray-200 border border-gray-700" style="padding: 0.125rem; text-align: left; background-color: #e5e7eb; border: 1px solid #374151;">Rango de Valoración de las Dimensiones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">En desarrollo</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">ED</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">Hasta 50</td></tr>
+                                    <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo aceptable</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DA</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">51 - 68</td></tr>
+                                    <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo óptimo</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DO</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">69 - 84</td></tr>
+                                    <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo pleno</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DP</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">85 - 100</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </header>
+
+                    <div class="grid grid-cols-3 gap-2 mb-2 text-[9px] bg-white border border-gray-300 p-1 rounded" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; font-size: 9px; padding: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem;">
+                        <div class="space-y-0.5 px-2" style="padding: 0 0.5rem;">
+                            <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Unidad Educativa:</span> <span class="truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SAN ISIDRO C</span></div>
+                            <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Distrito Educativo:</span> <span>SANTA CRUZ 3</span></div>
+                            <div class="flex" style="display: flex;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Turno:</span> <span>MAÑANA</span></div>
+                        </div>
+                        <div class="space-y-0.5 px-2 border-l border-gray-200" style="padding: 0 0.5rem; border-left: 1px solid #e5e7eb;">
+                            <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Departamento:</span> <span>SANTA CRUZ</span></div>
+                            <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Dependencia:</span> <span>FISCAL</span></div>
+                            <div class="flex" style="display: flex;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Gestión:</span> <span>${anioActual}</span></div>
+                        </div>
+                        <div class="space-y-0.5 px-2 border-l border-gray-200 bg-gray-50" style="padding: 0 0.5rem; border-left: 1px solid #e5e7eb; background-color: #f9fafb;">
+                            <div class="flex items-center" style="display: flex; align-items: center; margin-bottom: 2px;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Código :</span> <span class="font-semibold tracking-wider" style="font-weight: 600; letter-spacing: 0.05em;">${numLista}</span></div>
+                            <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Estudiante:</span> <span class="uppercase font-bold text-[10px] truncate" style="text-transform: uppercase; font-weight: bold; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${estudiante}</span></div>
+                            <div class="flex" style="display: flex;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Año Escolar:</span> <span>${curso}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">
+                        Evaluación (Ser, Saber, Hacer)
+                    </div>
+
+             <table class="compact-table"
+style="
+width:78%;
+margin:0 auto;
+border-collapse:collapse;
+text-align:center;
+font-size:11px;
+margin-bottom:0.25rem;
+border:1px solid #374151;
+">
+                        <thead>
+                            <tr>
+                             <th rowspan="2"
+class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700"
+style="
+width:30%;
+text-align:left;
+padding-left:0.5rem;
+background-color:#f9fafb;
+border:1px solid #374151;
+">
+Áreas Curriculares
+</th>
+                                <th colspan="3" class="bg-gray-50 border border-gray-700" style="background-color: #f9fafb; border: 1px solid #374151;">Trimestre</th>
+                                <th colspan="2" class="bg-gray-50 border border-gray-700" style="background-color: #f9fafb; border: 1px solid #374151;">Valoración Cuantitativa<br>Promedio Anual</th>
+                            </tr>
+                            <tr>
+                                <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">1er.Trimestre</th>
+                                <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">2do.Trimestre</th>
+                                <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">3er.Trimestre</th>
+                                <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Numeral ANUAL</th>
+                                <th class="text-[8px] bg-gray-50 border border-gray-700" style="font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Literal ANUAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasHTML}
+                        </tbody>
+                    </table>
+                    
+                    <div class="flex gap-4 my-2 items-stretch" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem; align-items: stretch;">
+                        <div class="w-1/2" style="width: 50%;">
+                            <table class="w-full border-collapse text-[9px] compact-table text-center bg-white h-full border border-gray-700" style="width: 100%; border-collapse: collapse; font-size: 9px; text-align: center; height: 100%; border: 1px solid #374151;">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Trimestre</th>
+                                        <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Promedio General</th>
+                                        <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Ranking en Curso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td>
+                                        <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td>
+                                        <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td>
+                                        <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td>
+                                        <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td>
+                                        <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td>
+                                        <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-1/2 text-left pl-2 bg-gray-50 p-2 border border-gray-300 rounded flex flex-col" style="width: 50%; text-align: left; padding-left: 0.5rem; background-color: #f9fafb; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; display: flex; flex-direction: column;">
+                            <span class="font-bold text-[9px] mb-1" style="font-weight: bold; font-size: 9px; margin-bottom: 0.25rem;">Informe de Promoción:</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pb-2" style="margin-top: auto; padding-bottom: 0.5rem;">
+                        <div class="grid grid-cols-3 gap-8 text-center pb-1" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; text-align: center; padding-bottom: 0.25rem;">
+                            <div>
+                                <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Maestra/Maestro</span><br>
+                                <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Firma</span>
+                            </div>
+                            <div>
+                                <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Unidad Educativa</span><br>
+                                <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Sello</span>
+                            </div>
+                            <div>
+                                <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Directora/Director Unidad Educativa</span><br>
+                                <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Firma</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(contenedorHTML);
+
+            // 4. Configurar y renderizar HTML2PDF
+            const opciones = {
+                margin: 0,
+                filename: `Libreta_${estudiante}_${curso}.pdf`,
+                image: { type: "jpeg", quality: 0.9 },
+                html2canvas: { scale: 1.5, useCORS: true, scrollY: 0 },
+                jsPDF: { unit: "mm", format: "a4", orientation: "landscape" }
+            };
+
+            await html2pdf().set(opciones).from(document.getElementById('boletin-content-render')).save();
+
+            // Limpiar contenedor oculto
+            document.body.removeChild(contenedorHTML);
+
+        } catch (error) {
+            console.error("Error al generar PDF:", error);
+            alert("Hubo un error al generar la libreta.");
+        } finally {
+            btnElement.innerText = "📄 Descargar Libreta";
+            btnElement.disabled = false;
+        }
+    }
+
+    // --- NUEVA FUNCIÓN MEJORADA: GENERAR TODAS LAS LIBRETAS EN UN SOLO PDF ---
+    async function generarPDFLibretaTodos(curso, listaEstudiantes, btnElement) {
+        btnElement.innerText = "⏳ Preparando datos...";
+        btnElement.disabled = true;
+
+        try {
+            const respProf = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES.json`);
+            const todosProfes = await respProf.json();
+            const profesoresCurso = [];
+
+            if (todosProfes) {
+                for (const nomProf in todosProfes) {
+                    const profUpp = String(nomProf).toUpperCase();
+                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[curso]) {
+                        const materia = pData.CURSO[curso];
+                        const matUpp = String(materia).toUpperCase();
+                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
+                }
+            }
+
+            if (profesoresCurso.length === 0) {
+                alert("No se encontraron profesores asignados a este curso para generar el boletín.");
+                btnElement.innerText = "⬇ Descargar Todo";
+                btnElement.disabled = false;
+                return;
+            }
+
+            const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
+            let rankingData = [{}, {}, {}];
+            const notasCache = { 0: {}, 1: {}, 2: {} };
+
+            // Pre-cargar notas de todo el curso
+            for (let i = 0; i < 3; i++) {
+                const trim = trimestres[i];
+                for (const p of profesoresCurso) {
+                    const rNota = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`);
+                    const cursoDoc = await rNota.json();
+                    notasCache[i][p.nombre] = cursoDoc;
+                    
+                    if (cursoDoc) {
+                        for (const keyEst in cursoDoc) {
+                            const estNombre = keyEst.trim().toUpperCase();
+                            const notaRoot = cursoDoc[keyEst];
+                            let notaVal = "";
+                            
+                            if (notaRoot) {
+                                const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
+                                if (nt !== null) {
+                                    notaVal = Math.round(nt);
+                                } else {
+                                    const ser = calcPromedioInterno(notaRoot, "SER");
+                                    const sab = calcPromedioInterno(notaRoot, "SABER");
+                                    const hac = calcPromedioInterno(notaRoot, "HACER");
+                                    const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+                                    if (ser !== null && sab !== null && hac !== null && aut !== null) {
+                                        const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
+                                        notaVal = Math.round(ser + sab + hac + aut + ext);
+                                    }
+                                }
+                            }
+                            if (notaVal !== "") {
+                                if (!rankingData[i][estNombre]) rankingData[i][estNombre] = { suma: 0, materias: 0 };
+                                rankingData[i][estNombre].suma += parseInt(notaVal);
+                                rankingData[i][estNombre].materias++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            function obtenerLugarRankingTodos(trimIndex, estudianteUpper) {
+                const datosTrim = rankingData[trimIndex];
+                const promedios = [];
+                for (const est in datosTrim) {
+                    if (datosTrim[est].materias > 0) {
+                        promedios.push({ nombre: est, promedio: datosTrim[est].suma / datosTrim[est].materias });
+                    }
+                }
+                if (promedios.length === 0) return "";
+                promedios.sort((a, b) => b.promedio - a.promedio);
+                
+                let lugar = 1;
+                let ultimoProm = promedios[0].promedio;
+                for (let i = 0; i < promedios.length; i++) {
+                    if (promedios[i].promedio < ultimoProm) { lugar++; ultimoProm = promedios[i].promedio; }
+                    if (promedios[i].nombre === estudianteUpper) return `${lugar}º`;
+                }
+                return "";
+            }
+
+            const anioActual = new Date().getFullYear();
+
+            const canvasContenedor = document.createElement('div');
+            canvasContenedor.id = "temp-pdf-container-todos";
+            canvasContenedor.style.position = 'absolute';
+            canvasContenedor.style.left = '-9999px';
+            canvasContenedor.style.top = '0';
+            canvasContenedor.style.transform = 'translateX(-9999px)';
+            canvasContenedor.style.width = '1123px';
+            canvasContenedor.style.minHeight = '794px';
+            canvasContenedor.style.zIndex = '9999';
+            canvasContenedor.style.opacity = '1';
+            canvasContenedor.style.pointerEvents = 'none';
+            canvasContenedor.style.backgroundColor = 'white';
+            canvasContenedor.style.overflow = 'visible';
+            canvasContenedor.style.display = 'block';
+            canvasContenedor.style.visibility = 'visible';
+            document.body.appendChild(canvasContenedor);
+
+            const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            async function renderStudentPage(htmlContent) {
+                if (typeof html2canvas !== 'function' && typeof window.html2canvas !== 'function') {
+                    throw new Error('html2canvas no está disponible');
+                }
+                const html2canvasFn = typeof html2canvas === 'function' ? html2canvas : window.html2canvas;
+
+                canvasContenedor.innerHTML = htmlContent;
+                await new Promise(resolve => requestAnimationFrame(resolve));
+
+                const canvas = await html2canvasFn(canvasContenedor, {
+                    scale: 1.5,
+                    useCORS: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: canvasContenedor.scrollWidth,
+                    height: canvasContenedor.scrollHeight,
+                    backgroundColor: '#ffffff'
+                });
+
+                if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                    throw new Error('html2canvas generó un lienzo vacío');
+                }
+                return canvas.toDataURL('image/jpeg', 0.9);
+            }
+
+            for (let eIdx = 0; eIdx < listaEstudiantes.length; eIdx++) {
+                btnElement.innerText = `⏳ Generando ${eIdx + 1} de ${listaEstudiantes.length}...`;
+
+                const estudiante = listaEstudiantes[eIdx].nombre;
+                const numLista = listaEstudiantes[eIdx].numero;
+
+                let filasHTML = '';
+                let sumaTrim = [0, 0, 0];
+                let matTrim = [0, 0, 0];
+
+                for (const p of profesoresCurso) {
+                    let htmlRow = `<tr><td style="text-align:left;">${p.materia.toUpperCase()}</td>`;
+                    let sumaAnualMateria = 0;
+                    let trimestresValidos = 0;
+
+                    for (let i = 0; i < 3; i++) {
+                        let notaFinalEstudiante = "";
+                        const cursoDoc = notasCache[i][p.nombre];
+
+                        if (cursoDoc) {
+                            let notaRoot = cursoDoc[estudiante];
+                            if (!notaRoot) {
+                                for (const k in cursoDoc) {
+                                    if (k.trim().toUpperCase() === estudiante) { notaRoot = cursoDoc[k]; break; }
+                                }
+                            }
+                            if (notaRoot) {
+                                const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
+                                if (nt !== null) { notaFinalEstudiante = Math.round(nt); }
+                                else {
+                                    const ser = calcPromedioInterno(notaRoot, "SER");
+                                    const sab = calcPromedioInterno(notaRoot, "SABER");
+                                    const hac = calcPromedioInterno(notaRoot, "HACER");
+                                    const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+                                    if (ser !== null && sab !== null && hac !== null && aut !== null) {
+                                        const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
+                                        notaFinalEstudiante = Math.round(ser + sab + hac + aut + ext);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (notaFinalEstudiante !== "") {
+                            sumaAnualMateria += parseInt(notaFinalEstudiante);
+                            trimestresValidos++;
+                            sumaTrim[i] += parseInt(notaFinalEstudiante);
+                            matTrim[i]++;
+                        }
+
+                        const valorTexto = notaFinalEstudiante !== "" ? notaFinalEstudiante : "";
+                        const estiloRojo = (notaFinalEstudiante !== "" && parseInt(notaFinalEstudiante) < 51) ? "color: #dc2626; font-weight: bold;" : "";
+                        htmlRow += `<td style="text-align:center; ${estiloRojo}">${valorTexto}</td>`;
+                    }
+
+                    let promedioAnualMat = "";
+                    if (trimestresValidos === 3) promedioAnualMat = Math.round(sumaAnualMateria / 3);
+                    const estiloRojoAnual = (promedioAnualMat !== "" && promedioAnualMat < 51) ? "color: #dc2626; font-weight: bold;" : "font-weight:bold;";
+                    htmlRow += `<td style="text-align:center; ${estiloRojoAnual}">${promedioAnualMat}</td>`;
+                    htmlRow += `<td style="text-align:center;"></td></tr>`;
+                    filasHTML += htmlRow;
+                }
+
+                const promTrim1 = matTrim[0] > 0 ? (sumaTrim[0] / matTrim[0]).toFixed(2) : "";
+                const promTrim2 = matTrim[1] > 0 ? (sumaTrim[1] / matTrim[1]).toFixed(2) : "";
+                const promTrim3 = matTrim[2] > 0 ? (sumaTrim[2] / matTrim[2]).toFixed(2) : "";
+
+                const rankTrim1 = obtenerLugarRankingTodos(0, estudiante);
+                const rankTrim2 = obtenerLugarRankingTodos(1, estudiante);
+                const rankTrim3 = obtenerLugarRankingTodos(2, estudiante);
+
+                const htmlEstudiante = `
+                    <div id="boletin-content-render" style="font-family: Arial, sans-serif; font-size: 10px; width: 297mm; height: 209mm; padding: 8mm 15mm 10mm 15mm; box-sizing: border-box; display: flex; flex-direction: column; background: white;">
+                        <style>
+                            #boletin-content-render table, #boletin-content-render th, #boletin-content-render td { border: 1px solid #374151; }
+                            #boletin-content-render th { background-color: #f9fafb; }
+                            #boletin-content-render .compact-table td, #boletin-content-render .compact-table th { padding: 0.2rem; }
+                            #boletin-content-render table th, #boletin-content-render table td {
+                                transform: none !important;
+                                display: table-cell !important;
+                                white-space: normal !important;
+                            }
+                        </style>
+                        <header class="flex justify-between items-center mb-1" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <div style="width: 3.5rem; height: 3.5rem; display: flex; align-items: center; justify-content: center; background-color: #f9fafb; border-radius: 0.25rem; overflow: hidden; border: 1px dashed #9ca3af;">
+                                <img src="logo.jpg" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                            </div>
+                            <div class="text-center flex-1 px-2" style="text-align: center; flex: 1; padding: 0 0.5rem;">
+                                <h3 class="font-bold text-base mt-1" style="font-size: 16px; font-weight: bold; margin-top: 0.25rem; margin-bottom: 0;">Boletin Interno Escolar San Isidro "C"</h3>
+                                <h4 class="text-[11px] font-semibold text-gray-600" style="font-size: 11px; font-weight: 600; color: #4b5563; margin-top: 0;">Educación Secundaria Comunitaria Productiva</h4>
+                            </div>
+                            <div class="w-48 text-[7px] leading-tight shrink-0" style="width: 12rem; font-size: 7px; line-height: 1.25;">
+                                <table class="w-full border-collapse text-center border border-gray-700" style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #374151;">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="3" class="p-0.5 text-left bg-gray-200 border border-gray-700" style="padding: 0.125rem; text-align: left; background-color: #e5e7eb; border: 1px solid #374151;">Rango de Valoración de las Dimensiones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">En desarrollo</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">ED</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">Hasta 50</td></tr>
+                                        <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo aceptable</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DA</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">51 - 68</td></tr>
+                                        <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo óptimo</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DO</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">69 - 84</td></tr>
+                                        <tr><td class="p-0.5 text-left border border-gray-700" style="padding: 0.125rem; text-align: left; border: 1px solid #374151;">Desarrollo pleno</td><td class="p-0.5 font-bold border border-gray-700" style="padding: 0.125rem; font-weight: bold; border: 1px solid #374151;">DP</td><td class="p-0.5 border border-gray-700" style="padding: 0.125rem; border: 1px solid #374151;">85 - 100</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </header>
+                        <div class="grid grid-cols-3 gap-2 mb-2 text-[9px] bg-white border border-gray-300 p-1 rounded" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; font-size: 9px; padding: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem;">
+                            <div class="space-y-0.5 px-2" style="padding: 0 0.5rem;">
+                                <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Unidad Educativa:</span> <span class="truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SAN ISIDRO C</span></div>
+                                <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Distrito Educativo:</span> <span>SANTA CRUZ 3</span></div>
+                                <div class="flex" style="display: flex;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Turno:</span> <span>MAÑANA</span></div>
+                            </div>
+                            <div class="space-y-0.5 px-2 border-l border-gray-200" style="padding: 0 0.5rem; border-left: 1px solid #e5e7eb;">
+                                <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Departamento:</span> <span>SANTA CRUZ</span></div>
+                                <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Dependencia:</span> <span>FISCAL</span></div>
+                                <div class="flex" style="display: flex;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Gestión:</span> <span>${anioActual}</span></div>
+                            </div>
+                            <div class="space-y-0.5 px-2 border-l border-gray-200 bg-gray-50" style="padding: 0 0.5rem; border-left: 1px solid #e5e7eb; background-color: #f9fafb;">
+                                <div class="flex items-center" style="display: flex; align-items: center; margin-bottom: 2px;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Código :</span> <span class="font-semibold tracking-wider" style="font-weight: 600; letter-spacing: 0.05em;">${numLista}</span></div>
+                                <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Estudiante:</span> <span class="uppercase font-bold text-[10px] truncate" style="text-transform: uppercase; font-weight: bold; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${estudiante}</span></div>
+                                <div class="flex" style="display: flex;"><span class="font-bold w-20" style="width: 5rem; font-weight: bold;">Año Escolar:</span> <span>${curso}</span></div>
+                            </div>
+                        </div>
+                        <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">Evaluación (Ser, Saber, Hacer)</div>
+                      <table class="compact-table"
+style="
+width:78%;
+margin:0 auto;
+border-collapse:collapse;
+text-align:center;
+font-size:11px;
+margin-bottom:0.25rem;
+border:1px solid #374151;
+">
+                            <thead>
+                                <tr>
+                                  <th rowspan="2"
+class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700"
+style="
+width:30%;
+text-align:left;
+padding-left:0.5rem;
+background-color:#f9fafb;
+border:1px solid #374151;
+">
+Áreas Curriculares
+</th>
+                                    <th colspan="3" class="bg-gray-50 border border-gray-700" style="background-color: #f9fafb; border: 1px solid #374151;">Trimestre</th>
+                                    <th colspan="2" class="bg-gray-50 border border-gray-700" style="background-color: #f9fafb; border: 1px solid #374151;">Valoración Cuantitativa<br>Promedio Anual</th>
+                                </tr>
+                                <tr>
+                                    <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">1er.Trimestre</th>
+                                    <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">2do.Trimestre</th>
+                                    <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">3er.Trimestre</th>
+                                    <th class="w-14 text-[8px] bg-gray-50 border border-gray-700" style="width: 3.5rem; font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Numeral ANUAL</th>
+                                    <th class="text-[8px] bg-gray-50 border border-gray-700" style="font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Literal ANUAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasHTML}
+                            </tbody>
+                        </table>
+                        <div class="flex gap-4 my-2 items-stretch" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem; align-items: stretch;">
+                            <div class="w-1/2" style="width: 50%;">
+                                <table class="w-full border-collapse text-[9px] compact-table text-center bg-white h-full border border-gray-700" style="width: 100%; border-collapse: collapse; font-size: 9px; text-align: center; height: 100%; border: 1px solid #374151;">
+                                    <thead>
+                                        <tr>
+                                            <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Trimestre</th>
+                                            <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Promedio General</th>
+                                            <th class="w-1/3 bg-gray-200 border border-gray-700" style="width: 33.333%; background-color: #e5e7eb; border: 1px solid #374151;">Ranking en Curso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td>
+                                            <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td>
+                                            <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td>
+                                            <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td>
+                                            <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td>
+                                            <td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td>
+                                            <td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="w-1/2 text-left pl-2 bg-gray-50 p-2 border border-gray-300 rounded flex flex-col" style="width: 50%; text-align: left; padding-left: 0.5rem; background-color: #f9fafb; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; display: flex; flex-direction: column;">
+                                <span class="font-bold text-[9px] mb-1" style="font-weight: bold; font-size: 9px; margin-bottom: 0.25rem;">Informe de Promoción:</span>
+                            </div>
+                        </div>
+                        <div class="mt-auto pb-2" style="margin-top: auto; padding-bottom: 0.5rem;">
+                            <div class="grid grid-cols-3 gap-8 text-center pb-1" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; text-align: center; padding-bottom: 0.25rem;">
+                                <div>
+                                    <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                    <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Maestra/Maestro</span><br>
+                                    <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Firma</span>
+                                </div>
+                                <div>
+                                    <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                    <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Unidad Educativa</span><br>
+                                    <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Sello</span>
+                                </div>
+                                <div>
+                                    <div class="border-t border-gray-800 mx-10 pt-1" style="border-top: 1px solid #1f2937; margin-left: 2.5rem; margin-right: 2.5rem; padding-top: 0.25rem;"></div>
+                                    <span class="text-[8px] font-bold" style="font-size: 8px; font-weight: bold;">Directora/Director Unidad Educativa</span><br>
+                                    <span class="text-[8px] text-gray-500" style="font-size: 8px; color: #6b7280;">Firma</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const imgData = await renderStudentPage(htmlEstudiante);
+                if (eIdx > 0) {
+                    doc.addPage();
+                }
+                doc.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+            }
+
+            doc.save(`Libretas_TODAS_${curso}.pdf`);
+            
+        } catch (error) {
+            console.error("Error al generar los PDFs masivos:", error);
+            alert("Hubo un error al generar las libretas. " + (error && error.message ? error.message : "Revise la consola para más detalles."));
+        } finally {
+            const cont = document.getElementById("temp-pdf-container-todos");
+            if (cont) document.body.removeChild(cont);
+            btnElement.innerText = "⬇ Descargar Todo";
+            btnElement.disabled = false;
+        }
+    }
+
     function actualizarBotones() {
         const habilitar = trimestre.value.trim() !== "" && tutor.value.trim() !== "";
         btnDescargar.disabled = !habilitar;
         btnDescargarAnual.disabled = !habilitar;
     }
 
-    // VERIFICAR PERMISOS
     fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CALIFICACIONES.json`)
     .then(r => r.json())
     .then(data => {
@@ -524,6 +1467,7 @@ document.addEventListener("DOMContentLoaded", () => {
             estado.className = "estado habilitado";
             contenido.style.display = "grid";
             filaAsistencia.style.display = "grid";
+            filaBoletin.style.display = "grid"; 
         } else {
             estado.innerHTML = "⛔ Acceso restringido";
             estado.className = "estado restringido";
@@ -549,9 +1493,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     actualizarBotones();
 
-    // ==========================================
-    // LOGICA DESCARGA TRIMESTRAL (ORIGINAL)
-    // ==========================================
     btnDescargar.addEventListener("click", async function() {
         try {
             const trimestreSeleccionado = trimestre.value;
@@ -678,7 +1619,6 @@ document.addEventListener("DOMContentLoaded", () => {
             cellPromHeader.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
             cellPromHeader.font = { bold: true };
             
-            // SE AJUSTA EL ANCHO DE LA COLUMNA PROMEDIO A 6 COMO SE SOLICITÓ
             ws.getColumn(colPromedio).width = 6;
             ws.getRow(4).height = 120;
 
@@ -762,7 +1702,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     listaCeldasPromedio.push({ cell: cellProm, value: promVal });
                 } else {
                     const cellNombre = ws.getCell(fila, 2);
-                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo brillante
+                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; 
                 }
 
                 fila++;
@@ -803,13 +1743,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // ==========================================
-    // NUEVA LOGICA: DESCARGA ANUAL
-    // ==========================================
     btnDescargarAnual.addEventListener("click", async () => {
         try {
             const cursoSeleccionado = tutor.value;
-            const trimestreSeleccionado = trimestre.value; // Capturar el trimestre seleccionado
+            const trimestreSeleccionado = trimestre.value; 
 
             if (!cursoSeleccionado) { 
                 alert("Seleccione un curso."); 
@@ -819,7 +1756,6 @@ document.addEventListener("DOMContentLoaded", () => {
             btnDescargarAnual.disabled = true;
             btnDescargarAnual.innerText = "⏳ Generando...";
 
-            // 1. ESTUDIANTES
             const respEst = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`);
             const estudiantesData = await respEst.json();
 
@@ -849,7 +1785,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return numA - numB;
             });
 
-            // 2. PROFESORES
             const respProf = await fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES.json`);
             const todosProfes = await respProf.json();
             const profesoresCurso = [];
@@ -877,7 +1812,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 3. CARGAR NOTAS (LOS 3 TRIMESTRES)
             const cacheNotasAnual = {};
             const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
 
@@ -890,11 +1824,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            // EXCEL CONFIG
             const wb = new ExcelJS.Workbook();
             const ws = wb.addWorksheet("ANUAL");
             
-            // Landscape por la cantidad de columnas
             ws.pageSetup.orientation = 'landscape';
             ws.pageSetup.fitToPage = true;
             ws.pageSetup.fitToWidth = 1;
@@ -920,20 +1852,17 @@ document.addEventListener("DOMContentLoaded", () => {
             cellNum.font = { bold: true, size: 10 };
 
             let col = 3;
-            // Paleta de colores pasteles para diferenciar las materias
             const headerColors = [
                 'FFB3E5FC', 'FFC8E6C9', 'FFFFE0B2', 'FFE1BEE7',
                 'FFFFCCBC', 'FFD7CCC8', 'FFCFD8DC', 'FFF0F4C3',
                 'FFB2DFDB', 'FFFFD54F', 'FFD1C4E9', 'FFC5CAE9'
             ];
 
-            // 4. CREAR CABECERAS PARA CADA MATERIA/PROFESOR
             profesoresCurso.forEach((p, idx) => {
                 const color = headerColors[idx % headerColors.length];
                 const startCol = col;
                 const endCol = col + 3;
 
-                // Fila 3: Profesor
                 ws.mergeCells(3, startCol, 3, endCol);
                 const cellProf = ws.getCell(3, startCol);
                 cellProf.value = p.nombre.toUpperCase();
@@ -941,7 +1870,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 cellProf.font = { bold: true, size: 8 };
                 cellProf.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
 
-                // Fila 4: Materia (Rotada a 90 grados y con Ajuste de Texto habilitado)
                 ws.mergeCells(4, startCol, 4, endCol);
                 const cellMat = ws.getCell(4, startCol);
                 cellMat.value = p.materia.toUpperCase();
@@ -949,7 +1877,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 cellMat.font = { bold: true, size: 7 };
                 cellMat.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
 
-                // Fila 5: Trimestres 1T, 2T, 3T, A
                 const headersT = ['1T', '2T', '3T', 'A'];
                 headersT.forEach((t, i) => {
                     const cCol = startCol + i;
@@ -960,7 +1887,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     cT.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
                     ws.getColumn(cCol).width = 4.5;
 
-                    // LOGICA DE OCULTAMIENTO DE COLUMNAS SEGÚN TRIMESTRE
                     if (trimestreSeleccionado === "PRIMERO" && (t === "2T" || t === "3T" || t === "A")) {
                         ws.getColumn(cCol).hidden = true;
                     } else if (trimestreSeleccionado === "SEGUNDO" && (t === "3T" || t === "A")) {
@@ -971,21 +1897,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 col += 4;
             });
 
-            // COLUMNA PROMEDIO ANUAL GENERAL (SIEMPRE VISIBLE)
             const colPromedio = col;
             ws.mergeCells(3, colPromedio, 5, colPromedio);
             const cellPromHeader = ws.getCell(3, colPromedio);
             cellPromHeader.value = "PROM.\nANUAL";
             cellPromHeader.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
             cellPromHeader.font = { bold: true, size: 9 };
-            cellPromHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo para el final
+            cellPromHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; 
             ws.getColumn(colPromedio).width = 6.5;
 
             ws.getRow(3).height = 25;
-            ws.getRow(4).height = 57; // Alto de fila de la materia a 57 exactamente
+            ws.getRow(4).height = 57; 
             ws.getRow(5).height = 20;
 
-            // Definimos los trimestres que se van a acumular según la selección
             let trimestresActivos = [];
             if (trimestreSeleccionado === "PRIMERO") {
                 trimestresActivos = ["PRIMERO"];
@@ -999,7 +1923,6 @@ document.addEventListener("DOMContentLoaded", () => {
             let numero = 1;
             const listaCeldasPromedio = [];
 
-            // 5. LLENAR DATOS CON VERIFICACIÓN ESTRICTA DE NOTAS Y FORMATOS DE COLORES SOLICITADOS
             for (let i = 0; i < estudiantesOrdenados.length; i++) {
                 const estudianteItem = estudiantesOrdenados[i];
                 const partes = estudianteItem.split(":");
@@ -1012,21 +1935,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 let colNotas = 3;
                 let sumaAnualGeneral = 0;
                 let materiasValidasGeneral = 0;
-                let promedioCompleto = true; // Flag para validar si el alumno tiene todas sus notas completas
+                let promedioCompleto = true; 
 
                 profesoresCurso.forEach((p, idx) => {
                     const color = headerColors[idx % headerColors.length];
                     let sumaAnualMateria = 0;
                     let trimestresValidos = 0;
-                    let tieneNotasCompletasMateria = true; // Validador por materia activa
+                    let tieneNotasCompletasMateria = true; 
 
-                    // Trimestres 1T, 2T, 3T
                     trimestres.forEach((trim, tIdx) => {
                         const cellNota = ws.getCell(fila, colNotas + tIdx);
-                        // Aplicar el mismo color de fondo de la cabecera a toda la columna por defecto
                         cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
 
-                        // Solo procesamos y tomamos notas para los trimestres activos
                         if (trimestresActivos.includes(trim)) {
                             let notaFinal = null;
                             const cursoDoc = cacheNotasAnual[p.nombre][trim];
@@ -1063,13 +1983,10 @@ document.addEventListener("DOMContentLoaded", () => {
                                 const valorRedondeado = Math.round(notaFinal);
                                 cellNota.value = valorRedondeado;
                                 
-                                // FORMATO DE COLORES SOLICITADO
                                 if (valorRedondeado < 30) {
-                                    // Menores a 30: Fondo lila con letras blancas
                                     cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9370DB' } };
                                     cellNota.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                                 } else if (valorRedondeado < 51) {
-                                    // Menores a 51 (entre 30 y 50): Fondo rojo con letras blancas
                                     cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
                                     cellNota.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                                 }
@@ -1077,18 +1994,14 @@ document.addEventListener("DOMContentLoaded", () => {
                                 sumaAnualMateria += valorRedondeado;
                                 trimestresValidos++;
                             } else {
-                                // El trimestre está activo para la selección actual pero no tiene nota
                                 tieneNotasCompletasMateria = false;
                             }
                         }
                     });
 
-                    // Calculo Promedio Anual de la Materia (Columna A)
                     const cellA = ws.getCell(fila, colNotas + 3);
-                    // Sombreado leve a la columna "A" para separarla, aplicado siempre
                     cellA.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
 
-                    // Solo calculamos el promedio de la materia si se registraron notas en TODOS los trimestres activos
                     if (tieneNotasCompletasMateria && trimestresValidos === trimestresActivos.length) {
                         const notaA = Math.round(sumaAnualMateria / trimestresValidos); 
                         cellA.value = notaA;
@@ -1101,15 +2014,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         sumaAnualGeneral += notaA;
                         materiasValidasGeneral++;
                     } else {
-                        // Dejar en blanco la nota anual de esta materia si le falta alguna requerida
                         cellA.value = "";
-                        promedioCompleto = false; // Al faltar una materia, el promedio general anual se cancela
+                        promedioCompleto = false; 
                     }
 
-                    colNotas += 4; // Saltar 4 columnas para el siguiente profesor
+                    colNotas += 4; 
                 });
 
-                // Promedio Anual General del Estudiante (PROM. ANUAL)
                 const cellProm = ws.getCell(fila, colPromedio);
                 if (promedioCompleto && materiasValidasGeneral === profesoresCurso.length && materiasValidasGeneral > 0) {
                     const promGral = Math.round((sumaAnualGeneral / materiasValidasGeneral) * 100) / 100;
@@ -1122,33 +2033,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     listaCeldasPromedio.push({ cell: cellProm, value: promGral });
                 } else {
-                    // Si falta una nota de alguna materia en los trimestres activos, se deja totalmente en blanco
                     cellProm.value = "";
                     const cellNombre = ws.getCell(fila, 2);
-                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Amarillo brillante
+                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; 
                 }
 
                 fila++;
                 numero++;
             }
 
-            // Resaltar los 3 mejores de todo el año
             listaCeldasPromedio.sort((a, b) => b.value - a.value);
             const mejores3 = listaCeldasPromedio.slice(0, 3);
             mejores3.forEach(item => {
-                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } }; // Azul oscuro
-                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // Letras blancas
+                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } }; 
+                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; 
             });
 
-            // 6. BORDES FINALES
             const borderOpts = { style: 'thin', color: { argb: 'FF000000' } };
             for (let r = 3; r < fila; r++) {
                 for (let c = 1; c <= colPromedio; c++) {
                     const celdaFinal = ws.getCell(r, c);
-                    // Inicializar si el estilo de borde es nulo
                     if (!celdaFinal.border) celdaFinal.border = {};
                     
-                    // Asegurarnos de no poner bordes en columnas ocultas para mejorar el rendimiento y vista
                     if (!ws.getColumn(c).hidden) {
                         celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
                     }
@@ -1162,7 +2068,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ws.getColumn(1).width = 5;
             ws.getColumn(2).width = 30;
 
-            // 7. GUARDAR
             const buffer = await wb.xlsx.writeBuffer();
             const nombreArchivo = `ANUAL_${trimestreSeleccionado}_${cursoSeleccionado}.xlsx`;
             saveAs(new Blob([buffer]), nombreArchivo);
@@ -1180,34 +2085,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-
-<div id="modalAsistencia" class="modal">
-<div class="modal-content">
-<div class="titulo-modal">
-<span>📋 DESCARGA DE ASISTENCIA</span>
-<span id="btnCerrarModal">✖</span>
-</div>
-<div class="fila-campos">
-<div class="campo">
-<label>Desde:</label>
-<input type="date" id="fechaDesde">
-</div>
-<div class="campo">
-<label>Hasta:</label>
-<input type="date" id="fechaHasta">
-</div>
-<div class="campo">
-<label>Curso</label>
-<select id="cursoAsistencia">
-<option value="">Seleccione Curso</option>
-</select>
-</div>
-</div>
-<div class="acciones">
-<button id="btnProcesar">DESCARGA</button>
-</div>
-</div>
-</div>
-
 </body>
 </html>
