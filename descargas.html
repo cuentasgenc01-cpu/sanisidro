@@ -130,7 +130,7 @@ table tr:first-child td:nth-child(n+3) {
 <a href="notas.html">📝 Notas</a>
 <a href="#">📅 Horario</a>
 <a href="kardex.html">⚖️ Kardex</a>
-<a href="descargas.html">⬇️ Descarga</a>
+<a href="descargas.html" style="background:rgba(255,255,255,0.20);font-weight:600;">⬇️ Descarga</a>
 </div>
 
 <button id="btnCerrarSesion">🚪 Cerrar Sesión</button>
@@ -241,6 +241,13 @@ table tr:first-child td:nth-child(n+3) {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const profesor = localStorage.getItem("profesor");
+
+    // VALIDACIÓN DE SESIÓN (Redirigir a index si no hay profesor)
+    if (!profesor) {
+        window.location.href = "index.html";
+        return;
+    }
+
     document.getElementById("nombreProfesor").innerHTML = profesor || "Profesor";
 
     const tutorSelect = document.getElementById("TUTOR");

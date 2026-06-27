@@ -337,7 +337,7 @@
         }
 
         .list-item.licencia {
-            background: #c8e6c9;
+            background: #04f80ce8;
             border-left: 6px solid #558b2f;
         }
 
@@ -572,20 +572,47 @@
         <div class="number" id="stat-asistentes">0</div>
     </div>
 
-    <div class="stat-card" onclick="filtrarEstado('FA')">
-        <h3>ATRASOS</h3>
-        <div class="number" id="stat-atrasos">0</div>
+    <div class="stat-card"
+     onclick="filtrarEstado('FA')"
+    style="
+background:linear-gradient(135deg,#E3F2FD,#BBDEFB);
+border-left:8px solid #1976D2;
+">
+    <h3 style="color:#006064;">ATRASOS</h3>
+    <div class="number"
+         id="stat-atrasos"
+         style="color:#01535a;">
+        0
     </div>
+</div>
 
-    <div class="stat-card" onclick="filtrarEstado('F')">
-        <h3>FALTAS</h3>
-        <div class="number" id="stat-faltas">0</div>
+<div class="stat-card"
+     onclick="filtrarEstado('F')"
+     style="
+        background:#FFCDD2;
+        border-left:8px solid #D32F2F;
+     ">
+    <h3 style="color:#B71C1C;">FALTAS</h3>
+    <div class="number"
+         id="stat-faltas"
+         style="color:#C62828;">
+        0
     </div>
+</div>
 
-    <div class="stat-card" onclick="filtrarEstado('L')">
-        <h3>LICENCIAS</h3>
-        <div class="number" id="stat-licencias">0</div>
+<div class="stat-card"
+     onclick="filtrarEstado('L')"
+     style="
+        background:#C8E6C9;
+        border-left:8px solid #43A047;
+     ">
+    <h3 style="color:#1B5E20;">LICENCIAS</h3>
+    <div class="number"
+         id="stat-licencias"
+         style="color:#2E7D32;">
+        0
     </div>
+</div>
 </div>
 
     <div class="list-container" id="alumnosList"></div>
@@ -648,13 +675,48 @@
         </div>
 
         <!-- Cabecera Tabla -->
-        <div style="display: flex; background: #eee; padding: 5px; font-size: 10px; font-weight: 900; border-radius: 4px;">
-            <span style="width: 85px;">FECHA</span>
-            <select id="filtroProfeHist" style="flex: 1; border: none; background: transparent; font-size: 10px; font-weight: 900;" onchange="renderizarHistorialAlumno()">
-                <option value="TODOS">TODOS LOS PROFESORES</option>
-            </select>
-            <span style="width: 50px; text-align: center;">ESTADO</span>
-        </div>
+        <div style="
+    display:flex;
+    align-items:center;
+    background:#eee;
+    padding:6px 8px;
+    font-size:10px;
+    font-weight:900;
+    border-radius:4px;
+">
+
+    <span style="width:85px;">
+        FECHA
+    </span>
+
+    <select id="filtroProfeHist"
+        onchange="renderizarHistorialAlumno()"
+        style="
+            width:180px;
+            border:none;
+            background:transparent;
+            font-size:10px;
+            font-weight:900;
+            margin-left:8px;
+            margin-right:10px;
+            cursor:pointer;
+        ">
+
+        <option value="TODOS">
+            TODOS LOS PROFESORES
+        </option>
+
+    </select>
+
+    <span style="
+        margin-left:auto;
+        width:60px;
+        text-align:center;
+    ">
+        ESTADO
+    </span>
+
+</div>
 
         <div id="historialAlumnoContenido" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
 
@@ -697,6 +759,12 @@
 
     // VARIABLES GLOBALES
     let profesor = localStorage.getItem("profesor");
+    
+    // VERIFICACIÓN DE SESIÓN INICIADA
+    if (!profesor) {
+        window.location.href = "index.html";
+    }
+
     let estados = {};
     let alumnos = [];
     let cursoActual = "";
@@ -720,7 +788,6 @@
     }
 
     // INICIALIZAR
-  // INICIALIZAR
 document.getElementById(
     "nombreProfesorSidebar"
 ).textContent =

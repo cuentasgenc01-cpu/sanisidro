@@ -1180,12 +1180,13 @@ style="
 <div id="dimensionsSection" style="display: none;">
 
     <!-- SER - SABER - HACER -->
-    <div style="
-        display:grid;
-        grid-template-columns:1fr 1fr 1fr;
-        gap:20px;
-        margin-bottom:20px;
-    ">
+   <div style="
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+    align-items:start;
+">
 
         <!-- SER -->
         <div class="dimension-card">
@@ -1407,7 +1408,13 @@ style="
         const db = getDatabase(app);
 
         // Global State
-        let profesor = localStorage.getItem('profesor') || 'Invitado';
+        let profesor = localStorage.getItem('profesor');
+        
+        // Si no hay profesor logueado, redirigir al index.html
+        if (!profesor) {
+            window.location.href = "index.html";
+        }
+
         let tienePermiso = false;
         let soloNotaTrimestral = false;
         let trimestres = [];
@@ -1425,20 +1432,9 @@ style="
         document.addEventListener('DOMContentLoaded', initApp);
 
         async function initApp() {
-            if (profesor === 'Invitado' || !profesor) {
-                console.warn('No hay profesor autenticado, redirigiendo a login');
-                // Descomentar para producción
-                /*
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 500);
-                return;
-                */
-            }
-
             // Mostrar nombre del profesor en el sidebar
             const sidebarEl = document.getElementById('sidebarProfesor');
-            if (sidebarEl && profesor !== 'Invitado') {
+            if (sidebarEl && profesor) {
                 sidebarEl.textContent = profesor;
             }
 
@@ -1582,18 +1578,15 @@ document.getElementById('saveBtn').disabled = true;
                             cursos.push(key);
                         }
                     }
-                } else {
-                    // Fallback for preview
-                    cursos = ['1ro A', '2do B', '3ro C'];
                 }
                 cursos.sort();
                 actualizarSelectCurso();
                 document.getElementById('curso').disabled = false;
             } catch (error) {
                 console.error('Error cargando cursos:', error);
-                cursos = ['1ro A', '2do B', '3ro C'];
+                cursos = [];
                 actualizarSelectCurso();
-                document.getElementById('curso').disabled = false;
+                document.getElementById('curso').disabled = true;
             }
         }
 
@@ -1671,8 +1664,6 @@ document.getElementById('saveBtn').disabled = true;
                             estudiantes.push(value);
                         }
                     }
-                } else {
-                    estudiantes = ['Juan Perez', 'Maria Garcia', 'Carlos Lopez'];
                 }
                 estudiantes.sort();
               actualizarSelectEstudiante();
@@ -1683,11 +1674,9 @@ setTimeout(marcarEstudiantesConCeros,300);
 document.getElementById('soloAsistentes').checked = false;
             } catch (error) {
                 console.error('Error cargando estudiantes:', error);
-                 estudiantes = ['Juan Perez', 'Maria Garcia', 'Carlos Lopez'];
+                 estudiantes = [];
                  actualizarSelectEstudiante();
-                 document.getElementById('estudiante').disabled = false;
-                 document.getElementById('studentRowContainer').style.display = 'grid';
-                 document.getElementById('checkboxContainer').style.display = 'flex';
+                 document.getElementById('estudiante').disabled = true;
             }
         }
 

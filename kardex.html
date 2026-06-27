@@ -380,6 +380,7 @@
             margin: 5px 0;
         }
 
+        /* MODIFICADO: Ajustes para botón borrar para que no ocupe fila extra */
         .record-card .delete-btn {
             background: #d32f2f;
             color: white;
@@ -387,8 +388,6 @@
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
-            float: right;
-            margin-top: 10px;
         }
 
         .modal {
@@ -880,6 +879,12 @@
 
     // VARIABLES GLOBALES
     let profesor = localStorage.getItem("profesor");
+    
+    // Si no hay profesor logueado, redirigir al index.html
+    if (!profesor) {
+        window.location.href = "index.html";
+    }
+
     let cursoActual = "";
     let estudiante = "";
     let actividadesSeleccionadas = [];
@@ -890,12 +895,11 @@
     let registroABorrar = null;
 
     // INICIALIZAR
- // INICIALIZAR
-document.getElementById("nombreProfesorSidebar").textContent =
-    profesor || "Invitado";
+    document.getElementById("nombreProfesorSidebar").textContent =
+        profesor || "Invitado";
 
-document.getElementById("fecha").value =
-    fechaActual;
+    document.getElementById("fecha").value =
+        fechaActual;
     
     // Formatear fecha para que coincida con Firebase (D-M-YYYY)
     function formatFechaDB(fechaISO) {
@@ -935,7 +939,6 @@ document.getElementById("fecha").value =
         }
         
         const select = document.getElementById("actividad");
-        select.innerHTML = '<option value="">Seleccionar Incidencia</option><option value="+ NUEVA">+ CREAR NUEVA</option>';
         select.innerHTML = '<option value="">Seleccionar Incidencia</option><option value="+ NUEVA" style="color: #FF5722; font-weight: bold; background-color: #FFF3E0;">+ NUEVA ACTIVIDAD</option>';
         
         todasLasActividades.forEach(act => {
@@ -1005,6 +1008,14 @@ document.getElementById("fecha").value =
         document.getElementById("btnHistorial").disabled = !cursoActual;
         document.getElementById("actividad").disabled = !estudiante; // Habilitar incidencias al elegir estudiante
         actividadesSeleccionadas = [];
+        
+        // REQUERIMIENTO: Cargar incidencias previas del estudiante si existen para hoy
+        const regPrevio = registrosHoy.find(r => r.cambios && r.cambios[estudiante]);
+        if (regPrevio && regPrevio.cambios[estudiante]) {
+            // Dividimos el string para llenar el arreglo de seleccionadas
+            actividadesSeleccionadas = regPrevio.cambios[estudiante].split(" | ");
+        }
+
         mostrarActividadesSeleccionadas();
     }
 
@@ -1016,6 +1027,22 @@ document.getElementById("fecha").value =
         const hoyLocal = hoyObj.getFullYear() + '-' + String(hoyObj.getMonth() + 1).padStart(2, '0') + '-' + String(hoyObj.getDate()).padStart(2, '0');
         document.getElementById("btnGuardar").disabled = !cursoActual || fechaActual !== hoyLocal;
 
+        // REQUERIMIENTO: Restablecer la selección de estudiante al cambiar la fecha
+        const selectEst = document.getElementById("estudiante");
+        if (selectEst.options.length > 0 && selectEst.options[0].value !== "") {
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Seleccionar Estudiante";
+            selectEst.insertBefore(defaultOption, selectEst.firstChild);
+        }
+        selectEst.value = "";
+        estudiante = "";
+        
+        document.getElementById("actividad").disabled = true; // Bloqueado hasta seleccionar estudiante
+        document.getElementById("btnHistEstudiante").disabled = true;
+        actividadesSeleccionadas = [];
+        mostrarActividadesSeleccionadas();
+
         cargarRegistrosProfe();
     }
 
@@ -1026,10 +1053,16 @@ document.getElementById("fecha").value =
         if (valor === "+ NUEVA") {
             document.getElementById("nuevaActividadDiv").style.display = "flex";
             document.getElementById("actividad").value = "";
-        } else if (valor && !actividadesSeleccionadas.includes(valor)) {
-            actividadesSeleccionadas.push(valor);
-            mostrarActividadesSeleccionadas();
-            document.getElementById("actividad").value = "";
+        } else if (valor) {
+            // REQUERIMIENTO: Validar si la incidencia ya fue agregada para mostrar un mensaje
+            if (actividadesSeleccionadas.includes(valor)) {
+                alert("Esta incidencia ya ha sido agregada para este estudiante.");
+                document.getElementById("actividad").value = "";
+            } else {
+                actividadesSeleccionadas.push(valor);
+                mostrarActividadesSeleccionadas();
+                document.getElementById("actividad").value = "";
+            }
         }
     }
 
@@ -1042,7 +1075,9 @@ document.getElementById("fecha").value =
             return;
         }
         
-        if (!actividadesSeleccionadas.includes(nueva)) {
+        if (actividadesSeleccionadas.includes(nueva)) {
+             alert("Esta incidencia ya ha sido agregada.");
+        } else {
             actividadesSeleccionadas.push(nueva);
             mostrarActividadesSeleccionadas();
         }
@@ -1079,7 +1114,16 @@ document.getElementById("fecha").value =
     }
 
     window.guardarRegistro = async function() {
-        if (!cursoActual || !estudiante || actividadesSeleccionadas.length === 0) {
+        if (!cursoActual || !estudiante) {
+            alert("Seleccione curso y estudiante");
+            return;
+        }
+
+        // Revisar si ya existen registros en BD
+        const regPrevio = registrosHoy.find(r => r.cambios && r.cambios[estudiante]);
+
+        // REQUERIMIENTO: Si NO existe incidencia en Firebase y la lista está vacía, mostrar mensaje.
+        if (actividadesSeleccionadas.length === 0 && !regPrevio) {
             alert("Complete todos los campos");
             return;
         }
@@ -1087,7 +1131,6 @@ document.getElementById("fecha").value =
         document.getElementById("loading").classList.add("active");
         
         try {
-            // Formatear fecha y hora como DD-MM-YYYY HH:mm:ss
             const now = new Date();
             const ahora = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()} ` +
                           `${String(now.getHours()).padStart(2, '0')}:` +
@@ -1101,54 +1144,73 @@ document.getElementById("fecha").value =
             const snapshot = await get(kardexRef);
             
             let existenteKey = null;
+            let existingCambios = {};
+
             if (snapshot.exists()) {
                 snapshot.forEach(child => {
                     const data = child.val();
                     if (data.profesor === profesor && data.fecha_asis === fechaDB) {
                         existenteKey = child.key;
+                        existingCambios = data.cambios || {};
                     }
                 });
             }
             
             const updates = {};
             
-            if (existenteKey) {
-                const existing = (await get(ref(db, `KARDEXREGISTRO/${cursoActual}/${existenteKey}`))).val();
-                const cambios = existing.cambios || {};
-                const anterior = cambios[estudiante] || "";
-                cambios[estudiante] = anterior ? `${anterior} | ${actividadesStr}` : actividadesStr;
-                
-                updates[`KARDEXREGISTRO/${cursoActual}/${existenteKey}`] = {
-                    profesor: profesor,
-                    fecha_asis: fechaDB,
-                    fecha_hora_reg: `EDITADO ${ahora}`,
-                    cambios: cambios
-                };
-            } else {
-                const newKey = push(ref(db, `KARDEXREGISTRO/${cursoActual}`)).key;
-                updates[`KARDEXREGISTRO/${cursoActual}/${newKey}`] = {
-                    profesor: profesor,
-                    fecha_asis: fechaDB,
-                    fecha_hora_reg: ahora,
-                    cambios: {[estudiante]: actividadesStr}
-                };
-            }
-            
-            // Agregar nuevas actividades a KARDEX
-            for (const act of actividadesSeleccionadas) {
-                if (!todasLasActividades.includes(act)) {
-                    updates[`KARDEX/${act}`] = true;
+            if (actividadesSeleccionadas.length === 0) {
+                // REQUERIMIENTO: Si se han eliminado todas las incidencias de la UI y ya existía, se elimina y guarda el cambio.
+                if (existenteKey && existingCambios[estudiante]) {
+                    delete existingCambios[estudiante];
+
+                    if (Object.keys(existingCambios).length === 0) {
+                        // Si era el único estudiante con registro, borramos el nodo completo
+                        await remove(ref(db, `KARDEXREGISTRO/${cursoActual}/${existenteKey}`));
+                    } else {
+                        // Actualizamos el registro excluyendo al estudiante actual
+                        updates[`KARDEXREGISTRO/${cursoActual}/${existenteKey}/cambios`] = existingCambios;
+                        updates[`KARDEXREGISTRO/${cursoActual}/${existenteKey}/fecha_hora_reg`] = `EDITADO ${ahora}`;
+                        await update(ref(db), updates);
+                    }
+                    alert("Incidencias eliminadas correctamente");
                 }
+            } else {
+                // Guardado normal o actualización
+                if (existenteKey) {
+                    // Ahora sobrescribimos directamente porque la UI ya maneja todo el estado correcto
+                    existingCambios[estudiante] = actividadesStr;
+                    
+                    updates[`KARDEXREGISTRO/${cursoActual}/${existenteKey}`] = {
+                        profesor: profesor,
+                        fecha_asis: fechaDB,
+                        fecha_hora_reg: `EDITADO ${ahora}`,
+                        cambios: existingCambios
+                    };
+                } else {
+                    const newKey = push(ref(db, `KARDEXREGISTRO/${cursoActual}`)).key;
+                    updates[`KARDEXREGISTRO/${cursoActual}/${newKey}`] = {
+                        profesor: profesor,
+                        fecha_asis: fechaDB,
+                        fecha_hora_reg: ahora,
+                        cambios: {[estudiante]: actividadesStr}
+                    };
+                }
+                
+                // Agregar nuevas actividades a KARDEX general
+                for (const act of actividadesSeleccionadas) {
+                    if (!todasLasActividades.includes(act)) {
+                        updates[`KARDEX/${act}`] = true;
+                    }
+                }
+                
+                await update(ref(db), updates);
+                alert("Registro guardado exitosamente");
             }
             
-            await update(ref(db), updates);
-            
-            alert("Registro guardado");
             actividadesSeleccionadas = [];
             
             // Resetear para que aparezca "Seleccionar Estudiante" y se bloqueen incidencias
             await cursoSeleccionado(); 
-            
             mostrarActividadesSeleccionadas();
             cargarActividades();
             
@@ -1176,6 +1238,14 @@ document.getElementById("fecha").value =
         }
         
         mostrarRegistros();
+
+        // Actualizar UI del estudiante seleccionado (útil si se acaba de borrar un registro desde mis registros o se editó)
+        if (estudiante) {
+            const selectEst = document.getElementById("estudiante");
+            if (selectEst.value === estudiante) {
+                window.estudianteSeleccionado();
+            }
+        }
     }
 
     function mostrarRegistros() {
@@ -1210,14 +1280,16 @@ document.getElementById("fecha").value =
                 Object.keys(reg.cambios).forEach(est => {
                     const card = document.createElement("div");
                     card.className = "record-card";
+                    // MODIFICADO: Estructura HTML actualizada para alinear el título y el botón juntos
                     card.innerHTML = `
-                        <h4 style="font-size: 13px; font-weight: bold;">${est}</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <h4 style="font-size: 13px; font-weight: bold; margin: 0;">${est}</h4>
+                            ${fechaActual === hoyLocal ? `
+                                <button class="delete-btn" onclick="confirmarBorrar('${reg.key}', '${est}')">BORRAR</button>
+                            ` : ''}
+                        </div>
                         <p style="font-size: 12px; color: #1B5E20; font-weight: bold;">${reg.cambios[est]}</p>
                         <small>${reg.fecha_hora_reg}</small>
-                        ${fechaActual === hoyLocal ? `
-                            <button class="delete-btn" onclick="confirmarBorrar('${reg.key}', '${est}')">BORRAR</button>
-                        ` : ''}
-                        <div style="clear: both;"></div>
                     `;
                     container.appendChild(card);
                 });
@@ -1265,11 +1337,6 @@ document.getElementById("fecha").value =
         }
     }
 
-    window.verHistorialEstudiante = async function() {
-        if (!estudiante || !cursoActual) return;
-        alert("Historial de " + estudiante + " - Funcionalidad en desarrollo");
-    }
-
     window.confirmarBorrar = function(key, est) {
         registroABorrar = {key, est, curso: cursoActual};
         document.getElementById("confirmText").textContent = `¿Eliminar registro de ${est}?`;
@@ -1305,11 +1372,8 @@ document.getElementById("fecha").value =
     }
 
   window.cerrarSesion = function() {
-
     localStorage.removeItem("profesor");
-
     window.location.href = "index.html";
-
 };
 
     // INICIALIZAR
