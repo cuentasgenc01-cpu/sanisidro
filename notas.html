@@ -1442,43 +1442,34 @@ style="
             verificarPermiso();
         }
 
-      async function verificarPermiso() {
+     async function verificarPermiso() {
 
     try {
 
-        const permRef =
-            ref(db, `PROFESORES/${profesor}/CALIFICACIONES`);
+        const permRef = ref(db, `PROFESORES/${profesor}/CALIFICACIONES`);
+        const snapshot = await get(permRef);
 
-        const snapshot =
-            await get(permRef);
+        const permCheckEl = document.getElementById('permissionCheck');
+        const accessDeniedEl = document.getElementById('accessDenied');
+        const mainContentEl = document.getElementById('mainContent');
 
-        const permCheckEl =
-            document.getElementById('permissionCheck');
-
-        const accessDeniedEl =
-            document.getElementById('accessDenied');
-
-        const mainContentEl =
-            document.getElementById('mainContent');
-
-        // NO EXISTE CALIFICACIONES
+        // NO EXISTE EL PERMISO
         if (!snapshot.exists()) {
-            
-            // LOGICA MODIFICADA PARA PREVIEW (Asume true por defecto si falla bd en preview)
-            tienePermiso = true; 
+
+            tienePermiso = false;
+
             permCheckEl.classList.add('hidden');
-            accessDeniedEl.classList.add('hidden');
-            mainContentEl.classList.remove('hidden');
-            cargarTrimestres();
+            mainContentEl.classList.add('hidden');
+            accessDeniedEl.classList.remove('hidden');
+
             return;
         }
 
-        // EXISTE CALIFICACIONES
+        // EXISTE EL PERMISO
         tienePermiso = true;
 
-        // SI ES FALSE → SOLO NOTA TRIMESTRAL
-        soloNotaTrimestral =
-            snapshot.val() === false;
+        // false = solo nota trimestral
+        soloNotaTrimestral = (snapshot.val() === false);
 
         permCheckEl.classList.add('hidden');
         accessDeniedEl.classList.add('hidden');
@@ -1488,18 +1479,17 @@ style="
 
     } catch (error) {
 
-        console.error(
-            'Error verificando permiso:',
-            error
-        );
-        // Fallback for preview environment
-        const permCheckEl = document.getElementById('permissionCheck');
-        const mainContentEl = document.getElementById('mainContent');
-        permCheckEl.classList.add('hidden');
-        mainContentEl.classList.remove('hidden');
-        trimestres = ['1er Trimestre', '2do Trimestre'];
-        actualizarSelectTrimestre();
+        console.error("Error verificando permiso:", error);
 
+        const permCheckEl = document.getElementById('permissionCheck');
+        const accessDeniedEl = document.getElementById('accessDenied');
+        const mainContentEl = document.getElementById('mainContent');
+
+        tienePermiso = false;
+
+        permCheckEl.classList.add('hidden');
+        mainContentEl.classList.add('hidden');
+        accessDeniedEl.classList.remove('hidden');
     }
 }
 
@@ -2076,21 +2066,40 @@ async function guardarNotas() {
                 }
             );
 
-            hideLoading();
+           hideLoading();
 
-            alert('✅ NOTA TRIMESTRAL GUARDADA');
+setTimeout(async () => {
+    await marcarEstudiantesConCeros();
+}, 500);
 
-        } catch(error) {
+alert('✅ NOTA TRIMESTRAL GUARDADA');
 
-            hideLoading();
+// VOLVER A LA SELECCIÓN DE ESTUDIANTE
+document.getElementById('estudiante').selectedIndex = 0;
 
-            alert(
-                '❌ Error: ' + error.message
-            );
+document.getElementById('dimensionsSection').style.display = 'none';
 
-        }
+document.getElementById('totalValue').textContent = '-';
 
-        return;
+document.getElementById('saveBtn').disabled = true;
+
+// Si estaba activado "Solo Asistencias y Atrasos",
+// volver a cargar la lista filtrada
+if (document.getElementById('soloAsistentes').checked) {
+    await toggleSoloAsistentes();
+}
+
+} catch(error) {
+
+    hideLoading();
+
+    alert(
+        '❌ Error: ' + error.message
+    );
+
+}
+
+return;
     }
 
 
