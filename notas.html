@@ -1083,7 +1083,7 @@ padding:10px;
                 border-radius:16px;
                 flex: 1;
             ">
-            ⬇️ TRIMESTRE
+            ⬇️ CENTRALIZADOR
         </button>
 
         <button
@@ -1767,7 +1767,7 @@ document.getElementById('checkboxContainer').style.display = 'flex';
 
   
 
-    const notasExtrasInput =
+    const notesExtrasInput =
         document.getElementById('notasExtras');
 
     if (notasData.esNotaTrimestral) {
@@ -1775,9 +1775,9 @@ document.getElementById('checkboxContainer').style.display = 'flex';
         document.getElementById('extrasLabel').textContent =
             'NOTA TRIMESTRAL (100 puntos)';
 
-        notasExtrasInput.max = 100;
+        notesExtrasInput.max = 100;
 
-        notasExtrasInput.value =
+        notesExtrasInput.value =
             notasData.notaTrimestralAnterior || '';
 
     } else {
@@ -1785,9 +1785,9 @@ document.getElementById('checkboxContainer').style.display = 'flex';
         document.getElementById('extrasLabel').textContent =
             'NOTAS EXTRAS (20 puntos)';
 
-        notasExtrasInput.max = 20;
+        notesExtrasInput.max = 20;
 
-        notasExtrasInput.value =
+        notesExtrasInput.value =
             notasData.notasExtras || '';
 
     }
@@ -1810,8 +1810,8 @@ document.getElementById('checkboxContainer').style.display = 'flex';
         document.getElementById('extrasLabel').textContent =
             'NOTA TRIMESTRAL (100 puntos)';
 
-        notasExtrasInput.max = 100;
-  notasExtrasInput.placeholder = 'COLOCA LA NOTA DE 1 A 100';
+        notesExtrasInput.max = 100;
+  notesExtrasInput.placeholder = 'COLOCA LA NOTA DE 1 A 100';
     }
 
 }
@@ -2556,6 +2556,14 @@ async function exportarExcel() {
             return;
         }
 
+        // NUEVO: Obtener la materia desde la base de datos de Firebase: /PROFESORES/{profesor}/CURSO/{curso}
+        const materiaRef = ref(db, `PROFESORES/${profesor}/CURSO/${curso}`);
+        const materiaSnapshot = await get(materiaRef);
+        let materia = '';
+        if (materiaSnapshot.exists()) {
+            materia = materiaSnapshot.val();
+        }
+
         // 2. Obtener todas las calificaciones registradas en /NOTAS/{profesor}/{trimestre}/{curso}
         const notasRef = ref(db, `NOTAS/${profesor}/${trimestre}/${curso}`);
         const snapshot = await get(notasRef);
@@ -2570,12 +2578,14 @@ async function exportarExcel() {
         filas.push([
             'PROFESOR:', profesor.toUpperCase(),
             'CURSO:', curso.toUpperCase(),
-            'TRIMESTRE:', trimestre.toUpperCase(),
-            '', ''
+         
         ]);
 
-        // Fila 3: Espaciador
-        filas.push(['', '', '', '', '', '', '', '']);
+        // Fila 3: MODIFICADO: Información de la Materia
+        filas.push([
+            'MATERIA:', materia ? materia.toString().toUpperCase() : '',
+            'TRIMESTRE:', trimestre.toUpperCase(),
+        ]);
 
         // Fila 4: Cabeceras de columnas
         filas.push([
@@ -2626,7 +2636,7 @@ async function exportarExcel() {
         if(!ws['!rows']) ws['!rows'] = [];
         ws['!rows'][0] = { hpt: 25 };  // Fila del título
         ws['!rows'][1] = { hpt: 20 };  // Fila de información
-        ws['!rows'][2] = { hpt: 10 };  // Fila vacía
+        ws['!rows'][2] = { hpt: 20 };  // MODIFICADO: Fila de la materia con suficiente altura
         ws['!rows'][3] = { hpt: 120 }; // Fila de cabecera con texto vertical
 
         // --- AJUSTE DE CONFIGURACIÓN DE PÁGINA PARA FORZAR IMPRESIÓN EN 1 SOLA HOJA ---
@@ -2723,8 +2733,15 @@ async function exportarExcel() {
                     continue;
                 }
 
-                // Fila 3: Espaciador vacío
-                if (F === 2) continue;
+                // Fila 3: MODIFICADO: Estilo de la etiqueta y valor de materia
+                if (F === 2) {
+                    if (C === 0) {
+                        ws[refCelda].s = estiloInfoLabel;
+                    } else if (C === 1) {
+                        ws[refCelda].s = estiloInfoValue;
+                    }
+                    continue;
+                }
 
                 // Fila 4: Cabeceras de tabla
                 if (F === 3) {

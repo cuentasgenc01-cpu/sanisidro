@@ -71,7 +71,8 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 
 select, button.descarga{padding:14px;border-radius:12px;height:48px; width: 100%;}
 select { min-width: 180px; }
-button.descarga{ border:none;background:#0D47A1;color:white; min-width: 200px; cursor: pointer; padding: 0 20px;}
+/* SOLUCIÓN AL DESBORDE: white-space: nowrap; y min-width dinámico para que no se salga del cuadro */
+button.descarga{ border:none;background:#0D47A1;color:white; min-width: max-content; cursor: pointer; padding: 0 20px; white-space: nowrap;}
 button.descarga:disabled{background:#999; cursor: not-allowed;}
 button#btnDescargarAnual:not(:disabled) {
     background: #28a745;
@@ -107,7 +108,8 @@ table tr:first-child td:nth-child(n+3) {
 .btn-pdf-est:hover { background:#218838; }
 .btn-pdf-est:disabled { background:#999; cursor:not-allowed; }
 
-@media (max-width: 1150px) {
+/* SOLUCIÓN AL DESBORDE: Aumentamos el breakpoint a 1300px para que se adapte antes de romper el layout */
+@media (max-width: 1300px) {
     #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga {
         grid-template-columns: 1fr;
         justify-items: stretch;
@@ -2052,31 +2054,24 @@ border:1px solid #374151;
             listaCeldasPromedio.sort((a, b) => b.value - a.value);
             const mejores3 = listaCeldasPromedio.slice(0, 3);
             mejores3.forEach(item => {
-                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } }; 
-                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; 
+                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } };
+                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
             });
 
             const borderOpts = { style: 'thin', color: { argb: 'FF000000' } };
             for (let r = 3; r < fila; r++) {
                 for (let c = 1; c <= colPromedio; c++) {
                     const celdaFinal = ws.getCell(r, c);
-                    if (!celdaFinal.border) celdaFinal.border = {};
-                    
-                    if (!ws.getColumn(c).hidden) {
-                        celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
-                    }
-                    
-                    if (c > 2 && r > 5) {
-                        celdaFinal.alignment = { horizontal: 'center', vertical: 'middle' };
-                    }
+                    celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
+                    if (c > 2 && r > 4) celdaFinal.alignment = { horizontal: 'center', vertical: 'middle' };
                 }
             }
 
-            ws.getColumn(1).width = 5;
-            ws.getColumn(2).width = 30;
+            ws.getColumn(1).width = 6;
+            ws.getColumn(2).width = 35;
 
             const buffer = await wb.xlsx.writeBuffer();
-            const nombreArchivo = `ANUAL_${trimestreSeleccionado}_${cursoSeleccionado}.xlsx`;
+            const nombreArchivo = `Anual_${cursoSeleccionado}.xlsx`;
             saveAs(new Blob([buffer]), nombreArchivo);
             
             alert("Excel Anual generado correctamente.");
@@ -2089,7 +2084,6 @@ border:1px solid #374151;
             btnDescargarAnual.disabled = false;
         }
     });
-
 });
 </script>
 </body>
