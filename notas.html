@@ -1819,16 +1819,99 @@ document.getElementById('checkboxContainer').style.display = 'flex';
                 row.innerHTML = `
                     <div style="display:flex; align-items:center; gap: 10px; width:100%; overflow:hidden;">
                         <div style="width: 5px; height: 28px; background: ${mainColor}; border-radius: 4px; flex-shrink: 0;"></div>
-                        <input type="text" value="${nombre}" readonly title="${nombre}"
-                            style="width:100%; color:#333; font-weight:700; background:transparent; border:none; text-overflow:ellipsis; box-shadow:none !important; outline:none !important; font-size:13px !important;">
+                     <input
+    type="text"
+    value="${nombre}"
+    readonly
+    title="${nombre}"
+    style="
+        width:100%;
+        font-weight:800;
+        text-overflow:ellipsis;
+        box-shadow:none!important;
+        outline:none!important;
+        font-size:13px!important;
+        border-radius:12px;
+        padding:8px 10px;
+
+        ${
+            Number(valor) > 0
+            ? (
+                id === 'ser'
+                ? `
+                    background:#E1BEE7!important;
+                    color:#7B1FA2!important;
+                    border:2px solid #CE93D8!important;
+                `
+                : id === 'saber'
+                ? `
+                    background:#FFE0B2!important;
+                    color:#E65100!important;
+                    border:2px solid #FFB74D!important;
+                `
+                : `
+                    background:#C8E6C9!important;
+                    color:#1B5E20!important;
+                    border:2px solid #81C784!important;
+                `
+            )
+            : `
+                background:#EEF2F7!important;
+                color:#333!important;
+                border:2px solid #D6DEEF!important;
+            `
+        }
+
+        -webkit-text-fill-color:currentColor;
+    ">
                     </div>
                     
-                    <input type="number" 
-                        value="${Number(valor)===0 ? '' : valor}" 
-                        min="0" max="${max}" step="1"
-                        oninput="this.value=this.value.replace(/[^0-9]/g,''); if(parseInt(this.value) > ${max}){alert('CORREGIR NOTA');this.value='';} updateActivityValue('${id}','${nombre}',this.value); calcularTotal();"
-                        placeholder="0"
-                        style="text-align: center; font-weight: 800; color: #0D47A1; padding: 4px !important; height: 32px !important; background: #f8fbff !important; border: 2px solid #e7eefc !important; border-radius: 8px !important; font-size: 14px !important;">
+                   <input
+    type="number"
+    value="${Number(valor)===0 ? '' : valor}"
+    min="0"
+    max="${max}"
+    step="1"
+    oninput="this.value=this.value.replace(/[^0-9]/g,''); if(parseInt(this.value) > ${max}){alert('CORREGIR NOTA');this.value='';} updateActivityValue('${id}','${nombre}',this.value); calcularTotal();"
+    placeholder="0"
+    style="
+        text-align:center;
+        font-weight:900;
+        padding:4px!important;
+        height:32px!important;
+        border-radius:10px!important;
+        font-size:14px!important;
+
+        ${
+            Number(valor)>0
+            ?(
+                id==='ser'
+                ?`
+                    background:#E1BEE7!important;
+                    color:#7B1FA2!important;
+                    border:2px solid #CE93D8!important;
+                `
+                :id==='saber'
+                ?`
+                    background:#FFE0B2!important;
+                    color:#E65100!important;
+                    border:2px solid #FFB74D!important;
+                `
+                :`
+                    background:#C8E6C9!important;
+                    color:#1B5E20!important;
+                    border:2px solid #81C784!important;
+                `
+            )
+            :`
+                background:#F8FBFF!important;
+                color:#0D47A1!important;
+                border:2px solid #E7EEFC!important;
+            `
+        }
+
+        -webkit-text-fill-color:currentColor;
+    ">
                         
                     <button class="btn btn-danger btn-sm" onclick="deleteActivity('${id}', '${nombre}')" title="Eliminar Actividad"
                         style="height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px !important; padding: 0 !important;">
