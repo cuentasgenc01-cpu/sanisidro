@@ -1501,11 +1501,18 @@ style="
                 trimestres = [];
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    for (const [key, value] of Object.entries(data)) {
-                        if (value === true && key !== 'ACTIVO') {
-                            trimestres.push(key);
-                        }
-                    }
+                  const permitidos = ["PRIMERO", "SEGUNDO", "TERCERO"];
+
+for (const [key, value] of Object.entries(data)) {
+
+    if (
+        value === true &&
+        permitidos.includes(key)
+    ) {
+        trimestres.push(key);
+    }
+
+}
                 } else {
                      trimestres = ['1er Trimestre', '2do Trimestre', '3er Trimestre'];
                 }
