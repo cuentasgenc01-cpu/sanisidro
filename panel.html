@@ -413,7 +413,6 @@ hr.divider {
     background: #1565C0;
 }
 
-
 button.save-btn {
     background: #d8dbe0;
     color: #777;
@@ -485,8 +484,8 @@ button.save-btn.active:hover {
             📝 <span>Notas</span>
         </a>
        <a href="#" onclick="mostrarMensaje('En proceso', 'La sección Horario se encuentra en desarrollo y estará disponible próximamente.'); return false;">
-    📅 <span>Horario</span>
-</a>
+            📅 <span>Horario</span>
+        </a>
         <a href="kardex.html">
             ⚖️ <span>Kardex</span>
         </a>
@@ -609,337 +608,345 @@ button.save-btn.active:hover {
 <script>
 // Constantes y Variables
 const baseUrl = "https://sanisidro-933a9-default-rtdb.firebaseio.com";
-let profesor = localStorage.getItem("profesor") || "JUAN_TUPA"; // Asegúrate de usar el formato correcto
-let misAsignaciones = [];
-let todasLasMaterias = []; 
-let todosLosCursos = []; 
 
-// Referencias DOM
-const elNombreProfesor = document.getElementById("nombreProfesor");
-const btnCerrarSesion = document.getElementById("btnCerrarSesion");
-const modalRegistro = document.getElementById("modalRegistro");
-const selectCurso = document.getElementById("selectCurso");
-const selectMateria = document.getElementById("selectMateria");
-const btnAgregar = document.getElementById("btnAgregar");
-const btnGuardar = document.getElementById("btnGuardar");
-const handGuide = document.getElementById("handGuide");
-const listaAsignaciones = document.getElementById("listaAsignaciones");
-const countAsignaciones = document.getElementById("countAsignaciones");
-const msgError = document.getElementById("msgError");
+// OBTIENE EL PROFESOR Y SI NO HAY SESIÓN, REDIRIGE INMEDIATAMENTE
+let profesor = localStorage.getItem("profesor");
 
-// Referencias Modal Confirmación
-const modalConfirmacion = document.getElementById("modalConfirmacion");
-const btnCancelarConfirmacion = document.getElementById("btnCancelarConfirmacion");
-const btnAceptarConfirmacion = document.getElementById("btnAceptarConfirmacion");
+if (!profesor) {
+    // Redirección segura para que no puedan volver atrás a esta página
+    window.location.replace("index.html");
+} else {
+    // Si la sesión existe, continuamos cargando la vista
+    let misAsignaciones = [];
+    let todasLasMaterias = []; 
+    let todosLosCursos = []; 
 
-// Referencias Modal Mensaje
-const modalMensaje = document.getElementById("modalMensaje");
-const mensajeTitulo = document.getElementById("mensajeTitulo");
-const mensajeTexto = document.getElementById("mensajeTexto");
-const btnCerrarMensaje = document.getElementById("btnCerrarMensaje");
+    // Referencias DOM
+    const elNombreProfesor = document.getElementById("nombreProfesor");
+    const btnCerrarSesion = document.getElementById("btnCerrarSesion");
+    const modalRegistro = document.getElementById("modalRegistro");
+    const selectCurso = document.getElementById("selectCurso");
+    const selectMateria = document.getElementById("selectMateria");
+    const btnAgregar = document.getElementById("btnAgregar");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const handGuide = document.getElementById("handGuide");
+    const listaAsignaciones = document.getElementById("listaAsignaciones");
+    const countAsignaciones = document.getElementById("countAsignaciones");
+    const msgError = document.getElementById("msgError");
 
-// Inicializar nombre en la interfaz
-elNombreProfesor.innerHTML = profesor.replace(/_/g, ' ');
+    // Referencias Modal Confirmación
+    const modalConfirmacion = document.getElementById("modalConfirmacion");
+    const btnCancelarConfirmacion = document.getElementById("btnCancelarConfirmacion");
+    const btnAceptarConfirmacion = document.getElementById("btnAceptarConfirmacion");
 
-// Cerrar sesión
-btnCerrarSesion.addEventListener("click", function(){
-    localStorage.removeItem("profesor");
-    window.location.href = "index.html"; 
-});
+    // Referencias Modal Mensaje
+    const modalMensaje = document.getElementById("modalMensaje");
+    const mensajeTitulo = document.getElementById("mensajeTitulo");
+    const mensajeTexto = document.getElementById("mensajeTexto");
+    const btnCerrarMensaje = document.getElementById("btnCerrarMensaje");
 
-async function verificarCursosProfesor() {
-    try {
-        // Consultar si el profesor ya tiene cursos registrados en Firebase
-        const response = await fetch(`${baseUrl}/PROFESORES/${profesor}/CURSO.json`);
-        const data = await response.json();
-        
-        // Si data es null o indefinido, significa que no tiene cursos registrados
-        if (!data) {
+    // Inicializar nombre en la interfaz
+    elNombreProfesor.innerHTML = profesor.replace(/_/g, ' ');
+
+    // Cerrar sesión
+    btnCerrarSesion.addEventListener("click", function(){
+        localStorage.removeItem("profesor");
+        window.location.href = "index.html"; 
+    });
+
+    async function verificarCursosProfesor() {
+        try {
+            // Consultar si el profesor ya tiene cursos registrados en Firebase
+            const response = await fetch(`${baseUrl}/PROFESORES/${profesor}/CURSO.json`);
+            const data = await response.json();
+            
+            // Si data es null o indefinido, significa que no tiene cursos registrados
+            if (!data) {
+                iniciarModalRegistro();
+            }
+        } catch (error) {
+            console.error("Error al verificar cursos del profesor:", error);
+            // Podrías mostrar el modal de registro por defecto si falla la verificación
             iniciarModalRegistro();
         }
-    } catch (error) {
-        console.error("Error al verificar cursos del profesor:", error);
-        // Podrías mostrar el modal de registro por defecto si falla la verificación
-        iniciarModalRegistro();
     }
-}
 
-// Iniciar verificación al cargar
-window.onload = verificarCursosProfesor;
+    // Iniciar verificación al cargar
+    window.onload = verificarCursosProfesor;
 
 
-async function iniciarModalRegistro() {
-    modalRegistro.style.display = "flex";
-    
-    // 1. Cargar opciones de Cursos (Primero A hasta Sexto C)
-    const grados = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", "SEXTO"];
-    const paralelos = ["A", "B", "C"];
-    
-    grados.forEach(grado => {
-        paralelos.forEach(paralelo => {
-            const value = `${grado}${paralelo}`;
-            const text = `${grado} ${paralelo}`;
-            todosLosCursos.push({ value, text });
-        });
-    });
-
-    // 2. Cargar Materias desde Firebase
-    try {
-        const response = await fetch(`${baseUrl}/MATERIA.json`);
-        const materiasFirebase = await response.json();
+    async function iniciarModalRegistro() {
+        modalRegistro.style.display = "flex";
         
-        if (materiasFirebase) {
-            Object.keys(materiasFirebase).forEach(materiaKey => {
-                const value = materiaKey;
-                const text = materiaKey.replace(/_/g, ' ');
-                todasLasMaterias.push({ value, text });
+        // 1. Cargar opciones de Cursos (Primero A hasta Sexto C)
+        const grados = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", "SEXTO"];
+        const paralelos = ["A", "B", "C"];
+        
+        grados.forEach(grado => {
+            paralelos.forEach(paralelo => {
+                const value = `${grado}${paralelo}`;
+                const text = `${grado} ${paralelo}`;
+                todosLosCursos.push({ value, text });
             });
-        }
-    } catch (error) {
-        console.error("Error al cargar materias:", error);
-    }
-    
-    actualizarOpcionesSelects();
+        });
 
-    // Ubicar manito inicial
-    actualizarGuiaInteractiva();
-}
-
-// Actualizar las opciones de los selects basándose en las asignaciones actuales
-function actualizarOpcionesSelects() {
-    const cursoSeleccionado = selectCurso.value;
-    const materiaSeleccionada = selectMateria.value;
-
-    selectCurso.innerHTML = '<option value="">Seleccionar Curso</option>';
-    selectMateria.innerHTML = '<option value="">Seleccionar Materia</option>';
-
-    const cursosAgregados = misAsignaciones.map(asig => asig.cursoValue);
-
-    todosLosCursos.forEach(curso => {
-        if (!cursosAgregados.includes(curso.value)) {
-            const option = document.createElement("option");
-            option.value = curso.value;
-            option.textContent = curso.text;
-            selectCurso.appendChild(option);
-        }
-    });
-
-    if (cursoSeleccionado && !cursosAgregados.includes(cursoSeleccionado)) {
-        selectCurso.value = cursoSeleccionado;
-    } else {
-        selectCurso.value = ""; 
-    }
-
-    todasLasMaterias.forEach(materia => {
-        const option = document.createElement("option");
-        option.value = materia.value;
-        option.textContent = materia.text;
-        selectMateria.appendChild(option);
-    });
-
-    if (materiaSeleccionada) {
-        selectMateria.value = materiaSeleccionada;
-    }
-}
-
-// Actualizar posición de la mano y estado de los selects
-function actualizarGuiaInteractiva() {
-    setTimeout(() => {
-        if (selectCurso.value === "") {
-            handGuide.style.top = selectCurso.offsetTop + (selectCurso.offsetHeight / 2) - 15 + "px";
-            selectMateria.disabled = true;
-            btnAgregar.disabled = true;
-            btnAgregar.classList.remove("active");
+        // 2. Cargar Materias desde Firebase
+        try {
+            const response = await fetch(`${baseUrl}/MATERIA.json`);
+            const materiasFirebase = await response.json();
             
-        } else if (selectMateria.value === "") {
-            handGuide.style.top = selectMateria.offsetTop + (selectMateria.offsetHeight / 2) - 15 + "px";
-            selectMateria.disabled = false;
-            btnAgregar.disabled = true;
-            btnAgregar.classList.remove("active");
-            
+            if (materiasFirebase) {
+                Object.keys(materiasFirebase).forEach(materiaKey => {
+                    const value = materiaKey;
+                    const text = materiaKey.replace(/_/g, ' ');
+                    todasLasMaterias.push({ value, text });
+                });
+            }
+        } catch (error) {
+            console.error("Error al cargar materias:", error);
+        }
+        
+        actualizarOpcionesSelects();
+
+        // Ubicar manito inicial
+        actualizarGuiaInteractiva();
+    }
+
+    // Actualizar las opciones de los selects basándose en las asignaciones actuales
+    function actualizarOpcionesSelects() {
+        const cursoSeleccionado = selectCurso.value;
+        const materiaSeleccionada = selectMateria.value;
+
+        selectCurso.innerHTML = '<option value="">Seleccionar Curso</option>';
+        selectMateria.innerHTML = '<option value="">Seleccionar Materia</option>';
+
+        const cursosAgregados = misAsignaciones.map(asig => asig.cursoValue);
+
+        todosLosCursos.forEach(curso => {
+            if (!cursosAgregados.includes(curso.value)) {
+                const option = document.createElement("option");
+                option.value = curso.value;
+                option.textContent = curso.text;
+                selectCurso.appendChild(option);
+            }
+        });
+
+        if (cursoSeleccionado && !cursosAgregados.includes(cursoSeleccionado)) {
+            selectCurso.value = cursoSeleccionado;
         } else {
-            handGuide.style.top = btnAgregar.offsetTop + (btnAgregar.offsetHeight / 2) - 15 + "px";
-            selectMateria.disabled = false;
-            btnAgregar.disabled = false;
-            btnAgregar.classList.add("active");
+            selectCurso.value = ""; 
         }
-    }, 50);
-}
 
-// Event Listeners para cambios en los selectores
-selectCurso.addEventListener("change", () => {
-    actualizarOpcionesSelects(); 
-    actualizarGuiaInteractiva();
-});
-selectMateria.addEventListener("change", actualizarGuiaInteractiva);
+        todasLasMaterias.forEach(materia => {
+            const option = document.createElement("option");
+            option.value = materia.value;
+            option.textContent = materia.text;
+            selectMateria.appendChild(option);
+        });
 
-// Agregar combinación Curso + Materia a la lista local
-btnAgregar.addEventListener("click", () => {
-    const cursoValue = selectCurso.value;
-    const cursoText = selectCurso.options[selectCurso.selectedIndex].text;
-    const materiaValue = selectMateria.value;
-    const materiaText = selectMateria.options[selectMateria.selectedIndex].text;
+        if (materiaSeleccionada) {
+            selectMateria.value = materiaSeleccionada;
+        }
+    }
 
-    const existe = misAsignaciones.find(item => item.cursoValue === cursoValue && item.materiaValue === materiaValue);
-    
-    if (!existe) {
-        misAsignaciones.push({
-            cursoValue,
-            cursoText,
-            materiaValue,
-            materiaText,
-            esTutor: false
+    // Actualizar posición de la mano y estado de los selects
+    function actualizarGuiaInteractiva() {
+        setTimeout(() => {
+            if (selectCurso.value === "") {
+                handGuide.style.top = selectCurso.offsetTop + (selectCurso.offsetHeight / 2) - 15 + "px";
+                selectMateria.disabled = true;
+                btnAgregar.disabled = true;
+                btnAgregar.classList.remove("active");
+                
+            } else if (selectMateria.value === "") {
+                handGuide.style.top = selectMateria.offsetTop + (selectMateria.offsetHeight / 2) - 15 + "px";
+                selectMateria.disabled = false;
+                btnAgregar.disabled = true;
+                btnAgregar.classList.remove("active");
+                
+            } else {
+                handGuide.style.top = btnAgregar.offsetTop + (btnAgregar.offsetHeight / 2) - 15 + "px";
+                selectMateria.disabled = false;
+                btnAgregar.disabled = false;
+                btnAgregar.classList.add("active");
+            }
+        }, 50);
+    }
+
+    // Event Listeners para cambios en los selectores
+    selectCurso.addEventListener("change", () => {
+        actualizarOpcionesSelects(); 
+        actualizarGuiaInteractiva();
+    });
+    selectMateria.addEventListener("change", actualizarGuiaInteractiva);
+
+    // Agregar combinación Curso + Materia a la lista local
+    btnAgregar.addEventListener("click", () => {
+        const cursoValue = selectCurso.value;
+        const cursoText = selectCurso.options[selectCurso.selectedIndex].text;
+        const materiaValue = selectMateria.value;
+        const materiaText = selectMateria.options[selectMateria.selectedIndex].text;
+
+        const existe = misAsignaciones.find(item => item.cursoValue === cursoValue && item.materiaValue === materiaValue);
+        
+        if (!existe) {
+            misAsignaciones.push({
+                cursoValue,
+                cursoText,
+                materiaValue,
+                materiaText,
+                esTutor: false
+            });
+            
+            renderizarAsignaciones();
+            actualizarOpcionesSelects(); 
+        }
+
+        selectCurso.value = "";
+        selectMateria.value = "";
+        actualizarGuiaInteractiva();
+    });
+
+    // Pintar la lista en la interfaz
+    function renderizarAsignaciones() {
+        listaAsignaciones.innerHTML = "";
+        countAsignaciones.textContent = misAsignaciones.length;
+
+        if (misAsignaciones.length > 0) {
+            btnGuardar.disabled = false;
+            btnGuardar.classList.add("active");
+        } else {
+            btnGuardar.disabled = true;
+            btnGuardar.classList.remove("active");
+        }
+
+        misAsignaciones.forEach((asignacion, index) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.className = `assignment-item ${asignacion.esTutor ? 'tutor' : ''}`;
+            
+            itemDiv.innerHTML = `
+                <span><b>${asignacion.cursoText}</b> - ${asignacion.materiaText}</span>
+                ${asignacion.esTutor ? '<span>(Tutor)</span>' : ''}
+            `;
+            
+            itemDiv.onclick = () => alternarTutor(index);
+            
+            const btnEliminar = document.createElement("span");
+            btnEliminar.innerHTML = "❌";
+            btnEliminar.style.cursor = "pointer";
+            btnEliminar.style.marginLeft = "10px";
+            btnEliminar.onclick = (e) => {
+                e.stopPropagation(); 
+                misAsignaciones.splice(index, 1);
+                renderizarAsignaciones();
+                actualizarOpcionesSelects();
+                actualizarGuiaInteractiva();
+            };
+            
+            itemDiv.appendChild(btnEliminar);
+
+            listaAsignaciones.appendChild(itemDiv);
+        });
+    }
+
+    // Alternar el estado de tutoría
+    function alternarTutor(indexClickeado) {
+        msgError.style.display = "none"; 
+        misAsignaciones.forEach((asignacion, index) => {
+            if (index === indexClickeado) {
+                asignacion.esTutor = !asignacion.esTutor;
+            } else {
+                asignacion.esTutor = false; // Asegura que solo haya un tutor a la vez
+            }
         });
         
         renderizarAsignaciones();
-        actualizarOpcionesSelects(); 
     }
 
-    selectCurso.value = "";
-    selectMateria.value = "";
-    actualizarGuiaInteractiva();
-});
+    // Mostrar modal de confirmación al presionar Guardar
+    btnGuardar.addEventListener("click", () => {
+        if (misAsignaciones.length === 0) return;
+        
+        const tieneTutor = misAsignaciones.some(asig => asig.esTutor);
+        if (!tieneTutor) {
+            msgError.textContent = "⚠️ Debe marcar al menos un curso como Tutor (Tóquelo en la lista).";
+            msgError.style.display = "block";
+            return; 
+        }
 
-// Pintar la lista en la interfaz
-function renderizarAsignaciones() {
-    listaAsignaciones.innerHTML = "";
-    countAsignaciones.textContent = misAsignaciones.length;
+        msgError.style.display = "none"; 
+        modalConfirmacion.style.display = "flex";
+    });
 
-    if (misAsignaciones.length > 0) {
-        btnGuardar.disabled = false;
-        btnGuardar.classList.add("active");
-    } else {
+    // Cancelar guardado en el modal de confirmación
+    btnCancelarConfirmacion.addEventListener("click", () => {
+        modalConfirmacion.style.display = "none";
+    });
+
+
+    // Guardar Todo en Firebase al confirmar
+    btnAceptarConfirmacion.addEventListener("click", async () => {
+        
+        modalConfirmacion.style.display = "none";
+        btnGuardar.textContent = "GUARDANDO...";
         btnGuardar.disabled = true;
-        btnGuardar.classList.remove("active");
-    }
 
-    misAsignaciones.forEach((asignacion, index) => {
-        const itemDiv = document.createElement("div");
-        itemDiv.className = `assignment-item ${asignacion.esTutor ? 'tutor' : ''}`;
-        
-        itemDiv.innerHTML = `
-            <span><b>${asignacion.cursoText}</b> - ${asignacion.materiaText}</span>
-            ${asignacion.esTutor ? '<span>(Tutor)</span>' : ''}
-        `;
-        
-        itemDiv.onclick = () => alternarTutor(index);
-        
-        const btnEliminar = document.createElement("span");
-        btnEliminar.innerHTML = "❌";
-        btnEliminar.style.cursor = "pointer";
-        btnEliminar.style.marginLeft = "10px";
-        btnEliminar.onclick = (e) => {
-            e.stopPropagation(); 
-            misAsignaciones.splice(index, 1);
-            renderizarAsignaciones();
-            actualizarOpcionesSelects();
-            actualizarGuiaInteractiva();
-        };
-        
-        itemDiv.appendChild(btnEliminar);
+        // Estructuras separadas para CURSO y TUTORIA
+        const payloadCurso = {};
+        const payloadTutoria = {};
 
-        listaAsignaciones.appendChild(itemDiv);
-    });
-}
+        misAsignaciones.forEach(asig => {
+            // En CURSO, la llave es el curso y el valor es la materia (Ej: CUARTOC: "MATEMATICAS")
+            payloadCurso[asig.cursoValue] = asig.materiaValue;
+            
+            // Si es tutor, lo agregamos a la estructura separada TUTORIA
+            if (asig.esTutor) {
+                payloadTutoria[asig.cursoValue] = asig.materiaValue;
+            }
+        });
 
-// Alternar el estado de tutoría
-function alternarTutor(indexClickeado) {
-    msgError.style.display = "none"; 
-    misAsignaciones.forEach((asignacion, index) => {
-        if (index === indexClickeado) {
-            asignacion.esTutor = !asignacion.esTutor;
-        } else {
-            asignacion.esTutor = false; // Asegura que solo haya un tutor a la vez
-        }
-    });
-    
-    renderizarAsignaciones();
-}
+        try {
+            // 1. Guardar los cursos en la ruta PROFESORES/{profesor}/CURSO
+            const guardarCursos = fetch(`${baseUrl}/PROFESORES/${profesor}/CURSO.json`, {
+                method: 'PATCH', // Usamos PATCH para actualizar/fusionar
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadCurso)
+            });
 
-// Mostrar modal de confirmación al presionar Guardar
-btnGuardar.addEventListener("click", () => {
-    if (misAsignaciones.length === 0) return;
-    
-    const tieneTutor = misAsignaciones.some(asig => asig.esTutor);
-    if (!tieneTutor) {
-        msgError.textContent = "⚠️ Debe marcar al menos un curso como Tutor (Tóquelo en la lista).";
-        msgError.style.display = "block";
-        return; 
-    }
+            // 2. Guardar la tutoría en la ruta PROFESORES/{profesor}/TUTORIA
+            const guardarTutoria = fetch(`${baseUrl}/PROFESORES/${profesor}/TUTORIA.json`, {
+                method: 'PATCH', // Usamos PATCH
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadTutoria)
+            });
 
-    msgError.style.display = "none"; 
-    modalConfirmacion.style.display = "flex";
-});
+            // Esperar a que ambas peticiones terminen
+            await Promise.all([guardarCursos, guardarTutoria]);
 
-// Cancelar guardado en el modal de confirmación
-btnCancelarConfirmacion.addEventListener("click", () => {
-    modalConfirmacion.style.display = "none";
-});
-
-
-// Guardar Todo en Firebase al confirmar (ACTUALIZADO SEGÚN IMAGEN)
-btnAceptarConfirmacion.addEventListener("click", async () => {
-    
-    modalConfirmacion.style.display = "none";
-    btnGuardar.textContent = "GUARDANDO...";
-    btnGuardar.disabled = true;
-
-    // Estructuras separadas para CURSO y TUTORIA
-    const payloadCurso = {};
-    const payloadTutoria = {};
-
-    misAsignaciones.forEach(asig => {
-        // En CURSO, la llave es el curso y el valor es la materia (Ej: CUARTOC: "MATEMATICAS")
-        payloadCurso[asig.cursoValue] = asig.materiaValue;
-        
-        // Si es tutor, lo agregamos a la estructura separada TUTORIA
-        if (asig.esTutor) {
-            payloadTutoria[asig.cursoValue] = asig.materiaValue;
+            // Cerrar modal tras guardado exitoso
+            modalRegistro.style.display = "none";
+            mostrarMensaje("¡Éxito!", "Cursos y tutoría registrados exitosamente.");
+            
+        } catch (error) {
+            console.error("Error al guardar asignaciones:", error);
+            mostrarMensaje("Error", "Ocurrió un error al guardar. Revise su conexión a internet.");
+            btnGuardar.textContent = "GUARDAR REGISTRO";
+            btnGuardar.disabled = false;
         }
     });
 
-    try {
-        // 1. Guardar los cursos en la ruta PROFESORES/{profesor}/CURSO
-        const guardarCursos = fetch(`${baseUrl}/PROFESORES/${profesor}/CURSO.json`, {
-            method: 'PATCH', // Usamos PATCH para actualizar/fusionar
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadCurso)
-        });
-
-        // 2. Guardar la tutoría en la ruta PROFESORES/{profesor}/TUTORIA
-        const guardarTutoria = fetch(`${baseUrl}/PROFESORES/${profesor}/TUTORIA.json`, {
-            method: 'PATCH', // Usamos PATCH
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadTutoria)
-        });
-
-        // Esperar a que ambas peticiones terminen
-        await Promise.all([guardarCursos, guardarTutoria]);
-
-        // Cerrar modal tras guardado exitoso
-        modalRegistro.style.display = "none";
-        mostrarMensaje("¡Éxito!", "Cursos y tutoría registrados exitosamente.");
-        
-    } catch (error) {
-        console.error("Error al guardar asignaciones:", error);
-        mostrarMensaje("Error", "Ocurrió un error al guardar. Revise su conexión a internet.");
-        btnGuardar.textContent = "GUARDAR REGISTRO";
-        btnGuardar.disabled = false;
+    // Función para mostrar mensajes personalizados sin usar alert()
+    function mostrarMensaje(titulo, texto) {
+        mensajeTitulo.textContent = titulo;
+        mensajeTexto.textContent = texto;
+        modalMensaje.style.display = "flex";
     }
-});
 
-// Función para mostrar mensajes personalizados sin usar alert()
-function mostrarMensaje(titulo, texto) {
-    mensajeTitulo.textContent = titulo;
-    mensajeTexto.textContent = texto;
-    modalMensaje.style.display = "flex";
+    // Cerrar el modal de mensaje general
+    btnCerrarMensaje.addEventListener("click", () => {
+        modalMensaje.style.display = "none";
+    });
 }
-
-// Cerrar el modal de mensaje general
-btnCerrarMensaje.addEventListener("click", () => {
-    modalMensaje.style.display = "none";
-});
-
 </script>
 
 </body>
