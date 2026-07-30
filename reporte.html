@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reporte - San Isidro</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" href="logo.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Librerías para generar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<!-- Librería para leer EXCEL -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root {
+    --primary-blue: #0D47A1;
+    --secondary-blue: #1565C0;
+    --light-blue: #1976D2;
+    --bg-color: #f4f7fb;
+    --text-dark: #333;
+    --text-light: #666;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: linear-gradient(180deg, var(--primary-blue), var(--secondary-blue), var(--light-blue));
+    color: white;
+    padding: 20px 15px;
+    box-shadow: 5px 0 20px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    transition: all 0.3s ease;
+}
+
+/* PERFIL */
+.profile {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255,255,255,0.4);
+    margin: 0 auto 10px auto;
+    display: block;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+    background-color: white;
+}
+
+.profile h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.profile p {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 3px;
+}
+
+/* MENU */
+.menu {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.menu::-webkit-scrollbar {
+    width: 5px;
+}
+.menu::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+}
+
+.menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    margin-bottom: 3px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.menu a:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateX(5px);
+}
+
+.menu a.active {
+    background: rgba(255,255,255,0.2);
+    font-weight: 600;
+    border-left: 4px solid white;
+}
+
+/* BOTON */
+#btnCerrarSesion {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: #C62828;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: auto;
+}
+
+#btnCerrarSesion:hover {
+    background: #E53935;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.4);
+}
+
+/* MAIN CONTENT */
+.main-content {
+    margin-left: 250px;
+    flex: 1;
+    padding: 30px;
+    width: calc(100% - 250px);
+    transition: all 0.3s ease;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.topbar h1 {
+    font-size: 28px;
+    color: var(--primary-blue);
+    font-weight: 700;
+}
+
+.topbar p {
+    color: var(--text-light);
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+/* PANEL */
+.panel-container {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    min-height: 250px;
+}
+
+/* Custom Select */
+.custom-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+/* RESPONSIVE */
+@media(max-width: 900px) {
+    .sidebar {
+        width: 80px;
+        padding: 15px 10px;
+    }
+    .profile h2, .profile p, .menu a span, #btnCerrarSesion span { display: none; }
+    .profile img { width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.4); }
+    .menu a { justify-content: center; padding: 15px; }
+    .main-content { margin-left: 80px; width: calc(100% - 80px); padding: 20px; }
+    #btnCerrarSesion { padding: 15px 0; display: flex; justify-content: center; }
+    #btnCerrarSesion::before { content: '🚪'; }
+}
+
+@media(max-width: 600px) {
+    .topbar { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .main-content { padding: 15px; }
+    .panel-container { padding: 20px; }
+}
+
+/* Loader */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-blue);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Table inside Modal - FIXED LAYOUT FOR ELLIPSIS TRUNCATION */
+.table-container {
+    overflow-y: auto;
+    overflow-x: auto;
+    max-height: 280px;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed; 
+}
+
+th { 
+    background-color: #f9fafb; 
+    padding: 0.75rem 0.6rem; 
+    text-align: left; 
+    font-weight: 600; 
+    color: #4b5563; 
+    font-size: 0.85rem; 
+    text-transform: uppercase; 
+    border-bottom: 1px solid #e5e7eb; 
+    position: sticky; 
+    top: 0; 
+    z-index: 10;
+    white-space: nowrap;
+}
+
+td { 
+    padding: 0.65rem 0.6rem; 
+    border-bottom: 1px solid #e5e7eb; 
+    color: #1f2937; 
+    font-size: 0.85rem; 
+    vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover { background-color: #f8fafc; }
+</style>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="profile">
+        <img src="logo.jpg" alt="Perfil" id="imgPerfil" onerror="this.src='https://ui-avatars.com/api/?name=Profesor&background=fff&color=0D47A1'">
+        <h2 id="nombreProfesorSidebar">Cargando...</h2>
+        <p>Profesor Académico</p>
+    </div>
+
+    <div class="menu">
+        <a href="panel.html">🏠 <span>Inicio</span></a>
+        <a href="asistencia.html">📋 <span>Asistencia</span></a>
+        <a href="notas.html">📝 <span>Notas</span></a>
+        <a href="#">📅 <span>Horario</span></a>
+        <a href="kardex.html">⚖️ <span>Kardex</span></a>
+        <a href="descargas.html">⬇️ <span>Descarga</span></a>
+        <a href="reporte.html" class="active">📊 <span>Reporte</span></a>
+    </div>
+
+    <button id="btnCerrarSesion"><span>🚪 Cerrar Sesión</span></button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    
+    <div class="topbar">
+        <div>
+            <h1>Reportes</h1>
+            <p>Panel de generación y visualización de reportes estudiantiles.</p>
+        </div>
+        
+        <!-- CONTENEDOR TUTORÍA -->
+        <div id="tutoriaContainer" class="hidden text-right bg-blue-50 py-2.5 px-5 rounded-xl border border-blue-100 shadow-sm">
+            <span class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Tutor De</span>
+            <span class="block text-lg font-bold text-[#0D47A1]" id="txtTutoria">Cargando...</span>
+        </div>
+    </div>
+
+    <div class="panel-container relative">
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 z-[9999] flex items-center justify-center">
+            <div class="bg-white rounded-xl shadow-2xl px-8 py-6 flex flex-col items-center min-w-[260px] max-w-[320px]">
+                <div class="loader"></div>
+                <p class="mt-4 text-gray-700 font-semibold text-center" id="loadingText">
+                    Guardando...
+                </p>
+            </div>
+        </div>
+
+        <!-- System Inactive Message -->
+        <div id="systemInactiveMsg" class="hidden flex flex-col items-center justify-center h-64 text-center">
+            <div class="text-6xl mb-4">🔒</div>
+            <h2 class="text-2xl font-bold text-red-600 mb-2">Acceso Restringido</h2>
+            <p class="text-gray-600 max-w-md">El sistema de reportes se encuentra inactivo en este momento. Por favor, intente más tarde.</p>
+        </div>
+
+        <!-- Main Workspace -->
+        <div id="mainWorkspace" class="hidden">
+            
+            <!-- Título y Botón Principal -->
+            <div class="flex flex-col sm:flex-row items-center justify-between py-6 border-b border-gray-200 gap-4 mb-6">
+                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                    <span class="text-2xl">📊</span>
+                    <span id="txtReporteTitulo">Reporte TRIMESTRAL de Estudiantes</span>
+                    <span id="badgeModo" class="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase">
+                        MODO: ESTUDIANTE
+                    </span>
+                </div>
+                <button id="btnOpenModal" class="bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    <span class="text-sm btn-label">🔍 SELECCIONAR ESTUDIANTES</span>
+                </button>
+            </div>
+
+            <!-- SEGUNDA FILA: DESCARGAR REPORTE -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-5 border-b border-gray-200 gap-4">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                        <span class="text-2xl">📥</span>
+                        <span>DESCARGAR REPORTES</span>
+                    </div>
+                       </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    <!-- Selector de Trimestre para Descarga -->
+                    <select id="selectTrimestreDescarga" class="custom-select bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5 min-w-[200px]">
+                        <option value="">Seleccione Trimestre</option>
+                        <option value="PRIMERO">PRIMERO</option>
+                        <option value="SEGUNDO">SEGUNDO</option>
+                        <option value="TERCERO">TERCERO</option>
+                    </select>
+
+                    <button id="btnDescargarReporte"
+                        class="bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto" disabled title="Descarga el consolidado de todos los profesores para el curso del cual es Tutor">
+                        <span class="text-sm">⬇️ TUTOR</span>
+                    </button>
+
+                    <!-- NUEVO BOTÓN: MIS CURSOS -->
+                    <button id="btnDescargarMisCursos"
+                        class="bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto" disabled title="Descarga los reportes individuales que usted guardó, una hoja por curso">
+                        <span class="text-sm">📄 MIS CURSOS</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TERCERA FILA: SUBIR NOTAS -->
+            <div class="flex flex-col sm:flex-row items-center justify-between py-5 border-b border-gray-200 gap-4">
+                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                    <span class="text-2xl">📝</span>
+                    <span>Subir Notas del Trimestre</span>
+                </div>
+                <button id="btnSubirNotas"
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    <span class="text-sm">⬆️ SUBIR NOTAS</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE SELECCIÓN DE REPORTE -->
+<div id="selectionModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+            <h3 class="text-lg font-bold text-[#0D47A1] flex items-center gap-2">
+                <span>📋</span> <span id="txtModalTitulo">REPORTA TU LISTA DE ESTUDIANTE CON BAJO RENDIMIENTO</span>
+            </h3>
+            <button id="btnCloseModal" class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-6">
+            
+            <!-- Selectors Row -->
+            <div class="grid grid-cols-12 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                <div class="col-span-12 sm:col-span-3">
+                    <label for="selectTrimestre" class="block text-sm font-semibold text-gray-700 mb-1.5">1. Trimestre</label>
+                    <select id="selectTrimestre" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5" disabled>
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+                <div class="col-span-12 sm:col-span-4">
+                    <label for="selectCurso" class="block text-sm font-semibold text-gray-700 mb-1.5">2. Curso</label>
+                    <select id="selectCurso" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5" disabled>
+                        <option value="">Seleccione trimestre</option>
+                    </select>
+                </div>
+                <div class="col-span-12 sm:col-span-5">
+                    <label for="selectEstudiante" class="block text-sm font-semibold text-gray-700 mb-1.5">3. Estudiante</label>
+                    <select id="selectEstudiante" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5" disabled>
+                        <option value="">Seleccione curso</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Lista de Seleccionados</h4>
+                    <span class="bg-blue-100 text-[#1565C0] text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200" id="contadorEstudiantes">
+                        0 Seleccionados
+                    </span>
+                </div>
+
+                <div id="emptyState" class="text-center py-10 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-gray-500 font-medium text-sm">No hay estudiantes en la lista.</p>
+                </div>
+
+                <div id="tableWrapper" class="hidden table-container bg-white">
+                    <table id="studentsTable" class="w-full table-fixed">
+                        <thead>
+                          <tr id="tableHeaderRow">
+                            <th class="w-12 text-center">N°</th>
+                            <th class="w-[35%] text-left">Estudiante</th>
+                            <th class="w-[20%] text-left">Curso</th>
+                            <th class="w-[20%] text-left">Trimestre</th>
+                            <th class="w-[25%] text-center" id="thAccion">Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 shrink-0">
+            <button id="btnLimpiarLista" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors hidden mr-auto">
+                Limpiar Lista
+            </button>
+            <button id="btnCancelModal" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                Cancelar
+            </button>
+            <button id="btnGenerarReportes" class="px-5 py-2.5 text-sm font-bold text-white bg-[#1565C0] border border-transparent rounded-lg hover:bg-[#0D47A1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>
+                Generar Reportes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: SUBIR NOTAS -->
+<div id="modalSubirNotas" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+            <h3 class="text-lg font-bold text-[#0D47A1] flex items-center gap-2">
+                <span>⬆️</span> SUBIR NOTAS AL SISTEMA
+            </h3>
+            <button id="btnCloseModalSubirNotas" class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 flex-1 space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Seleccionar Trimestre</label>
+                <select id="selectTrimestreSubirNotas" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5">
+                    <option value="">Cargando trimestres...</option>
+                </select>
+            </div>
+            
+            <div id="containerCentralizador" class="hidden space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <label for="inputNombreHoja" class="block text-sm font-bold text-[#0D47A1] mb-2 uppercase tracking-wider">Nombre de la Hoja a Buscar</label>
+                    <input type="text" id="inputNombreHoja" value="CENTRALIZADOR" class="w-full text-center font-bold text-gray-700 p-2 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-2">Asegúrate de que tu archivo Excel contenga esta hoja exactamente como la escribes.</p>
+                </div>
+                <div>
+                    <input type="file" id="fileExcelNotas" accept=".xlsx, .xls" class="hidden" />
+                    <button id="btnBuscarExcel" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <span class="text-lg">📄</span> BUSCAR ARCHIVO EXCEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: INFORMACIÓN EXTRAÍDA DEL EXCEL -->
+<div id="modalInfoExcel" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-green-50 flex justify-between items-center shrink-0">
+            <h3 class="text-lg font-bold text-green-700 flex items-center gap-2">
+                <span>✅</span> EXCEL VALIDADO Y PROCESADO
+            </h3>
+            <button id="btnCloseModalInfoExcel" class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 flex-1 flex flex-col space-y-4 text-center overflow-hidden">
+            <!-- Cards Resumen -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 shrink-0">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <p class="text-[10px] text-gray-500 font-bold tracking-widest mb-1">CURSO (D5):</p>
+                    <p id="infoExcelCurso" class="text-base font-bold text-[#0D47A1] truncate">---</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <p class="text-[10px] text-gray-500 font-bold tracking-widest mb-1">MATERIA (D9):</p>
+                    <p id="infoExcelMateria" class="text-base font-bold text-[#0D47A1] truncate">---</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <p class="text-[10px] text-blue-500 font-bold tracking-widest mb-1">ESTUDIANTES:</p>
+                    <p id="infoExcelEstudiantes" class="text-base font-bold text-[#0D47A1]">0</p>
+                </div>
+            </div>
+
+            <!-- Tabla de Notas Extraídas -->
+            <div class="flex-1 overflow-y-auto border border-gray-200 rounded-xl mt-2 text-left bg-white">
+                <table class="w-full text-sm border-collapse table-fixed">
+                    <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold text-gray-600 border-b border-gray-200 w-16 text-center">N°</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 border-b border-gray-200">Estudiante</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 border-b border-gray-200 w-24 text-center">Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaNotasExtraidasBody" class="divide-y divide-gray-100">
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="btnOkInfoExcel" class="w-full bg-[#1565C0] hover:bg-[#0D47A1] text-white font-bold py-3 px-6 rounded-xl transition-colors mt-4 shadow-md shrink-0">
+                ACEPTAR
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICACIÓN TOAST PERSONALIZADA -->
+<div id="customToast" class="hidden fixed bottom-5 right-5 z-[99999] max-w-md bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 border border-gray-700 transition-all duration-300">
+    <span id="customToastText" class="text-sm font-medium">Notificación</span>
+    <button id="btnCloseToast" class="text-gray-400 hover:text-white font-bold text-lg leading-none">&times;</button>
+</div>
+
+<!-- MODAL CONFIRMACIÓN PERSONALIZADO -->
+<div id="customConfirmModal" class="hidden fixed inset-0 bg-gray-900/60 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center space-y-4 border border-gray-100">
+        <div class="text-4xl text-amber-500">⚠️</div>
+        <h3 id="confirmModalTitle" class="text-lg font-bold text-gray-800">¿Estás seguro?</h3>
+        <p id="confirmModalText" class="text-sm text-gray-600">Esta acción eliminará todos los seleccionados.</p>
+        <div class="flex justify-center gap-3 pt-2">
+            <button id="btnConfirmCancel" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-semibold transition-colors">Cancelar</button>
+            <button id="btnConfirmOk" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DB_URL = 'https://sanisidro-933a9-default-rtdb.firebaseio.com';
+    let currentProfesorKey = '';
+    let selectedList = [];
+    
+    // MODO del sistema: "estudiante" | "padre" | "lectura"
+    let currentSystemMode = 'estudiante';
+    
+    // Almacenará el curso de tutoría para descargar PDF
+    let tutorCursoDescarga = ''; 
+
+    // Variable global para almacenar las notas extraídas del Excel
+    let notasExtraidasGlobal = [];
+
+    // UI Elements
+    const ui = {
+        overlay: document.getElementById('loadingOverlay'),
+        loadingText: document.getElementById('loadingText'),
+        inactiveMsg: document.getElementById('systemInactiveMsg'),
+        workspace: document.getElementById('mainWorkspace'),
+        
+        // Elementos de Reporte (Modal Principal)
+        modal: document.getElementById('selectionModal'),
+        btnOpenModal: document.getElementById('btnOpenModal'),
+        btnCloseModal: document.getElementById('btnCloseModal'),
+        btnCancelModal: document.getElementById('btnCancelModal'),
+        selTrimestre: document.getElementById('selectTrimestre'),
+        selCurso: document.getElementById('selectCurso'),
+        selEstudiante: document.getElementById('selectEstudiante'),
+        contadorEstudiantes: document.getElementById('contadorEstudiantes'),
+        emptyState: document.getElementById('emptyState'),
+        tableWrapper: document.getElementById('tableWrapper'),
+        tableBody: document.getElementById('studentsTableBody'),
+        btnLimpiarLista: document.getElementById('btnLimpiarLista'),
+        btnGenerarReportes: document.getElementById('btnGenerarReportes'),
+
+        // Elementos del Nuevo Flujo: Subir Notas
+        btnSubirNotas: document.getElementById('btnSubirNotas'),
+        modalSubirNotas: document.getElementById('modalSubirNotas'),
+        btnCloseModalSubirNotas: document.getElementById('btnCloseModalSubirNotas'),
+        selectTrimestreSubirNotas: document.getElementById('selectTrimestreSubirNotas'),
+        containerCentralizador: document.getElementById('containerCentralizador'),
+        btnBuscarExcel: document.getElementById('btnBuscarExcel'),
+        fileExcelNotas: document.getElementById('fileExcelNotas'),
+
+        // Elementos del Nuevo Flujo: Mostrar Excel Extraído
+        modalInfoExcel: document.getElementById('modalInfoExcel'),
+        btnCloseModalInfoExcel: document.getElementById('btnCloseModalInfoExcel'),
+        infoExcelCurso: document.getElementById('infoExcelCurso'),
+        infoExcelMateria: document.getElementById('infoExcelMateria'),
+        infoExcelEstudiantes: document.getElementById('infoExcelEstudiantes'),
+        tablaNotasExtraidasBody: document.getElementById('tablaNotasExtraidasBody'),
+        btnOkInfoExcel: document.getElementById('btnOkInfoExcel')
+    };
+
+    function showNotification(msg, isError = false) {
+        const toast = document.getElementById('customToast');
+        const toastText = document.getElementById('customToastText');
+        toastText.textContent = msg;
+        if (isError) {
+            toast.className = "fixed bottom-5 right-5 z-[99999] max-w-md bg-red-800 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 border border-red-600 transition-all duration-300";
+        } else {
+            toast.className = "fixed bottom-5 right-5 z-[99999] max-w-md bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 border border-gray-700 transition-all duration-300";
+        }
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 4000);
+    }
+
+    document.getElementById('btnCloseToast').addEventListener('click', () => {
+        document.getElementById('customToast').classList.add('hidden');
+    });
+
+    function showConfirm(title, message, onConfirm) {
+        const confirmModal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
+        const textEl = document.getElementById('confirmModalText');
+        const btnCancel = document.getElementById('btnConfirmCancel');
+        const btnOk = document.getElementById('btnConfirmOk');
+
+        titleEl.textContent = title;
+        textEl.textContent = message;
+        confirmModal.classList.remove('hidden');
+
+        const cleanup = () => {
+            btnOk.removeEventListener('click', handleOk);
+            btnCancel.removeEventListener('click', handleCancel);
+        };
+        const handleOk = () => {
+            confirmModal.classList.add('hidden');
+            cleanup();
+            onConfirm();
+        };
+        const handleCancel = () => {
+            confirmModal.classList.add('hidden');
+            cleanup();
+        };
+
+        btnOk.addEventListener('click', handleOk);
+        btnCancel.addEventListener('click', handleCancel);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showLoading(text) {
+        ui.loadingText.textContent = text;
+        ui.overlay.classList.remove("hidden");
+        ui.overlay.classList.add("flex");
+    }
+    
+    function hideLoading() {
+        ui.overlay.classList.remove("flex");
+        ui.overlay.classList.add("hidden");
+    }
+
+    function openModal() {
+        // Limpiar lista de estudiantes
+        selectedList = [];
+
+        // Actualizar la tabla
+        updateTableUI();
+
+        // Reiniciar Trimestre
+        ui.selTrimestre.selectedIndex = 0;
+
+        // Reiniciar Curso
+        ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
+        ui.selCurso.disabled = true;
+
+        // Reiniciar Estudiante según el modo
+        if (currentSystemMode === 'estudiante') {
+            ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
+        } else if (currentSystemMode === 'padre') {
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+        } else {
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+        }
+
+        ui.selEstudiante.disabled = true;
+
+        // Reiniciar contador
+        ui.contadorEstudiantes.textContent = "0 Seleccionados";
+
+        // Mostrar estado vacío
+        ui.emptyState.classList.remove("hidden");
+        ui.tableWrapper.classList.add("hidden");
+
+        // Abrir modal
+        ui.modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        ui.modal.classList.add('hidden');
+    }
+
+    function applySystemModeUI() {
+        const txtReporteTitulo = document.getElementById('txtReporteTitulo');
+        const badgeModo = document.getElementById('badgeModo');
+        const txtModalTitulo = document.getElementById('txtModalTitulo');
+        const thAccion = document.getElementById('thAccion');
+        const btnOpenModalLabel = document.querySelector('#btnOpenModal .btn-label');
+
+        if (currentSystemMode === 'padre') {
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: PADRE";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "REGISTRO DE ASISTENCIA DE PADRES DE FAMILIA";
+            if (thAccion) thAccion.textContent = "Padre Asistió";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 REGISTRAR ASISTENCIA DE PADRES";
+            
+            ui.btnLimpiarLista.classList.add('hidden');
+            ui.selEstudiante.disabled = true;
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+            ui.btnGenerarReportes.textContent = "Guardar Asistencia de Padres";
+            ui.btnGenerarReportes.classList.remove('hidden');
+
+        } else if (currentSystemMode === 'lectura') {
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: LECTURA";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-300 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "CONSULTA DE ASISTENCIA DE PADRES (MODO LECTURA)";
+            if (thAccion) thAccion.textContent = "Padre Asistió";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 CONSULTAR ASISTENCIA DE PADRES";
+
+            ui.btnLimpiarLista.classList.add('hidden');
+            ui.selEstudiante.disabled = true;
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+            ui.btnGenerarReportes.classList.add('hidden');
+
+        } else {
+            // MODO: "estudiante"
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de Estudiantes";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: ESTUDIANTE";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "REPORTA TU LISTA DE ESTUDIANTE CON BAJO RENDIMIENTO";
+            if (thAccion) thAccion.textContent = "Acción";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 SELECCIONAR ESTUDIANTES";
+
+            ui.btnGenerarReportes.textContent = "GUARDAR Reportes";
+            ui.btnGenerarReportes.classList.remove('hidden');
+        }
+    }
+
+    // Toggle para la asistencia de padres en MODO "padre"
+    window.togglePadreAsistio = function(studentId) {
+        if (currentSystemMode === 'lectura') return;
+        const student = selectedList.find(s => String(s.id) === String(studentId));
+        if (!student) return;
+
+        student.asistio = !student.asistio;
+
+        // Actualizar solamente el contador
+        const totalAsistieron = selectedList.filter(s => s.asistio).length;
+        ui.contadorEstudiantes.textContent = `${totalAsistieron} / ${selectedList.length} Padres Asistieron`;
+
+        // Actualizar solamente la fila
+        const checkbox = document.querySelector(`input[onchange="window.togglePadreAsistio('${student.id}')"]`);
+        if (!checkbox) return;
+
+        const label = checkbox.closest("label");
+        const texto = label.querySelector("span");
+        checkbox.checked = student.asistio;
+
+        if (student.asistio) {
+            label.classList.remove("bg-red-100", "hover:bg-red-200", "border-red-300");
+            label.classList.add("bg-green-100", "hover:bg-green-200", "border-green-300");
+            texto.textContent = "PADRE ASISTIÓ";
+            texto.classList.remove("text-gray-500");
+            texto.classList.add("text-green-700");
+        } else {
+            label.classList.remove("bg-green-100", "hover:bg-green-200", "border-green-300");
+            label.classList.add("bg-red-100", "hover:bg-red-200", "border-red-300");
+            texto.textContent = "NO ASISTIÓ";
+            texto.classList.remove("text-green-700");
+            texto.classList.add("text-gray-500");
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        currentProfesorKey = localStorage.getItem('profesor');
+        if (!currentProfesorKey) {
+            window.location.href = 'index.html';
+            return;
+        }
+        document.getElementById('nombreProfesorSidebar').textContent = currentProfesorKey;
+
+        // Cargar la tutoría del profesor
+        cargarTutoria();
+        await initTrimesterSystem();
+
+        ui.btnOpenModal.addEventListener('click', openModal);
+        ui.btnCloseModal.addEventListener('click', closeModal);
+        ui.btnCancelModal.addEventListener('click', closeModal);
+
+        ui.selTrimestre.addEventListener('change', handleTrimestreChange);
+        ui.selCurso.addEventListener('change', handleCursoChange);
+        ui.selEstudiante.addEventListener('change', handleEstudianteChange);
+        ui.btnLimpiarLista.addEventListener('click', clearStudentList);
+        
+        ui.btnSubirNotas.addEventListener("click", openModalSubirNotas);
+        ui.btnCloseModalSubirNotas.addEventListener("click", () => ui.modalSubirNotas.classList.add("hidden"));
+        
+        ui.btnCloseModalInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
+        ui.btnOkInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
+
+        ui.selectTrimestreSubirNotas.addEventListener("change", (e) => {
+            if(e.target.value) {
+                ui.containerCentralizador.classList.remove("hidden");
+            } else {
+                ui.containerCentralizador.classList.add("hidden");
+            }
+        });
+
+        ui.btnBuscarExcel.addEventListener("click", () => {
+            ui.fileExcelNotas.click();
+        });
+
+        ui.fileExcelNotas.addEventListener("change", handleExcelUpload);
+
+        async function openModalSubirNotas() {
+            ui.modalSubirNotas.classList.remove("hidden");
+            ui.containerCentralizador.classList.add("hidden");
+            ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Cargando...</option>';
+            ui.fileExcelNotas.value = "";
+            notasExtraidasGlobal = [];
+
+            try {
+                const resp = await fetch(`${DB_URL}/TRIMESTRE.json`);
+                const data = await resp.json();
+
+                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Seleccione Trimestre...</option>';
+                let addedCount = 0;
+                
+                ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
+                    if (data && data[trim] === true) {
+                        const option = document.createElement('option');
+                        option.value = trim;
+                        option.textContent = trim; 
+                        ui.selectTrimestreSubirNotas.appendChild(option);
+                        addedCount++;
+                    }
+                });
+
+                if(addedCount === 0) {
+                    ui.selectTrimestreSubirNotas.innerHTML = '<option value="">No hay trimestres habilitados</option>';
+                }
+            } catch(error) {
+                console.error("Error al cargar trimestres:", error);
+                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Error de red</option>';
+            }
+        }
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const trimestreSeleccionado = ui.selectTrimestreSubirNotas.value;
+            if (!trimestreSeleccionado) {
+                showNotification("Por favor seleccione el trimestre antes de buscar el archivo.", true);
+                ui.fileExcelNotas.value = "";
+                return;
+            }
+
+            const nombreHojaBuscada = document.getElementById("inputNombreHoja").value.trim() || "CENTRALIZADOR";
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+
+                    if (workbook.SheetNames.includes(nombreHojaBuscada)) {
+                        const sheet = workbook.Sheets[nombreHojaBuscada];
+                        
+                        const curso = sheet['D5'] ? sheet['D5'].v : "No encontrado";
+                        const materia = sheet['D9'] ? sheet['D9'].v : "No encontrada";
+
+                        let colNota = "K"; 
+                        if (trimestreSeleccionado === "SEGUNDO") colNota = "S";
+                        else if (trimestreSeleccionado === "TERCERO") colNota = "AA";
+
+                        notasExtraidasGlobal = []; 
+
+                        for (let i = 15; i <= 60; i++) {
+                            const celdaNombre = sheet['C' + i];
+                            const celdaNota = sheet[colNota + i];
+
+                            if (celdaNombre && celdaNombre.v && String(celdaNombre.v).trim() !== "") {
+                                let valorNota = "";
+                                if (celdaNota) {
+                                    valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
+                                }
+
+                                notasExtraidasGlobal.push({
+                                    filaExcel: i,
+                                    nombre: String(celdaNombre.v).trim(),
+                                    nota: valorNota
+                                });
+                            }
+                        }
+
+                        ui.tablaNotasExtraidasBody.innerHTML = '';
+                        notasExtraidasGlobal.forEach((item, index) => {
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-gray-50 transition-colors";
+                            
+                            let colorNota = "text-gray-700";
+                            if (item.nota !== "" && !isNaN(item.nota)) {
+                                colorNota = Number(item.nota) < 51 ? "text-red-600 font-bold" : "text-green-600 font-bold";
+                            }
+
+                            tr.innerHTML = `
+                                <td class="px-4 py-2 text-center text-gray-500 font-medium">${index + 1}</td>
+                                <td class="px-4 py-2 font-semibold text-[#0D47A1] truncate max-w-xs" title="${escapeHtml(item.nombre)}">${escapeHtml(item.nombre)}</td>
+                                <td class="px-4 py-2 text-center font-bold ${colorNota}">${item.nota !== "" ? item.nota : '-'}</td>
+                            `;
+                            ui.tablaNotasExtraidasBody.appendChild(tr);
+                        });
+
+                        ui.infoExcelCurso.textContent = curso;
+                        ui.infoExcelMateria.textContent = materia;
+                        ui.infoExcelEstudiantes.textContent = notasExtraidasGlobal.length.toString();
+
+                        ui.modalSubirNotas.classList.add("hidden");
+                        ui.modalInfoExcel.classList.remove("hidden");
+
+                    } else {
+                        showNotification(`El archivo Excel no contiene una hoja llamada "${nombreHojaBuscada}".`, true);
+                    }
+                } catch (err) {
+                    console.error("Error leyendo Excel:", err);
+                    showNotification("Ocurrió un error al procesar el archivo Excel.", true);
+                }
+                ui.fileExcelNotas.value = "";
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        const selectTrimestreDescarga = document.getElementById('selectTrimestreDescarga');
+        const btnDescargarReporte = document.getElementById('btnDescargarReporte');
+        const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
+
+        selectTrimestreDescarga.addEventListener('change', (e) => {
+            if (e.target.value) {
+                // Habilitar Botón Tutor
+                btnDescargarReporte.disabled = false;
+                btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+                
+                // Habilitar Botón Mis Cursos
+                btnDescargarMisCursos.disabled = false;
+                btnDescargarMisCursos.className = 'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+            } else {
+                // Deshabilitar Botón Tutor
+                btnDescargarReporte.disabled = true;
+                btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+                
+                // Deshabilitar Botón Mis Cursos
+                btnDescargarMisCursos.disabled = true;
+                btnDescargarMisCursos.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+            }
+        });
+
+        // NUEVO EVENTO: Botón de Mis Cursos
+        btnDescargarMisCursos.addEventListener('click', async () => {
+            const trimestreSel = selectTrimestreDescarga.value;
+            if (!trimestreSel) return;
+
+            showLoading("Obteniendo sus reportes individuales...");
+
+            try {
+                // 1. Obtener reportes del profesor para este trimestre
+                const urlMisReportes = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestreSel)}.json`;
+                const respMisReportes = await fetch(urlMisReportes);
+                const misReportesData = await respMisReportes.json();
+
+                if (!misReportesData || Object.keys(misReportesData).length === 0) {
+                    hideLoading();
+                    showNotification(`El profesor no cuenta con reportes registrados en el trimestre ${trimestreSel}.`, true);
+                    return;
+                }
+
+                // 2. Obtener materias del profesor para asignarlas al PDF
+                const urlMisCursos = `${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/CURSO.json`;
+                const respMisCursos = await fetch(urlMisCursos);
+                const materiasData = await respMisCursos.json() || {};
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait' });
+                const pageWidth = doc.internal.pageSize.getWidth();
+
+                let isFirstPage = true;
+
+                // 3. Iterar por cada curso y crear una hoja en el PDF
+                for (const [curso, estudiantesObj] of Object.entries(misReportesData)) {
+                    if (!estudiantesObj) continue;
+
+                    if (!isFirstPage) {
+                        doc.addPage();
+                    }
+                    isFirstPage = false;
+
+                    const materia = materiasData[curso] || "Materia no asignada";
+
+                    // Encabezado
+                    doc.setFontSize(14);
+                    doc.setTextColor(13, 71, 161);
+                    doc.text("Reporte Individual de Rendimiento Estudiantil", pageWidth / 2, 18, { align: "center" });
+
+                    doc.setFontSize(10);
+                    doc.setTextColor(51, 51, 51);
+                    doc.text(`Profesor: ${currentProfesorKey}`, 14, 28);
+                    doc.text(`Curso: ${curso}`, 14, 34);
+                    doc.text(`Materia: ${materia}`, pageWidth / 2, 34);
+                    doc.text(`Trimestre: ${trimestreSel}`, 14, 40);
+
+                    // Datos de Tabla
+                    const tableData = [];
+                    let contadorNro = 1;
+
+                    Object.values(estudiantesObj).forEach(val => {
+                        if (!val) return;
+                        let nombreLimpio = "";
+                        let estado = "Reportado";
+
+                        if (typeof val === 'object' && val.nombre) {
+                            nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
+                            // Si estamos en modo padre, usar asistio
+                            if (val.asistio !== undefined) {
+                                estado = val.asistio ? "Asistió a Reunión" : "Bajo Rendimiento";
+                            }
+                        } else {
+                            nombreLimpio = String(val).replace(/^\d+[\:\.]\s*/, "").trim();
+                        }
+
+                        tableData.push([contadorNro.toString(), nombreLimpio, estado]);
+                        contadorNro++;
+                    });
+
+                    // Generar Tabla
+                    doc.autoTable({
+                        startY: 48,
+                        head: [["N°", "APELLIDOS Y NOMBRES", "ESTADO"]],
+                        body: tableData,
+                        theme: "grid",
+                        headStyles: {
+                            fillColor: [21, 101, 192], // Secondary Blue
+                            textColor: 255,
+                            halign: "center",
+                            fontStyle: "bold",
+                            fontSize: 9
+                        },
+                        columnStyles: {
+                            0: { halign: 'center', cellWidth: 15 },
+                            1: { cellWidth: 'auto' },
+                            2: { halign: 'center', cellWidth: 45 }
+                        },
+                        styles: {
+                            fontSize: 8.5,
+                            cellPadding: 2,
+                            lineColor: [200, 200, 200],
+                            lineWidth: 0.1
+                        }
+                    });
+                }
+
+                doc.save(`Mis_Reportes_${currentProfesorKey}_${trimestreSel}.pdf`);
+                hideLoading();
+
+            } catch (error) {
+                console.error("Error al generar reportes individuales:", error);
+                hideLoading();
+                showNotification("Ocurrió un error de red al intentar generar sus reportes.", true);
+            }
+        });
+
+        // EVENTO ORIGINAL: Botón Tutor
+        btnDescargarReporte.addEventListener('click', async () => {
+            const trimestreSel = selectTrimestreDescarga.value;
+            if (!trimestreSel) return;
+            
+            if (!tutorCursoDescarga) {
+                showNotification("No se ha detectado un curso de tutoría asignado para este profesor.", true);
+                return;
+            }
+
+            showLoading("Obteniendo reportes globales...");
+
+            try {
+                const urlEstudiantes = `${DB_URL}/CURSOS/${encodeURIComponent(tutorCursoDescarga)}.json`;
+                const respEstudiantes = await fetch(urlEstudiantes);
+                const estudiantesData = await respEstudiantes.json();
+
+                if (!estudiantesData) {
+                    hideLoading();
+                    showNotification(`No hay estudiantes registrados en el curso: ${tutorCursoDescarga}`, true);
+                    return;
+                }
+
+                const urlReportesGeneral = `${DB_URL}/REPORTE.json`;
+                const respReportes = await fetch(urlReportesGeneral);
+                const todosLosReportes = await respReportes.json();
+
+                const profesoresQueReportaron = new Set();
+                const mapEstudianteProfesores = {}; 
+
+                if (todosLosReportes) {
+                    for (const [nombreProfesor, trimestres] of Object.entries(todosLosReportes)) {
+                        if (trimestres[trimestreSel] && trimestres[trimestreSel][tutorCursoDescarga]) {
+                            const estudiantesReportados = trimestres[trimestreSel][tutorCursoDescarga];
+                            let reportoAlMenosUno = false;
+                            
+                            Object.values(estudiantesReportados).forEach(val => {
+                                if (val) {
+                                    let nombreLimpio = "";
+                                    let marca = "X"; // Por defecto "X" (si es false o no existe asistio)
+
+                                    if (typeof val === 'object' && val.nombre) {
+                                        nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
+                                        if (val.asistio === true || val.asistio === "true") {
+                                            marca = "SI";
+                                        }
+                                    } else {
+                                        nombreLimpio = String(val).replace(/^\d+[\:\.]\s*/, "").trim();
+                                    }
+
+                                    if (!mapEstudianteProfesores[nombreLimpio]) {
+                                        mapEstudianteProfesores[nombreLimpio] = {};
+                                    }
+                                    mapEstudianteProfesores[nombreLimpio][nombreProfesor] = marca;
+                                    reportoAlMenosUno = true;
+                                }
+                            });
+
+                            if (reportoAlMenosUno) {
+                                profesoresQueReportaron.add(nombreProfesor);
+                            }
+                        }
+                    }
+                }
+
+                const profList = Array.from(profesoresQueReportaron);
+                
+                if (profList.length === 0) {
+                    hideLoading();
+                    showNotification(`No se encontraron reportes para el curso ${tutorCursoDescarga} en el trimestre ${trimestreSel}.`, true);
+                    return;
+                }
+
+                const materiasList = {};
+                for (const prof of profList) {
+                    try {
+                        const urlProfCurso = `${DB_URL}/PROFESORES/${encodeURIComponent(prof)}/CURSO.json`;
+                        const respProfCurso = await fetch(urlProfCurso);
+                        const profCursosData = await respProfCurso.json();
+
+                        if (profCursosData && profCursosData[tutorCursoDescarga]) {
+                            materiasList[prof] = profCursosData[tutorCursoDescarga];
+                        } else {
+                            materiasList[prof] = "Sin Materia";
+                        }
+                    } catch (error) {
+                        materiasList[prof] = "";
+                    }
+                }
+
+                const headerRow1 = [
+                    { content: "N°", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25,118,210] } },
+                    { content: "APELLIDOS Y NOMBRES", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25,118,210] } }
+                ];
+
+                const headerRow2 = [];
+
+                if (profList.length > 0) {
+                    profList.forEach(prof => {
+                        headerRow1.push({ content: prof, styles: { halign: "center", valign: "middle", fillColor: [123,31,162], fontStyle: "bold" } });
+                        headerRow2.push({ content: materiasList[prof] || "", styles: { halign: "center", valign: "middle", fillColor: [156,39,176], fontStyle: "normal" } });
+                    });
+
+                    headerRow1.push({ content: "TOTAL", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25, 118, 210], fontStyle: "bold" } });
+                }
+
+                const headConfig = [headerRow1, headerRow2];
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait' });
+                const pageWidth = doc.internal.pageSize.getWidth();
+
+                doc.setFontSize(14);
+                doc.setTextColor(13, 71, 161);
+                doc.text("Reporte Consolidado de Rendimiento Estudiantil", pageWidth / 2, 18, { align: "center" });
+                
+                doc.setFontSize(10);
+                doc.setTextColor(51, 51, 51);
+                doc.text(`Tutor a Cargo: ${currentProfesorKey}   |   Curso: ${tutorCursoDescarga}   |   Trimestre: ${trimestreSel}`, 14, 26);
+
+                const tableData = [];
+                let contadorNro = 1;
+                
+                for (const [key, valor] of Object.entries(estudiantesData)) {
+                    if (!valor) continue;
+                    const nombreEstudianteOriginal = String(valor).replace(/^\d+[\:\.]\s*/, "").trim();
+                    
+                    let nombreMostrar = nombreEstudianteOriginal;
+                    if (nombreMostrar.length > 30) {
+                        nombreMostrar = nombreMostrar.substring(0, 30).trim() + " (...)";
+                    }
+
+                    const fila = [contadorNro.toString(), nombreMostrar];
+                    
+                    if (profList.length > 0) {
+                        let totalX = 0;
+                        profList.forEach(prof => {
+                            const marca = (mapEstudianteProfesores[nombreEstudianteOriginal] && mapEstudianteProfesores[nombreEstudianteOriginal][prof]) ? mapEstudianteProfesores[nombreEstudianteOriginal][prof] : "";
+                            if (marca !== "") totalX++;
+                            fila.push(marca);
+                        });
+
+                        fila.push(totalX > 0 ? totalX.toString() : "");
+                    } else {
+                        fila.push("");
+                    }
+
+                    tableData.push(fila);
+                    contadorNro++;
+                }
+
+                const colStyles = { 
+                    0: { halign: 'center', cellWidth: 8 },
+                    1: { cellWidth: 60 }
+                };
+                
+                if (profList.length > 0) {
+                    profList.forEach((prof, idx) => {
+                        colStyles[2 + idx] = { halign: 'center', cellWidth: 8, fontStyle: 'bold', textColor: [220, 38, 38] };
+                    });
+                    const totalColIndex = 2 + profList.length;
+                    colStyles[totalColIndex] = { halign: 'center', cellWidth: 10, fontStyle: 'bold', textColor: [33, 33, 33] };
+                } else {
+                    colStyles[2] = { cellWidth: 40 }; 
+                }
+
+                doc.autoTable({
+                    startY: 30,
+                    margin: { left: 10, right: 10, bottom: 10 },
+                    head: headConfig,
+                    body: tableData,
+                    theme: "grid",
+                    tableWidth: "wrap",
+                    
+                    headStyles: {
+                        textColor: 255,
+                        halign: "center",
+                        valign: "middle",
+                        fontSize: 7.5,
+                        lineColor: [200, 200, 200],
+                        lineWidth: 0.1
+                    },
+                    styles: {
+                        fontSize: 7.5,
+                        cellPadding: 0.8,
+                        overflow: "hidden",
+                        valign: "middle",
+                        lineColor: [200, 200, 200],
+                        lineWidth: 0.1
+                    },
+                    columnStyles: colStyles,
+
+                    didParseCell: function(data) {
+                        if (data.section === "head") {
+                            const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isTotalHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isTotalHeader) {
+                                data.cell.styles.minCellHeight = 20;
+                                data.cell.customVerticalText = data.cell.text.join(" ");
+                                data.cell.text = [];
+                            }
+                            
+                            if (isMateriaHeader) {
+                                data.cell.styles.minCellHeight = 30;
+                                data.cell.customVerticalText = data.cell.text.join(" ");
+                                data.cell.text = [];
+                            }
+                        }
+                    },
+
+                    didDrawCell: function(data) {
+                        if (data.section === "head") {
+                            const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isTotalHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isMateriaHeader || isTotalHeader) {
+                                let texto = (data.cell.customVerticalText || "").trim();
+
+                                if (isMateriaHeader && texto.length > 22) {
+                                    texto = texto.substring(0, 22) + "(...)";
+                                }
+                                
+                                doc.setFontSize((isProfesorHeader || isTotalHeader) ? 6 : 5);
+                                doc.setTextColor(255, 255, 255);
+                                
+                                const textHeight = doc.getTextDimensions(texto).h;
+                                const centroX = data.cell.x + (data.cell.width / 2);
+                                
+                                const margenInferior = 2;
+                                const posY = data.cell.y + data.cell.height - margenInferior;
+                                const posX = centroX + (textHeight / 3);
+
+                                doc.text(texto, posX, posY, { angle: 90 });
+                            }
+                        }
+                    }
+                });
+
+                doc.save(`Consolidado_Rendimiento_${tutorCursoDescarga}_${trimestreSel}.pdf`);
+                hideLoading();
+
+            } catch (error) {
+                console.error("Error al generar o descargar el PDF:", error);
+                hideLoading();
+                showNotification("Ocurrió un error de red al intentar descargar la lista global de reportes.", true);
+            }
+        });
+
+        ui.btnGenerarReportes.addEventListener('click', async () => {
+            if (selectedList.length === 0) return;
+            if (currentSystemMode === 'lectura') return;
+
+            const trimestre = ui.selTrimestre.value;
+            const curso = ui.selCurso.value;
+            if (!trimestre || !curso) {
+                showNotification("Por favor seleccione Trimestre y Curso.", true);
+                return;
+            }
+
+            showLoading(currentSystemMode === 'padre' ? "Guardando asistencia de padres..." : "Guardando y generando reportes...");
+
+            try {
+                if (currentSystemMode === 'estudiante') {
+                    const baseURL = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+
+                    await fetch(baseURL, { method: "DELETE" });
+
+                    const datos = {};
+                    selectedList.forEach((student, index) => {
+                      datos[index + 1] = {
+                            nombre: String(student.nombre).replace(/^\d+\:\s*/, ""),
+                            asistio: !!student.asistio
+                        };
+                    });
+
+                    const response = await fetch(baseURL, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(datos)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("No se pudo guardar la información.");
+                    }
+
+                    hideLoading();
+                    showNotification("Reportes guardados exitosamente.");
+
+                    selectedList = [];
+                    updateTableUI();
+
+                    ui.selCurso.selectedIndex = 0;
+                    ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
+                    ui.selEstudiante.disabled = true;
+                    ui.selCurso.focus();
+
+                } else if (currentSystemMode === 'padre') {
+                    // MODO PADRE
+                    const urlPadres = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+                    const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+
+                    const datosPadres = {};
+                    const datosGen = {};
+                    let countGen = 1;
+
+                    selectedList.forEach((student) => {
+                        datosPadres[student.id] = {
+                            nombre: student.nombre,
+                            asistio: !!student.asistio
+                        };
+                        datosGen[countGen++] = {
+                            nombre: student.nombre,
+                            asistio: !!student.asistio
+                        };
+                    });
+
+                    await fetch(urlPadres, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(datosPadres)
+                    });
+
+                    await fetch(urlReporteGen, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(datosGen)
+                    });
+
+                    hideLoading();
+                    showNotification("Asistencia de Padres de Familia guardada exitosamente.");
+                }
+
+            } catch (error) {
+                console.error("Error guardando reporte:", error);
+                hideLoading();
+                showNotification("Ocurrió un error al guardar los datos.", true);
+            }
+        });
+
+        // Logout
+        document.getElementById('btnCerrarSesion').addEventListener('click', () => {
+            localStorage.removeItem('profesor');
+            window.location.href = 'index.html';
+        });
+    });
+
+    async function cargarTutoria() {
+        const tutoriaContainer = document.getElementById('tutoriaContainer');
+        const txtTutoria = document.getElementById('txtTutoria');
+
+        try {
+            const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/TUTORIA.json`);
+            const tutoriaData = await resp.json();
+
+            if (tutoriaData) {
+                const cursos = Object.keys(tutoriaData);
+                if (cursos.length > 0) {
+                    const curso = cursos[0];
+                    const materia = tutoriaData[curso];
+                    txtTutoria.textContent = `${curso} : ${materia}`;
+                    tutoriaContainer.classList.remove('hidden');
+
+                    tutorCursoDescarga = curso;
+                }
+            }
+        } catch (error) {
+            console.error("Error obteniendo la tutoría del profesor:", error);
+        }
+    }
+
+    async function initTrimesterSystem() {
+        showLoading("Verificando estado del trimestre...");
+        try {
+            const resp = await fetch(`${DB_URL}/TRIMESTRE.json`);
+            const data = await resp.json();
+
+            if (!data || data.REPORTE !== true) {
+                hideLoading();
+                ui.inactiveMsg.classList.remove('hidden');
+                ui.workspace.classList.add('hidden');
+                return;
+            }
+
+            // DETECTAR Y ASIGNAR MODO DEL SISTEMA
+            if (data.MODO) {
+                currentSystemMode = String(data.MODO).toLowerCase().trim();
+            } else {
+                currentSystemMode = 'estudiante';
+            }
+
+            // Aplicar cambios en la UI para el Modo Detectado
+            applySystemModeUI();
+
+            ui.inactiveMsg.classList.add('hidden');
+            ui.workspace.classList.remove('hidden');
+            
+            ui.selTrimestre.innerHTML = '<option value="">Seleccione...</option>';
+            let addedCount = 0;
+
+            ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
+                if (data[trim] === true) {
+                    const option = document.createElement('option');
+                    option.value = trim;
+                    option.textContent = trim; 
+                    ui.selTrimestre.appendChild(option);
+                    addedCount++;
+                }
+            });
+
+            if(addedCount > 0) {
+                ui.selTrimestre.disabled = false;
+            } else {
+                ui.selTrimestre.innerHTML = '<option value="">No hay trimestres habilitados</option>';
+            }
+
+            hideLoading();
+        } catch (error) {
+            console.error("Error validando trimestres:", error);
+            hideLoading();
+            showNotification("Error al conectar con la base de datos.", true);
+        }
+    }
+
+    async function handleTrimestreChange(e) {
+        const selectedTrimestre = e.target.value;
+        selectedList = [];
+        updateTableUI();
+
+        ui.selCurso.innerHTML = '<option value="">Seleccione un curso...</option>';
+        ui.selCurso.disabled = true;
+
+        if (currentSystemMode === 'estudiante') {
+            ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
+            ui.selEstudiante.disabled = true;
+        } else {
+            ui.selEstudiante.disabled = true;
+        }
+       
+        if (!selectedTrimestre) {
+            ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
+            return;
+        }
+
+        ui.selCurso.innerHTML = '<option value="">Cargando...</option>';
+        
+        try {
+            const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/CURSO.json`);
+            const cursosData = await resp.json();
+
+            if (!cursosData) {
+                ui.selCurso.innerHTML = '<option value="">No tiene cursos asignados</option>';
+                return;
+            }
+
+            ui.selCurso.innerHTML = '<option value="">Seleccione un curso...</option>';
+            for (const [cursoNombre, materia] of Object.entries(cursosData)) {
+                const option = document.createElement('option');
+                option.value = cursoNombre;
+                option.textContent = `${cursoNombre} - ${materia}`;
+                ui.selCurso.appendChild(option);
+            }
+            ui.selCurso.disabled = false;
+
+        } catch (error) {
+            console.error("Error obteniendo cursos:", error);
+            ui.selCurso.innerHTML = '<option value="">Error al cargar cursos</option>';
+        }
+    }
+
+    async function handleCursoChange(e) {
+        const selectedCurso = e.target.value;
+        selectedList = [];
+        updateTableUI();
+
+        if (!selectedCurso) {
+            if (currentSystemMode === 'estudiante') {
+                ui.selEstudiante.innerHTML = '<option value="">Seleccione un estudiante...</option>';
+                ui.selEstudiante.disabled = true;
+            }
+            return;
+        }
+
+        if (currentSystemMode === 'estudiante') {
+            ui.selEstudiante.innerHTML = '<option value="">Cargando...</option>';
+            ui.selEstudiante.disabled = true;
+        }
+
+        try {
+            const resp = await fetch(`${DB_URL}/CURSOS/${encodeURIComponent(selectedCurso)}.json`);
+            const estudiantesData = await resp.json();
+
+            if (!estudiantesData) {
+                if (currentSystemMode === 'estudiante') {
+                    ui.selEstudiante.innerHTML = '<option value="">No hay estudiantes</option>';
+                }
+                return;
+            }
+
+            if (currentSystemMode === 'estudiante') {
+                ui.selEstudiante.innerHTML = '<option value="">Seleccione un estudiante...</option>';
+                let count = 0;
+
+                for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
+                    if (!nombreEstudiante) continue;
+                    count++;
+                    const option = document.createElement("option");
+                    option.value = key;
+                    option.hidden = false;
+                    option.textContent = `${count}. ${nombreEstudiante}`;
+                    ui.selEstudiante.appendChild(option);
+                }
+
+                ui.selEstudiante.disabled = count === 0;
+                if (count === 0) {
+                    ui.selEstudiante.innerHTML = '<option value="">No hay estudiantes</option>';
+                }
+
+                const reporteURL = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
+                const reporteResp = await fetch(reporteURL);
+                const reporteData = await reporteResp.json();
+
+                if (reporteData) {
+                   Object.entries(reporteData)
+                    .sort((a, b) => Number(a[0]) - Number(b[0]))
+                    .forEach(([numero, valor]) => {
+
+                        if (!valor) return;
+
+                        // Compatibilidad con formato antiguo y nuevo
+                        let nombre = "";
+
+                        if (typeof valor === "string") {
+                            nombre = valor;
+                        } else {
+                            nombre = valor.nombre || "";
+                        }
+
+                        const asistio = (typeof valor === "object")
+                            ? !!valor.asistio
+                            : false;
+
+                        nombre = nombre.replace(/^\d+\:\s*/, "");
+
+                        selectedList.push({
+                            id: numero,
+                            nombre: nombre,
+                            asistio: asistio,
+                            curso: selectedCurso,
+                            trimestre: ui.selTrimestre.value,
+                            keyId: Date.now() + Math.random()
+                        });
+
+                        Array.from(ui.selEstudiante.options).forEach(op => {
+                            const texto = op.text.replace(/^\d+\.\s*/, "");
+                            if (texto === nombre) {
+                                op.hidden = true;
+                            }
+                        });
+                    });
+                    updateTableUI();
+                }
+
+            } else {
+                // MODO "padre" O MODO "lectura"
+                ui.selEstudiante.disabled = true;
+                ui.selEstudiante.innerHTML = currentSystemMode === 'padre' 
+                    ? '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>'
+                    : '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+
+                // Consultar asistencia guardada previa
+                const repPadresURL = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
+                const repPadresResp = await fetch(repPadresURL);
+                const repPadresData = await repPadresResp.json();
+
+                const repGenURL = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
+                const repGenResp = await fetch(repGenURL);
+                const repGenData = await repGenResp.json();
+
+                // EN MODO PADRE: Solo cargamos a los estudiantes que el profesor reportó
+                if (repGenData) {
+                    for (const [reportKey, reportValue] of Object.entries(repGenData)) {
+                        if (!reportValue) continue;
+
+                        const nombreReportado = (typeof reportValue === 'object' && reportValue.nombre) ? reportValue.nombre : reportValue;
+                        const nombreLimpio = String(nombreReportado).replace(/^\d+[\:\.]\s*/, "").trim();
+
+                        // Buscar el ID original del estudiante en estudiantesData para enlazar correctamente
+                        let originalId = reportKey;
+                        for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
+                            if (!nombreEstudiante) continue;
+                            if (String(nombreEstudiante).replace(/^\d+[\:\.]\s*/, "").trim() === nombreLimpio) {
+                                originalId = key;
+                                break;
+                            }
+                        }
+
+                        let asistio = false;
+                        // Verificar si ya se guardó la asistencia del padre previamente
+                        if (repPadresData && repPadresData[originalId]) {
+                            const savedVal = repPadresData[originalId];
+                            asistio = (typeof savedVal === 'object') ? !!savedVal.asistio : !!savedVal;
+                        } else if (typeof reportValue === 'object' && reportValue.asistio !== undefined) {
+                            asistio = reportValue.asistio;
+                        }
+
+                        selectedList.push({
+                            id: originalId,
+                            nombre: nombreLimpio,
+                            curso: selectedCurso,
+                            trimestre: ui.selTrimestre.value,
+                            asistio: asistio,
+                            keyId: Date.now() + Math.random()
+                        });
+                    }
+                }
+                updateTableUI();
+            }
+
+        } catch (error) {
+            console.error("Error al procesar curso:", error);
+            if (currentSystemMode === 'estudiante') {
+                ui.selEstudiante.innerHTML = '<option value="">Error al cargar</option>';
+            }
+        }
+    }
+
+    function handleEstudianteChange(e) {
+        if (currentSystemMode !== 'estudiante') return;
+        if (!e.target.value) return;
+        addStudentToList();
+    }
+
+    function addStudentToList() {
+        if (ui.selEstudiante.selectedIndex <= 0 || !ui.selEstudiante.value) {
+            return;
+        }
+
+        const idEstudiante = ui.selEstudiante.value;
+        const texto = ui.selEstudiante.options[ui.selEstudiante.selectedIndex].text.trim();
+        const nombreEstudiante = texto.replace(/^\d+\.\s*/, "").trim();
+
+        if (!nombreEstudiante) {
+            return;
+        }
+
+        const cursoCompleto = ui.selCurso.options[ui.selCurso.selectedIndex].text;
+        const nombreCurso = cursoCompleto.split('-')[0].trim();
+        const trimestre = ui.selTrimestre.options[ui.selTrimestre.selectedIndex].text;
+
+        const exists = selectedList.some(s => s.nombre === nombreEstudiante && s.curso === nombreCurso && s.trimestre === trimestre);
+
+        if (exists) {
+            return;
+        }
+
+        selectedList.push({
+            id: idEstudiante,
+            nombre: nombreEstudiante,
+            curso: nombreCurso,
+            trimestre: trimestre,
+            keyId: Date.now() + Math.random()
+        });
+
+        const option = ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
+        option.hidden = true;
+        ui.selEstudiante.selectedIndex = 0;
+        updateTableUI();
+    }
+
+    function removeStudent(keyId) {
+        if (currentSystemMode !== 'estudiante') return;
+        const eliminado = selectedList.find(s => s.keyId === keyId);
+        selectedList = selectedList.filter(s => s.keyId !== keyId);
+
+        if (eliminado) {
+            Array.from(ui.selEstudiante.options).forEach(op => {
+                if (op.value === eliminado.id) {
+                    op.hidden = false;
+                }
+            });
+        }
+        updateTableUI();
+    }
+
+    function clearStudentList() {
+        if (currentSystemMode !== 'estudiante') return;
+        showConfirm("Limpiar Lista", "¿Estás seguro de limpiar toda la lista de estudiantes seleccionados?", () => {
+            Array.from(ui.selEstudiante.options).forEach((option, index) => {
+                if (index === 0) return; 
+                option.hidden = false;
+            });
+            selectedList = [];
+            ui.selEstudiante.selectedIndex = 0;
+            updateTableUI();
+        });
+    }
+
+    function updateTableUI() {
+        if (currentSystemMode === 'padre' || currentSystemMode === 'lectura') {
+            const totalAsistieron = selectedList.filter(s => s.asistio).length;
+            ui.contadorEstudiantes.textContent = `${totalAsistieron} / ${selectedList.length} Padres Asistieron`;
+        } else {
+            ui.contadorEstudiantes.textContent = `${selectedList.length} Seleccionado${selectedList.length !== 1 ? 's' : ''}`;
+        }
+        
+        if (selectedList.length === 0) {
+            ui.emptyState.classList.remove('hidden');
+            ui.tableWrapper.classList.add('hidden');
+            ui.btnLimpiarLista.classList.add('hidden');
+            ui.btnGenerarReportes.disabled = true;
+            return;
+        }
+
+        ui.emptyState.classList.add('hidden');
+        ui.tableWrapper.classList.remove('hidden');
+
+        if (currentSystemMode === 'estudiante') {
+            ui.btnLimpiarLista.classList.remove('hidden');
+            ui.btnGenerarReportes.classList.remove('hidden');
+            ui.btnGenerarReportes.disabled = false;
+        } else if (currentSystemMode === 'padre') {
+            ui.btnLimpiarLista.classList.add('hidden'); 
+            ui.btnGenerarReportes.classList.remove('hidden');
+            ui.btnGenerarReportes.disabled = false;
+        } else if (currentSystemMode === 'lectura') {
+            ui.btnLimpiarLista.classList.add('hidden'); 
+            ui.btnGenerarReportes.classList.add('hidden'); 
+        }
+
+        ui.tableBody.innerHTML = '';
+        selectedList.forEach((student, index) => {
+            const tr = document.createElement('tr');
+
+            let actionColHtml = '';
+            if (currentSystemMode === 'estudiante') {
+                actionColHtml = `
+                    <td class="text-center">
+                        <button onclick="removeStudent(${student.keyId})" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors" title="Quitar">
+                            <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+            } else if (currentSystemMode === 'padre') {
+                actionColHtml = `
+                    <td class="text-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none
+    ${student.asistio
+        ? 'bg-green-100 hover:bg-green-200 border-green-300'
+        : 'bg-red-100 hover:bg-red-200 border-red-300'}
+    px-3 py-1.5 rounded-lg border transition-colors">
+                            <input type="checkbox" ${student.asistio ? 'checked' : ''} onchange="window.togglePadreAsistio('${student.id}')" class="w-5 h-5 text-[#1565C0] rounded focus:ring-[#1565C0] cursor-pointer">
+                            <span class="text-xs font-bold ${student.asistio ? 'text-green-700' : 'text-gray-500'}">${student.asistio ? 'PADRE ASISTIÓ' : 'NO ASISTIÓ'}</span>
+                        </label>
+                    </td>
+                `;
+            } else if (currentSystemMode === 'lectura') {
+                actionColHtml = `
+                    <td class="text-center">
+                        <label class="inline-flex items-center gap-2 select-none opacity-90 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                            <input type="checkbox" ${student.asistio ? 'checked' : ''} disabled class="w-5 h-5 text-[#1565C0] rounded cursor-not-allowed">
+                            <span class="text-xs font-bold ${student.asistio ? 'text-green-700' : 'text-red-600'}">${student.asistio ? 'PADRE ASISTIÓ' : 'NO ASISTIÓ'}</span>
+                        </label>
+                    </td>
+                `;
+            }
+
+            tr.innerHTML = `
+                <td class="text-center font-medium text-gray-500 truncate">${index + 1}</td>
+                <td class="font-semibold text-[#0D47A1] truncate max-w-full cursor-help" title="${escapeHtml(student.nombre)}">
+                    <span class="block truncate">${escapeHtml(student.nombre)}</span>
+                </td>
+                <td class="truncate max-w-full" title="${escapeHtml(student.curso)}">
+                    <span class="block truncate">${escapeHtml(student.curso)}</span>
+                </td>
+                <td class="truncate"><span class="bg-blue-50 text-[#1565C0] text-xs px-2.5 py-1 rounded-md font-medium border border-blue-100">${escapeHtml(student.trimestre)}</span></td>
+                ${actionColHtml}
+            `;
+            ui.tableBody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>
