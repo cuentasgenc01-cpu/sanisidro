@@ -295,9 +295,15 @@ tr:hover { background-color: #f8fafc; }
 <div class="main-content">
     
     <div class="topbar">
-        <div>
-            <h1>Reportes</h1>
-            <p>Panel de generación y visualización de reportes estudiantiles.</p>
+        <div class="flex items-center gap-4">
+            <div>
+                <h1>Reportes</h1>
+                <p>Panel de generación y visualización de reportes estudiantiles.</p>
+            </div>
+            <!-- Botón para alternar el Modo Administrador -->
+            <button id="btnToggleAdmin" class="hidden w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors shadow-sm border border-gray-200 text-xl" title="Activar/Desactivar Modo Administrador">
+                ⚙️
+            </button>
         </div>
         
         <!-- CONTENEDOR TUTORÍA -->
@@ -344,15 +350,48 @@ tr:hover { background-color: #f8fafc; }
             </div>
 
             <!-- SEGUNDA FILA: DESCARGAR REPORTE -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between py-5 border-b border-gray-200 gap-4">
-                <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
-                        <span class="text-2xl">📥</span>
-                        <span>DESCARGAR REPORTES</span>
-                    </div>
-                       </div>
+            <div class="flex flex-col border-b border-gray-200 py-5 gap-4">
+                
+                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                    <span class="text-2xl">📥</span>
+                    <span>DESCARGAR REPORTES</span>
+                </div>
 
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <!-- PANEL ADMINISTRADOR -->
+                <div id="adminPanelDescargas" class="hidden w-full bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2 shadow-inner">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-amber-600 text-lg">👑</span>
+                        <span class="font-bold text-amber-800 uppercase tracking-wide text-sm">Modo Administrador Activo</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-700 mb-1">Simular Profesor (Para descargar 'Mis Cursos')</label>
+                            <select id="adminInputProfesor" class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+                                <option value="">Cargando profesores...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-700 mb-1">Forzar Curso Tutor (Para descargar 'Tutor')</label>
+                            <input type="text" id="adminInputCurso" class="w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-amber-500 focus:border-amber-500 shadow-sm" placeholder="Ej: 1A SEC" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-700 mb-1">Actualizar Modo Sistema</label>
+                            <div class="flex gap-2">
+                                <select id="adminSelectModo" class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+                                    <option value="ESTUDIANTE">ESTUDIANTE</option>
+                                    <option value="PADRE">PADRE</option>
+                                    <option value="LECTURA">LECTURA</option>
+                                </select>
+                                <button id="btnActualizarModo" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-colors" title="Actualizar Modo">
+                                    🔄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-amber-600 mt-2 font-medium">* Selecciona un profesor para ver su curso tutor y simular su usuario.</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full justify-end mt-2">
                     <!-- Selector de Trimestre para Descarga -->
                     <select id="selectTrimestreDescarga" class="custom-select bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5 min-w-[200px]">
                         <option value="">Seleccione Trimestre</option>
@@ -366,7 +405,6 @@ tr:hover { background-color: #f8fafc; }
                         <span class="text-sm">⬇️ TUTOR</span>
                     </button>
 
-                    <!-- NUEVO BOTÓN: MIS CURSOS -->
                     <button id="btnDescargarMisCursos"
                         class="bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto" disabled title="Descarga los reportes individuales que usted guardó, una hoja por curso">
                         <span class="text-sm">📄 MIS CURSOS</span>
@@ -567,6 +605,20 @@ tr:hover { background-color: #f8fafc; }
     </div>
 </div>
 
+<!-- NUEVO MODAL DE VALIDACIÓN EXCEL -->
+<div id="excelValidationModal" class="hidden fixed inset-0 bg-gray-900/80 z-[120] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full flex flex-col max-h-[90vh]">
+        <div id="validationIcon" class="text-5xl text-center mb-4">⚠️</div>
+        <h3 id="validationTitle" class="text-xl font-bold text-gray-800 text-center mb-2">Título</h3>
+        <div id="validationContent" class="flex-1 overflow-y-auto text-sm text-gray-700 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200 whitespace-pre-wrap font-medium">
+            <!-- Contenido dinámico -->
+        </div>
+        <div id="validationFooter" class="flex justify-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+            <!-- Botones dinámicos -->
+        </div>
+    </div>
+</div>
+
 <!-- NOTIFICACIÓN TOAST PERSONALIZADA -->
 <div id="customToast" class="hidden fixed bottom-5 right-5 z-[99999] max-w-md bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center justify-between gap-4 border border-gray-700 transition-all duration-300">
     <span id="customToastText" class="text-sm font-medium">Notificación</span>
@@ -596,6 +648,9 @@ tr:hover { background-color: #f8fafc; }
     
     // Almacenará el curso de tutoría para descargar PDF
     let tutorCursoDescarga = ''; 
+    
+    // Variable global para habilitar funciones de administrador
+    let isAdmin = false;
 
     // Variable global para almacenar las notas extraídas del Excel
     let notasExtraidasGlobal = [];
@@ -607,7 +662,7 @@ tr:hover { background-color: #f8fafc; }
         inactiveMsg: document.getElementById('systemInactiveMsg'),
         workspace: document.getElementById('mainWorkspace'),
         
-        // Elementos de Reporte (Modal Principal)
+        // Elementos de Reporte
         modal: document.getElementById('selectionModal'),
         btnOpenModal: document.getElementById('btnOpenModal'),
         btnCloseModal: document.getElementById('btnCloseModal'),
@@ -622,7 +677,6 @@ tr:hover { background-color: #f8fafc; }
         btnLimpiarLista: document.getElementById('btnLimpiarLista'),
         btnGenerarReportes: document.getElementById('btnGenerarReportes'),
 
-        // Elementos del Nuevo Flujo: Subir Notas
         btnSubirNotas: document.getElementById('btnSubirNotas'),
         modalSubirNotas: document.getElementById('modalSubirNotas'),
         btnCloseModalSubirNotas: document.getElementById('btnCloseModalSubirNotas'),
@@ -631,14 +685,22 @@ tr:hover { background-color: #f8fafc; }
         btnBuscarExcel: document.getElementById('btnBuscarExcel'),
         fileExcelNotas: document.getElementById('fileExcelNotas'),
 
-        // Elementos del Nuevo Flujo: Mostrar Excel Extraído
         modalInfoExcel: document.getElementById('modalInfoExcel'),
         btnCloseModalInfoExcel: document.getElementById('btnCloseModalInfoExcel'),
         infoExcelCurso: document.getElementById('infoExcelCurso'),
         infoExcelMateria: document.getElementById('infoExcelMateria'),
         infoExcelEstudiantes: document.getElementById('infoExcelEstudiantes'),
         tablaNotasExtraidasBody: document.getElementById('tablaNotasExtraidasBody'),
-        btnOkInfoExcel: document.getElementById('btnOkInfoExcel')
+        btnOkInfoExcel: document.getElementById('btnOkInfoExcel'),
+        
+        validationModal: document.getElementById('excelValidationModal'),
+        valIcon: document.getElementById('validationIcon'),
+        valTitle: document.getElementById('validationTitle'),
+        valContent: document.getElementById('validationContent'),
+        valFooter: document.getElementById('validationFooter'),
+        
+        // Botón Administrador
+        btnToggleAdmin: document.getElementById('btnToggleAdmin')
     };
 
     function showNotification(msg, isError = false) {
@@ -710,134 +772,22 @@ tr:hover { background-color: #f8fafc; }
         ui.overlay.classList.add("hidden");
     }
 
-    function openModal() {
-        // Limpiar lista de estudiantes
-        selectedList = [];
-
-        // Actualizar la tabla
-        updateTableUI();
-
-        // Reiniciar Trimestre
-        ui.selTrimestre.selectedIndex = 0;
-
-        // Reiniciar Curso
-        ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
-        ui.selCurso.disabled = true;
-
-        // Reiniciar Estudiante según el modo
-        if (currentSystemMode === 'estudiante') {
-            ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
-        } else if (currentSystemMode === 'padre') {
-            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
-        } else {
-            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
-        }
-
-        ui.selEstudiante.disabled = true;
-
-        // Reiniciar contador
-        ui.contadorEstudiantes.textContent = "0 Seleccionados";
-
-        // Mostrar estado vacío
-        ui.emptyState.classList.remove("hidden");
-        ui.tableWrapper.classList.add("hidden");
-
-        // Abrir modal
-        ui.modal.classList.remove('hidden');
+    function closeValidationModal() {
+        ui.validationModal.classList.add('hidden');
     }
 
-    function closeModal() {
-        ui.modal.classList.add('hidden');
+    function resetToUploadModal() {
+        closeValidationModal();
+        ui.modalInfoExcel.classList.add('hidden');
+        ui.modalSubirNotas.classList.remove('hidden');
+        ui.fileExcelNotas.value = ""; 
     }
 
-    function applySystemModeUI() {
-        const txtReporteTitulo = document.getElementById('txtReporteTitulo');
-        const badgeModo = document.getElementById('badgeModo');
-        const txtModalTitulo = document.getElementById('txtModalTitulo');
-        const thAccion = document.getElementById('thAccion');
-        const btnOpenModalLabel = document.querySelector('#btnOpenModal .btn-label');
-
-        if (currentSystemMode === 'padre') {
-            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
-            if (badgeModo) {
-                badgeModo.textContent = "MODO: PADRE";
-                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase";
-            }
-            if (txtModalTitulo) txtModalTitulo.textContent = "REGISTRO DE ASISTENCIA DE PADRES DE FAMILIA";
-            if (thAccion) thAccion.textContent = "Padre Asistió";
-            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 REGISTRAR ASISTENCIA DE PADRES";
-            
-            ui.btnLimpiarLista.classList.add('hidden');
-            ui.selEstudiante.disabled = true;
-            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
-            ui.btnGenerarReportes.textContent = "Guardar Asistencia de Padres";
-            ui.btnGenerarReportes.classList.remove('hidden');
-
-        } else if (currentSystemMode === 'lectura') {
-            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
-            if (badgeModo) {
-                badgeModo.textContent = "MODO: LECTURA";
-                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-300 uppercase";
-            }
-            if (txtModalTitulo) txtModalTitulo.textContent = "CONSULTA DE ASISTENCIA DE PADRES (MODO LECTURA)";
-            if (thAccion) thAccion.textContent = "Padre Asistió";
-            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 CONSULTAR ASISTENCIA DE PADRES";
-
-            ui.btnLimpiarLista.classList.add('hidden');
-            ui.selEstudiante.disabled = true;
-            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
-            ui.btnGenerarReportes.classList.add('hidden');
-
-        } else {
-            // MODO: "estudiante"
-            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de Estudiantes";
-            if (badgeModo) {
-                badgeModo.textContent = "MODO: ESTUDIANTE";
-                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase";
-            }
-            if (txtModalTitulo) txtModalTitulo.textContent = "REPORTA TU LISTA DE ESTUDIANTE CON BAJO RENDIMIENTO";
-            if (thAccion) thAccion.textContent = "Acción";
-            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 SELECCIONAR ESTUDIANTES";
-
-            ui.btnGenerarReportes.textContent = "GUARDAR Reportes";
-            ui.btnGenerarReportes.classList.remove('hidden');
-        }
+    function proceedToSaveExcel() {
+        closeValidationModal();
+        ui.modalInfoExcel.classList.add('hidden');
+        showNotification("Validación exitosa. Notas listas para ser guardadas. (Lógica de guardado pendiente)", false);
     }
-
-    // Toggle para la asistencia de padres en MODO "padre"
-    window.togglePadreAsistio = function(studentId) {
-        if (currentSystemMode === 'lectura') return;
-        const student = selectedList.find(s => String(s.id) === String(studentId));
-        if (!student) return;
-
-        student.asistio = !student.asistio;
-
-        // Actualizar solamente el contador
-        const totalAsistieron = selectedList.filter(s => s.asistio).length;
-        ui.contadorEstudiantes.textContent = `${totalAsistieron} / ${selectedList.length} Padres Asistieron`;
-
-        // Actualizar solamente la fila
-        const checkbox = document.querySelector(`input[onchange="window.togglePadreAsistio('${student.id}')"]`);
-        if (!checkbox) return;
-
-        const label = checkbox.closest("label");
-        const texto = label.querySelector("span");
-        checkbox.checked = student.asistio;
-
-        if (student.asistio) {
-            label.classList.remove("bg-red-100", "hover:bg-red-200", "border-red-300");
-            label.classList.add("bg-green-100", "hover:bg-green-200", "border-green-300");
-            texto.textContent = "PADRE ASISTIÓ";
-            texto.classList.remove("text-gray-500");
-            texto.classList.add("text-green-700");
-        } else {
-            label.classList.remove("bg-green-100", "hover:bg-green-200", "border-green-300");
-            label.classList.add("bg-red-100", "hover:bg-red-200", "border-red-300");
-            texto.textContent = "NO ASISTIÓ";
-            texto.classList.remove("text-green-700");
-            texto.classList.add("text-gray-500");
-        }
-    };
 
     document.addEventListener('DOMContentLoaded', async () => {
         currentProfesorKey = localStorage.getItem('profesor');
@@ -847,10 +797,30 @@ tr:hover { background-color: #f8fafc; }
         }
         document.getElementById('nombreProfesorSidebar').textContent = currentProfesorKey;
 
-        // Cargar la tutoría del profesor
+        // --- VERIFICACIÓN DE ADMINISTRADOR (SOLO JUAN TUPA PUEDE VER EL BOTÓN) ---
+        // Se elimina la activación automática, ahora él decide cuándo activarlo.
+        if (currentProfesorKey.trim().toUpperCase() === 'JUAN TUPA') {
+            ui.btnToggleAdmin.classList.remove('hidden'); // Mostramos el botón
+        } else {
+            ui.btnToggleAdmin.classList.add('hidden');    // Oculto para todos los demás
+        }
+
+        // Lógica para el botón de Toggle Admin
+        ui.btnToggleAdmin.addEventListener('click', async () => {
+            if (!isAdmin) {
+                activarModoAdmin(false); // false indica que fue accionado manualmente
+                showNotification("Modo Administrador Activado", false);
+            } else {
+                desactivarModoAdmin();
+                showNotification("Modo Administrador Desactivado", false);
+            }
+        });
+
         cargarTutoria();
         await initTrimesterSystem();
-
+        await validarSubirNotas();
+        setInterval(validarSubirNotas, 5000);
+        
         ui.btnOpenModal.addEventListener('click', openModal);
         ui.btnCloseModal.addEventListener('click', closeModal);
         ui.btnCancelModal.addEventListener('click', closeModal);
@@ -864,7 +834,176 @@ tr:hover { background-color: #f8fafc; }
         ui.btnCloseModalSubirNotas.addEventListener("click", () => ui.modalSubirNotas.classList.add("hidden"));
         
         ui.btnCloseModalInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
-        ui.btnOkInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
+
+        // Evento de administrador: cuando se selecciona un profesor del SELECT, traer su curso tutor
+        document.getElementById('adminInputProfesor').addEventListener('change', async (e) => {
+            const profSeleccionado = e.target.value;
+            const inputCurso = document.getElementById('adminInputCurso');
+            
+            if (!profSeleccionado) {
+                inputCurso.value = '';
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(profSeleccionado)}/TUTORIA.json`);
+                const tutoriaData = await resp.json();
+                
+                let cursoTutor = "";
+
+                // Análisis y extracción segura en caso de que la respuesta sea String o Objeto
+                if (tutoriaData) {
+                    if (typeof tutoriaData === 'string') {
+                        // Si la base de datos está guardada directamente como un String (ej: "TERCEROB")
+                        cursoTutor = tutoriaData;
+                    } else if (typeof tutoriaData === 'object' && !Array.isArray(tutoriaData)) {
+                        // Si la base de datos está guardada como un Objeto con llaves (ej: { "TERCEROB": true/materia })
+                        const keys = Object.keys(tutoriaData);
+                        if (keys.length > 0) {
+                            cursoTutor = keys[0];
+                        }
+                    }
+                }
+
+                if (cursoTutor) {
+                    inputCurso.value = cursoTutor;
+                    showNotification(`El curso tutor de ${profSeleccionado} es ${cursoTutor}`, false);
+                } else {
+                    inputCurso.value = '';
+                    showNotification(`El profesor ${profSeleccionado} no tiene tutoría asignada`, true);
+                }
+            } catch (error) {
+                console.error("Error al obtener tutoría del profesor:", error);
+                inputCurso.value = '';
+                showNotification("Error de red al verificar la tutoría.", true);
+            }
+        });
+
+        // NUEVA FUNCION ADMINISTRADOR: Actualizar Modo en Firebase
+        document.getElementById('btnActualizarModo').addEventListener('click', async () => {
+            const nuevoModo = document.getElementById('adminSelectModo').value;
+            if (!nuevoModo) return;
+
+            showLoading("Actualizando modo del sistema...");
+            try {
+                const resp = await fetch(`${DB_URL}/TRIMESTRE/MODO.json`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(nuevoModo)
+                });
+
+                if (resp.ok) {
+                    currentSystemMode = nuevoModo.toLowerCase();
+                    applySystemModeUI();
+                    
+                    // Limpiamos las listas y reseteamos selects para reflejar el nuevo modo sin errores
+                    selectedList = [];
+                    updateTableUI();
+                    ui.selTrimestre.selectedIndex = 0;
+                    ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
+                    ui.selCurso.disabled = true;
+                    if (currentSystemMode === 'estudiante') {
+                        ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
+                    } else if (currentSystemMode === 'padre') {
+                        ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+                    } else {
+                        ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+                    }
+                    ui.selEstudiante.disabled = true;
+
+                    showNotification(`Modo del sistema actualizado a: ${nuevoModo}`, false);
+                } else {
+                    showNotification("Error al actualizar el modo en la base de datos", true);
+                }
+            } catch (error) {
+                console.error("Error al actualizar modo:", error);
+                showNotification("Error de red al intentar actualizar el modo.", true);
+            }
+            hideLoading();
+        });
+
+        ui.btnOkInfoExcel.addEventListener("click", () => {
+            const notasBajas = [];
+            const notasVacias = [];
+
+            notasExtraidasGlobal.forEach(est => {
+                const notaStr = est.nota;
+                const notaNum = Number(notaStr);
+                
+                if (notaStr === "" || notaStr === "-" || notaStr === null || notaStr === undefined) {
+                    notasVacias.push(est.nombre);
+                } 
+                else if (!isNaN(notaNum) && notaNum >= 0 && notaNum <= 30) {
+                    notasBajas.push({ nombre: est.nombre, nota: notaNum });
+                }
+            });
+
+            if (notasBajas.length > 0) {
+                let mensaje = "Se encontraron notas inusualmente bajas (entre 0 y 30). Revise el archivo Excel antes de continuar:\n\n";
+                notasBajas.forEach((est, i) => {
+                    mensaje += `${i + 1}. ${est.nombre}   (${est.nota})\n`;
+                });
+
+                ui.valIcon.textContent = "❌";
+                ui.valTitle.textContent = "Validación Fallida";
+                ui.valTitle.className = "text-xl font-bold text-red-600 text-center mb-2";
+                ui.valContent.textContent = mensaje;
+                ui.valContent.className = "flex-1 overflow-y-auto text-sm text-red-800 mb-6 bg-red-50 p-4 rounded-xl border border-red-200 whitespace-pre-wrap font-medium";
+                
+                ui.valFooter.innerHTML = `
+                    <button id="btnValVolverAtras" class="px-5 py-3 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors">
+                        VOLVER ATRÁS PARA VOLVER A SUBIR EL ARCHIVO
+                    </button>
+                `;
+                
+                document.getElementById('btnValVolverAtras').addEventListener('click', resetToUploadModal);
+                ui.validationModal.classList.remove('hidden');
+                return;
+            }
+
+            if (notasVacias.length > 0) {
+                let mensaje = "Los siguientes estudiantes NO tienen nota válida asignada:\n\n";
+                notasVacias.forEach((nombre, i) => {
+                    mensaje += `${i + 1}. ${nombre}\n`;
+                });
+                mensaje += "\n¿Está seguro de que desea continuar y guardar esta información?";
+
+                ui.valIcon.textContent = "⚠️";
+                ui.valTitle.textContent = "Advertencia de Notas Vacías";
+                ui.valTitle.className = "text-xl font-bold text-amber-500 text-center mb-2";
+                ui.valContent.textContent = mensaje;
+                ui.valContent.className = "flex-1 overflow-y-auto text-sm text-amber-900 mb-6 bg-amber-50 p-4 rounded-xl border border-amber-200 whitespace-pre-wrap font-medium";
+
+                ui.valFooter.innerHTML = `
+                    <button id="btnValReSubir" class="px-4 py-3 flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors whitespace-normal">
+                        VOLVER A SUBIR EL ARCHIVO
+                    </button>
+                    <button id="btnValSiGuardar" class="px-4 py-3 flex-1 bg-[#1565C0] hover:bg-[#0D47A1] text-white rounded-xl text-sm font-bold transition-colors">
+                        SÍ, CONTINUAR
+                    </button>
+                `;
+                
+                document.getElementById('btnValReSubir').addEventListener('click', resetToUploadModal);
+                document.getElementById('btnValSiGuardar').addEventListener('click', proceedToSaveExcel);
+                ui.validationModal.classList.remove('hidden');
+                return;
+            }
+
+            ui.valIcon.textContent = "✅";
+            ui.valTitle.textContent = "Validación Exitosa";
+            ui.valTitle.className = "text-xl font-bold text-green-600 text-center mb-2";
+            ui.valContent.textContent = "Todas las notas extraídas son válidas y están listas para ser procesadas.\n\nHaga clic en Continuar para proceder con el guardado.";
+            ui.valContent.className = "flex-1 overflow-y-auto text-sm text-green-800 mb-6 bg-green-50 p-4 rounded-xl border border-green-200 whitespace-pre-wrap font-medium";
+
+            ui.valFooter.innerHTML = `
+                <button id="btnValOkFinal" class="px-5 py-3 w-full bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-colors">
+                    CONTINUAR
+                </button>
+            `;
+            
+            document.getElementById('btnValOkFinal').addEventListener('click', proceedToSaveExcel);
+            ui.validationModal.classList.remove('hidden');
+        });
 
         ui.selectTrimestreSubirNotas.addEventListener("change", (e) => {
             if(e.target.value) {
@@ -880,170 +1019,55 @@ tr:hover { background-color: #f8fafc; }
 
         ui.fileExcelNotas.addEventListener("change", handleExcelUpload);
 
-        async function openModalSubirNotas() {
-            ui.modalSubirNotas.classList.remove("hidden");
-            ui.containerCentralizador.classList.add("hidden");
-            ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Cargando...</option>';
-            ui.fileExcelNotas.value = "";
-            notasExtraidasGlobal = [];
-
-            try {
-                const resp = await fetch(`${DB_URL}/TRIMESTRE.json`);
-                const data = await resp.json();
-
-                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Seleccione Trimestre...</option>';
-                let addedCount = 0;
-                
-                ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
-                    if (data && data[trim] === true) {
-                        const option = document.createElement('option');
-                        option.value = trim;
-                        option.textContent = trim; 
-                        ui.selectTrimestreSubirNotas.appendChild(option);
-                        addedCount++;
-                    }
-                });
-
-                if(addedCount === 0) {
-                    ui.selectTrimestreSubirNotas.innerHTML = '<option value="">No hay trimestres habilitados</option>';
-                }
-            } catch(error) {
-                console.error("Error al cargar trimestres:", error);
-                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Error de red</option>';
-            }
-        }
-
-        function handleExcelUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const trimestreSeleccionado = ui.selectTrimestreSubirNotas.value;
-            if (!trimestreSeleccionado) {
-                showNotification("Por favor seleccione el trimestre antes de buscar el archivo.", true);
-                ui.fileExcelNotas.value = "";
-                return;
-            }
-
-            const nombreHojaBuscada = document.getElementById("inputNombreHoja").value.trim() || "CENTRALIZADOR";
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-
-                    if (workbook.SheetNames.includes(nombreHojaBuscada)) {
-                        const sheet = workbook.Sheets[nombreHojaBuscada];
-                        
-                        const curso = sheet['D5'] ? sheet['D5'].v : "No encontrado";
-                        const materia = sheet['D9'] ? sheet['D9'].v : "No encontrada";
-
-                        let colNota = "K"; 
-                        if (trimestreSeleccionado === "SEGUNDO") colNota = "S";
-                        else if (trimestreSeleccionado === "TERCERO") colNota = "AA";
-
-                        notasExtraidasGlobal = []; 
-
-                        for (let i = 15; i <= 60; i++) {
-                            const celdaNombre = sheet['C' + i];
-                            const celdaNota = sheet[colNota + i];
-
-                            if (celdaNombre && celdaNombre.v && String(celdaNombre.v).trim() !== "") {
-                                let valorNota = "";
-                                if (celdaNota) {
-                                    valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
-                                }
-
-                                notasExtraidasGlobal.push({
-                                    filaExcel: i,
-                                    nombre: String(celdaNombre.v).trim(),
-                                    nota: valorNota
-                                });
-                            }
-                        }
-
-                        ui.tablaNotasExtraidasBody.innerHTML = '';
-                        notasExtraidasGlobal.forEach((item, index) => {
-                            const tr = document.createElement('tr');
-                            tr.className = "hover:bg-gray-50 transition-colors";
-                            
-                            let colorNota = "text-gray-700";
-                            if (item.nota !== "" && !isNaN(item.nota)) {
-                                colorNota = Number(item.nota) < 51 ? "text-red-600 font-bold" : "text-green-600 font-bold";
-                            }
-
-                            tr.innerHTML = `
-                                <td class="px-4 py-2 text-center text-gray-500 font-medium">${index + 1}</td>
-                                <td class="px-4 py-2 font-semibold text-[#0D47A1] truncate max-w-xs" title="${escapeHtml(item.nombre)}">${escapeHtml(item.nombre)}</td>
-                                <td class="px-4 py-2 text-center font-bold ${colorNota}">${item.nota !== "" ? item.nota : '-'}</td>
-                            `;
-                            ui.tablaNotasExtraidasBody.appendChild(tr);
-                        });
-
-                        ui.infoExcelCurso.textContent = curso;
-                        ui.infoExcelMateria.textContent = materia;
-                        ui.infoExcelEstudiantes.textContent = notasExtraidasGlobal.length.toString();
-
-                        ui.modalSubirNotas.classList.add("hidden");
-                        ui.modalInfoExcel.classList.remove("hidden");
-
-                    } else {
-                        showNotification(`El archivo Excel no contiene una hoja llamada "${nombreHojaBuscada}".`, true);
-                    }
-                } catch (err) {
-                    console.error("Error leyendo Excel:", err);
-                    showNotification("Ocurrió un error al procesar el archivo Excel.", true);
-                }
-                ui.fileExcelNotas.value = "";
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
         const selectTrimestreDescarga = document.getElementById('selectTrimestreDescarga');
         const btnDescargarReporte = document.getElementById('btnDescargarReporte');
         const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
 
         selectTrimestreDescarga.addEventListener('change', (e) => {
             if (e.target.value) {
-                // Habilitar Botón Tutor
                 btnDescargarReporte.disabled = false;
                 btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
                 
-                // Habilitar Botón Mis Cursos
                 btnDescargarMisCursos.disabled = false;
                 btnDescargarMisCursos.className = 'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
             } else {
-                // Deshabilitar Botón Tutor
                 btnDescargarReporte.disabled = true;
                 btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
                 
-                // Deshabilitar Botón Mis Cursos
                 btnDescargarMisCursos.disabled = true;
                 btnDescargarMisCursos.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
             }
         });
 
-        // NUEVO EVENTO: Botón de Mis Cursos
+        // DESCARGAR MIS CURSOS
         btnDescargarMisCursos.addEventListener('click', async () => {
             const trimestreSel = selectTrimestreDescarga.value;
             if (!trimestreSel) return;
 
-            showLoading("Obteniendo sus reportes individuales...");
+            let profToDownload = currentProfesorKey;
+            
+            if (isAdmin) {
+                profToDownload = document.getElementById('adminInputProfesor').value.trim();
+                if (!profToDownload) {
+                    showNotification("Modo Admin: Debe seleccionar un profesor de la lista.", true);
+                    return;
+                }
+            }
+
+            showLoading(`Obteniendo reportes individuales de ${profToDownload}...`);
 
             try {
-                // 1. Obtener reportes del profesor para este trimestre
-                const urlMisReportes = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestreSel)}.json`;
+                const urlMisReportes = `${DB_URL}/REPORTE/${encodeURIComponent(profToDownload)}/${encodeURIComponent(trimestreSel)}.json`;
                 const respMisReportes = await fetch(urlMisReportes);
                 const misReportesData = await respMisReportes.json();
 
                 if (!misReportesData || Object.keys(misReportesData).length === 0) {
                     hideLoading();
-                    showNotification(`El profesor no cuenta con reportes registrados en el trimestre ${trimestreSel}.`, true);
+                    showNotification(`No se encontraron reportes para el profesor ${profToDownload} en el trimestre ${trimestreSel}.`, true);
                     return;
                 }
 
-                // 2. Obtener materias del profesor para asignarlas al PDF
-                const urlMisCursos = `${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/CURSO.json`;
+                const urlMisCursos = `${DB_URL}/PROFESORES/${encodeURIComponent(profToDownload)}/CURSO.json`;
                 const respMisCursos = await fetch(urlMisCursos);
                 const materiasData = await respMisCursos.json() || {};
 
@@ -1053,7 +1077,6 @@ tr:hover { background-color: #f8fafc; }
 
                 let isFirstPage = true;
 
-                // 3. Iterar por cada curso y crear una hoja en el PDF
                 for (const [curso, estudiantesObj] of Object.entries(misReportesData)) {
                     if (!estudiantesObj) continue;
 
@@ -1064,19 +1087,17 @@ tr:hover { background-color: #f8fafc; }
 
                     const materia = materiasData[curso] || "Materia no asignada";
 
-                    // Encabezado
                     doc.setFontSize(14);
                     doc.setTextColor(13, 71, 161);
                     doc.text("Reporte Individual de Rendimiento Estudiantil", pageWidth / 2, 18, { align: "center" });
 
                     doc.setFontSize(10);
                     doc.setTextColor(51, 51, 51);
-                    doc.text(`Profesor: ${currentProfesorKey}`, 14, 28);
+                    doc.text(`Profesor: ${profToDownload} ${isAdmin ? '(Modo Admin)' : ''}`, 14, 28);
                     doc.text(`Curso: ${curso}`, 14, 34);
                     doc.text(`Materia: ${materia}`, pageWidth / 2, 34);
                     doc.text(`Trimestre: ${trimestreSel}`, 14, 40);
 
-                    // Datos de Tabla
                     const tableData = [];
                     let contadorNro = 1;
 
@@ -1087,7 +1108,6 @@ tr:hover { background-color: #f8fafc; }
 
                         if (typeof val === 'object' && val.nombre) {
                             nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
-                            // Si estamos en modo padre, usar asistio
                             if (val.asistio !== undefined) {
                                 estado = val.asistio ? "Asistió a Reunión" : "Bajo Rendimiento";
                             }
@@ -1099,14 +1119,13 @@ tr:hover { background-color: #f8fafc; }
                         contadorNro++;
                     });
 
-                    // Generar Tabla
                     doc.autoTable({
                         startY: 48,
                         head: [["N°", "APELLIDOS Y NOMBRES", "ESTADO"]],
                         body: tableData,
                         theme: "grid",
                         headStyles: {
-                            fillColor: [21, 101, 192], // Secondary Blue
+                            fillColor: [21, 101, 192], 
                             textColor: 255,
                             halign: "center",
                             fontStyle: "bold",
@@ -1126,36 +1145,48 @@ tr:hover { background-color: #f8fafc; }
                     });
                 }
 
-                doc.save(`Mis_Reportes_${currentProfesorKey}_${trimestreSel}.pdf`);
+                doc.save(`Mis_Reportes_${profToDownload}_${trimestreSel}.pdf`);
                 hideLoading();
 
             } catch (error) {
                 console.error("Error al generar reportes individuales:", error);
                 hideLoading();
-                showNotification("Ocurrió un error de red al intentar generar sus reportes.", true);
+                showNotification("Ocurrió un error de red al intentar generar los reportes.", true);
             }
         });
 
-        // EVENTO ORIGINAL: Botón Tutor
+        // DESCARGAR REPORTE TUTOR
         btnDescargarReporte.addEventListener('click', async () => {
             const trimestreSel = selectTrimestreDescarga.value;
             if (!trimestreSel) return;
             
-            if (!tutorCursoDescarga) {
-                showNotification("No se ha detectado un curso de tutoría asignado para este profesor.", true);
-                return;
+            let cursoToDownload = tutorCursoDescarga;
+            let tutorLabel = currentProfesorKey;
+
+            if (isAdmin) {
+                cursoToDownload = document.getElementById('adminInputCurso').value.trim();
+                if (!cursoToDownload) {
+                    showNotification("Modo Admin: Debe escribir el nombre de un curso para descargar el consolidado.", true);
+                    return;
+                }
+                tutorLabel = document.getElementById('adminInputProfesor').value || "ADMINISTRADOR";
+            } else {
+                if (!tutorCursoDescarga) {
+                    showNotification("No se ha detectado un curso de tutoría asignado para este profesor.", true);
+                    return;
+                }
             }
 
-            showLoading("Obteniendo reportes globales...");
+            showLoading(`Obteniendo reporte global del curso ${cursoToDownload}...`);
 
             try {
-                const urlEstudiantes = `${DB_URL}/CURSOS/${encodeURIComponent(tutorCursoDescarga)}.json`;
+                const urlEstudiantes = `${DB_URL}/CURSOS/${encodeURIComponent(cursoToDownload)}.json`;
                 const respEstudiantes = await fetch(urlEstudiantes);
                 const estudiantesData = await respEstudiantes.json();
 
                 if (!estudiantesData) {
                     hideLoading();
-                    showNotification(`No hay estudiantes registrados en el curso: ${tutorCursoDescarga}`, true);
+                    showNotification(`No hay estudiantes registrados en el curso: ${cursoToDownload}`, true);
                     return;
                 }
 
@@ -1168,14 +1199,14 @@ tr:hover { background-color: #f8fafc; }
 
                 if (todosLosReportes) {
                     for (const [nombreProfesor, trimestres] of Object.entries(todosLosReportes)) {
-                        if (trimestres[trimestreSel] && trimestres[trimestreSel][tutorCursoDescarga]) {
-                            const estudiantesReportados = trimestres[trimestreSel][tutorCursoDescarga];
+                        if (trimestres[trimestreSel] && trimestres[trimestreSel][cursoToDownload]) {
+                            const estudiantesReportados = trimestres[trimestreSel][cursoToDownload];
                             let reportoAlMenosUno = false;
                             
                             Object.values(estudiantesReportados).forEach(val => {
                                 if (val) {
                                     let nombreLimpio = "";
-                                    let marca = "X"; // Por defecto "X" (si es false o no existe asistio)
+                                    let marca = "X"; 
 
                                     if (typeof val === 'object' && val.nombre) {
                                         nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
@@ -1205,7 +1236,7 @@ tr:hover { background-color: #f8fafc; }
                 
                 if (profList.length === 0) {
                     hideLoading();
-                    showNotification(`No se encontraron reportes para el curso ${tutorCursoDescarga} en el trimestre ${trimestreSel}.`, true);
+                    showNotification(`No se encontraron reportes para el curso ${cursoToDownload} en el trimestre ${trimestreSel}.`, true);
                     return;
                 }
 
@@ -1216,8 +1247,8 @@ tr:hover { background-color: #f8fafc; }
                         const respProfCurso = await fetch(urlProfCurso);
                         const profCursosData = await respProfCurso.json();
 
-                        if (profCursosData && profCursosData[tutorCursoDescarga]) {
-                            materiasList[prof] = profCursosData[tutorCursoDescarga];
+                        if (profCursosData && profCursosData[cursoToDownload]) {
+                            materiasList[prof] = profCursosData[cursoToDownload];
                         } else {
                             materiasList[prof] = "Sin Materia";
                         }
@@ -1253,7 +1284,7 @@ tr:hover { background-color: #f8fafc; }
                 
                 doc.setFontSize(10);
                 doc.setTextColor(51, 51, 51);
-                doc.text(`Tutor a Cargo: ${currentProfesorKey}   |   Curso: ${tutorCursoDescarga}   |   Trimestre: ${trimestreSel}`, 14, 26);
+                doc.text(`Tutor a Cargo: ${tutorLabel}   |   Curso: ${cursoToDownload}   |   Trimestre: ${trimestreSel}`, 14, 26);
 
                 const tableData = [];
                 let contadorNro = 1;
@@ -1376,7 +1407,7 @@ tr:hover { background-color: #f8fafc; }
                     }
                 });
 
-                doc.save(`Consolidado_Rendimiento_${tutorCursoDescarga}_${trimestreSel}.pdf`);
+                doc.save(`Consolidado_Rendimiento_${cursoToDownload}_${trimestreSel}.pdf`);
                 hideLoading();
 
             } catch (error) {
@@ -1435,7 +1466,6 @@ tr:hover { background-color: #f8fafc; }
                     ui.selCurso.focus();
 
                 } else if (currentSystemMode === 'padre') {
-                    // MODO PADRE
                     const urlPadres = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
                     const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
 
@@ -1477,12 +1507,67 @@ tr:hover { background-color: #f8fafc; }
             }
         });
 
-        // Logout
         document.getElementById('btnCerrarSesion').addEventListener('click', () => {
             localStorage.removeItem('profesor');
             window.location.href = 'index.html';
         });
     });
+
+    // NUEVA FUNCIÓN: Activar Modo Admin
+    async function activarModoAdmin(esAuto = false) {
+        isAdmin = true;
+        document.getElementById('adminPanelDescargas').classList.remove('hidden');
+        
+        // Estilos para el botón cuando está activo
+        ui.btnToggleAdmin.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-600');
+        ui.btnToggleAdmin.classList.remove('bg-gray-100', 'border-gray-200', 'text-xl');
+        ui.btnToggleAdmin.classList.add('text-2xl');
+        
+        // Colocar el dropdown de modo en el valor actual
+        const adminSelectModo = document.getElementById('adminSelectModo');
+        if(adminSelectModo && currentSystemMode) {
+            adminSelectModo.value = currentSystemMode.toUpperCase();
+        }
+
+        await cargarProfesoresAdmin();
+    }
+
+    // NUEVA FUNCIÓN: Desactivar Modo Admin
+    function desactivarModoAdmin() {
+        isAdmin = false;
+        document.getElementById('adminPanelDescargas').classList.add('hidden');
+        
+        // Regresar estilos del botón a inactivo
+        ui.btnToggleAdmin.classList.remove('bg-amber-100', 'border-amber-300', 'text-amber-600', 'text-2xl');
+        ui.btnToggleAdmin.classList.add('bg-gray-100', 'border-gray-200', 'text-xl');
+        
+        // Limpiar inputs del panel admin
+        if(document.getElementById('adminInputProfesor')) document.getElementById('adminInputProfesor').value = '';
+        if(document.getElementById('adminInputCurso')) document.getElementById('adminInputCurso').value = '';
+    }
+
+    // NUEVA FUNCIÓN: Obtener la lista de profesores para el panel de Administrador
+    async function cargarProfesoresAdmin() {
+        const selectProf = document.getElementById('adminInputProfesor');
+        try {
+            const resp = await fetch(`${DB_URL}/PROFESORES.json`);
+            const data = await resp.json();
+            
+            selectProf.innerHTML = '<option value="">Seleccione Profesor...</option>';
+            if (data) {
+                const nombresProfesores = Object.keys(data).sort();
+                nombresProfesores.forEach(prof => {
+                    const option = document.createElement('option');
+                    option.value = prof;
+                    option.textContent = prof;
+                    selectProf.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error("Error obteniendo lista de profesores para administrador:", error);
+            selectProf.innerHTML = '<option value="">Error de carga</option>';
+        }
+    }
 
     async function cargarTutoria() {
         const tutoriaContainer = document.getElementById('tutoriaContainer');
@@ -1492,15 +1577,30 @@ tr:hover { background-color: #f8fafc; }
             const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/TUTORIA.json`);
             const tutoriaData = await resp.json();
 
+            let curso = "";
+            let materia = "Sin materia";
+
             if (tutoriaData) {
-                const cursos = Object.keys(tutoriaData);
-                if (cursos.length > 0) {
-                    const curso = cursos[0];
-                    const materia = tutoriaData[curso];
+                // Análisis y extracción segura igual que en el panel admin para consistencia
+                if (typeof tutoriaData === 'string') {
+                    curso = tutoriaData;
+                } else if (typeof tutoriaData === 'object' && !Array.isArray(tutoriaData)) {
+                    const cursos = Object.keys(tutoriaData);
+                    if (cursos.length > 0) {
+                        curso = cursos[0];
+                        materia = tutoriaData[curso] || materia;
+                    }
+                }
+                
+                if (curso) {
                     txtTutoria.textContent = `${curso} : ${materia}`;
                     tutoriaContainer.classList.remove('hidden');
 
                     tutorCursoDescarga = curso;
+                    
+                    if (isAdmin && document.getElementById('adminInputCurso')) {
+                        document.getElementById('adminInputCurso').value = curso;
+                    }
                 }
             }
         } catch (error) {
@@ -1521,14 +1621,17 @@ tr:hover { background-color: #f8fafc; }
                 return;
             }
 
-            // DETECTAR Y ASIGNAR MODO DEL SISTEMA
             if (data.MODO) {
                 currentSystemMode = String(data.MODO).toLowerCase().trim();
             } else {
                 currentSystemMode = 'estudiante';
             }
 
-            // Aplicar cambios en la UI para el Modo Detectado
+            const adminSelectModo = document.getElementById('adminSelectModo');
+            if (adminSelectModo) {
+                adminSelectModo.value = currentSystemMode.toUpperCase();
+            }
+
             applySystemModeUI();
 
             ui.inactiveMsg.classList.add('hidden');
@@ -1607,6 +1710,28 @@ tr:hover { background-color: #f8fafc; }
         }
     }
 
+    async function validarSubirNotas() {
+        try {
+            const resp = await fetch(`${DB_URL}/TRIMESTRE/ACTIVO.json?t=${Date.now()}`);
+            const activo = await resp.json();
+
+            if (activo === true) {
+                ui.btnSubirNotas.disabled = false;
+                ui.btnSubirNotas.className =
+                    "bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5";
+                ui.btnSubirNotas.title = "";
+            } else {
+                ui.btnSubirNotas.disabled = true;
+                ui.btnSubirNotas.className =
+                    "bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg cursor-not-allowed flex items-center gap-2 shadow-md";
+                ui.btnSubirNotas.title = "La subida de notas está deshabilitada.";
+            }
+        } catch (error) {
+            console.error(error);
+            ui.btnSubirNotas.disabled = true;
+        }
+    }
+
     async function handleCursoChange(e) {
         const selectedCurso = e.target.value;
         selectedList = [];
@@ -1666,9 +1791,7 @@ tr:hover { background-color: #f8fafc; }
 
                         if (!valor) return;
 
-                        // Compatibilidad con formato antiguo y nuevo
                         let nombre = "";
-
                         if (typeof valor === "string") {
                             nombre = valor;
                         } else {
@@ -1701,13 +1824,11 @@ tr:hover { background-color: #f8fafc; }
                 }
 
             } else {
-                // MODO "padre" O MODO "lectura"
                 ui.selEstudiante.disabled = true;
                 ui.selEstudiante.innerHTML = currentSystemMode === 'padre' 
                     ? '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>'
                     : '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
 
-                // Consultar asistencia guardada previa
                 const repPadresURL = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
                 const repPadresResp = await fetch(repPadresURL);
                 const repPadresData = await repPadresResp.json();
@@ -1716,7 +1837,6 @@ tr:hover { background-color: #f8fafc; }
                 const repGenResp = await fetch(repGenURL);
                 const repGenData = await repGenResp.json();
 
-                // EN MODO PADRE: Solo cargamos a los estudiantes que el profesor reportó
                 if (repGenData) {
                     for (const [reportKey, reportValue] of Object.entries(repGenData)) {
                         if (!reportValue) continue;
@@ -1724,7 +1844,6 @@ tr:hover { background-color: #f8fafc; }
                         const nombreReportado = (typeof reportValue === 'object' && reportValue.nombre) ? reportValue.nombre : reportValue;
                         const nombreLimpio = String(nombreReportado).replace(/^\d+[\:\.]\s*/, "").trim();
 
-                        // Buscar el ID original del estudiante en estudiantesData para enlazar correctamente
                         let originalId = reportKey;
                         for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
                             if (!nombreEstudiante) continue;
@@ -1735,7 +1854,6 @@ tr:hover { background-color: #f8fafc; }
                         }
 
                         let asistio = false;
-                        // Verificar si ya se guardó la asistencia del padre previamente
                         if (repPadresData && repPadresData[originalId]) {
                             const savedVal = repPadresData[originalId];
                             asistio = (typeof savedVal === 'object') ? !!savedVal.asistio : !!savedVal;
@@ -1801,9 +1919,17 @@ tr:hover { background-color: #f8fafc; }
             keyId: Date.now() + Math.random()
         });
 
+        // Ordenar alfabéticamente por nombre del estudiante
+        selectedList.sort((a, b) =>
+            a.nombre.localeCompare(b.nombre, 'es', {
+                sensitivity: 'base'
+            })
+        );
+
         const option = ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
         option.hidden = true;
         ui.selEstudiante.selectedIndex = 0;
+
         updateTableUI();
     }
 
@@ -1834,6 +1960,236 @@ tr:hover { background-color: #f8fafc; }
             updateTableUI();
         });
     }
+
+    function openModalSubirNotas() {
+        ui.modalSubirNotas.classList.remove("hidden");
+        ui.containerCentralizador.classList.add("hidden");
+        ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Cargando...</option>';
+        ui.fileExcelNotas.value = "";
+        notasExtraidasGlobal = [];
+
+        fetch(`${DB_URL}/TRIMESTRE.json`)
+            .then(resp => resp.json())
+            .then(data => {
+                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Seleccione Trimestre...</option>';
+                let addedCount = 0;
+                
+                ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
+                    if (data && data[trim] === true) {
+                        const option = document.createElement('option');
+                        option.value = trim;
+                        option.textContent = trim; 
+                        ui.selectTrimestreSubirNotas.appendChild(option);
+                        addedCount++;
+                    }
+                });
+
+                if(addedCount === 0) {
+                    ui.selectTrimestreSubirNotas.innerHTML = '<option value="">No hay trimestres habilitados</option>';
+                }
+            })
+            .catch(error => {
+                console.error("Error al cargar trimestres:", error);
+                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Error de red</option>';
+            });
+    }
+
+    function handleExcelUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const trimestreSeleccionado = ui.selectTrimestreSubirNotas.value;
+        if (!trimestreSeleccionado) {
+            showNotification("Por favor seleccione el trimestre antes de buscar el archivo.", true);
+            ui.fileExcelNotas.value = "";
+            return;
+        }
+
+        const nombreHojaBuscada = document.getElementById("inputNombreHoja").value.trim() || "CENTRALIZADOR";
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+
+                if (workbook.SheetNames.includes(nombreHojaBuscada)) {
+                    const sheet = workbook.Sheets[nombreHojaBuscada];
+                    
+                    const curso = sheet['D5'] ? sheet['D5'].v : "No encontrado";
+                    const materia = sheet['D9'] ? sheet['D9'].v : "No encontrada";
+
+                    let colNota = "K"; 
+                    if (trimestreSeleccionado === "SEGUNDO") colNota = "S";
+                    else if (trimestreSeleccionado === "TERCERO") colNota = "AA";
+
+                    notasExtraidasGlobal = []; 
+
+                    for (let i = 15; i <= 60; i++) {
+                        const celdaNombre = sheet['C' + i];
+                        const celdaNota = sheet[colNota + i];
+
+                        if (celdaNombre && celdaNombre.v && String(celdaNombre.v).trim() !== "") {
+                            let valorNota = "";
+                            if (celdaNota) {
+                                valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
+                            }
+
+                            notasExtraidasGlobal.push({
+                                filaExcel: i,
+                                nombre: String(celdaNombre.v).trim(),
+                                nota: valorNota
+                            });
+                        }
+                    }
+
+                    ui.tablaNotasExtraidasBody.innerHTML = '';
+                    notasExtraidasGlobal.forEach((item, index) => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-50 transition-colors";
+                        
+                        let colorNota = "text-gray-700";
+                        if (item.nota !== "" && !isNaN(item.nota)) {
+                            colorNota = Number(item.nota) < 51 ? "text-red-600 font-bold" : "text-green-600 font-bold";
+                        }
+
+                        tr.innerHTML = `
+                            <td class="px-4 py-2 text-center text-gray-500 font-medium">${index + 1}</td>
+                            <td class="px-4 py-2 font-semibold text-[#0D47A1] truncate max-w-xs" title="${escapeHtml(item.nombre)}">${escapeHtml(item.nombre)}</td>
+                            <td class="px-4 py-2 text-center font-bold ${colorNota}">${item.nota !== "" ? item.nota : '-'}</td>
+                        `;
+                        ui.tablaNotasExtraidasBody.appendChild(tr);
+                    });
+
+                    ui.infoExcelCurso.textContent = curso;
+                    ui.infoExcelMateria.textContent = materia;
+                    ui.infoExcelEstudiantes.textContent = notasExtraidasGlobal.length.toString();
+
+                    ui.modalSubirNotas.classList.add("hidden");
+                    ui.modalInfoExcel.classList.remove("hidden");
+
+                } else {
+                    showNotification(`El archivo Excel no contiene una hoja llamada "${nombreHojaBuscada}".`, true);
+                }
+            } catch (err) {
+                console.error("Error leyendo Excel:", err);
+                showNotification("Ocurrió un error al procesar el archivo Excel.", true);
+            }
+            ui.fileExcelNotas.value = ""; 
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function openModal() {
+        selectedList = [];
+        updateTableUI();
+        ui.selTrimestre.selectedIndex = 0;
+        ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
+        ui.selCurso.disabled = true;
+
+        if (currentSystemMode === 'estudiante') {
+            ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
+        } else if (currentSystemMode === 'padre') {
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+        } else {
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+        }
+
+        ui.selEstudiante.disabled = true;
+        ui.contadorEstudiantes.textContent = "0 Seleccionados";
+        ui.emptyState.classList.remove("hidden");
+        ui.tableWrapper.classList.add("hidden");
+        ui.modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        ui.modal.classList.add('hidden');
+    }
+
+    function applySystemModeUI() {
+        const txtReporteTitulo = document.getElementById('txtReporteTitulo');
+        const badgeModo = document.getElementById('badgeModo');
+        const txtModalTitulo = document.getElementById('txtModalTitulo');
+        const thAccion = document.getElementById('thAccion');
+        const btnOpenModalLabel = document.querySelector('#btnOpenModal .btn-label');
+
+        if (currentSystemMode === 'padre') {
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: PADRE";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "REGISTRO DE ASISTENCIA DE PADRES DE FAMILIA";
+            if (thAccion) thAccion.textContent = "Padre Asistió";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 REGISTRAR ASISTENCIA DE PADRES";
+            
+            ui.btnLimpiarLista.classList.add('hidden');
+            ui.selEstudiante.disabled = true;
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+            ui.btnGenerarReportes.textContent = "Guardar Asistencia de Padres";
+            ui.btnGenerarReportes.classList.remove('hidden');
+
+        } else if (currentSystemMode === 'lectura') {
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de PADRES DE FAMILIA";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: LECTURA";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-300 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "CONSULTA DE ASISTENCIA DE PADRES (MODO LECTURA)";
+            if (thAccion) thAccion.textContent = "Padre Asistió";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 CONSULTAR ASISTENCIA DE PADRES";
+
+            ui.btnLimpiarLista.classList.add('hidden');
+            ui.selEstudiante.disabled = true;
+            ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+            ui.btnGenerarReportes.classList.add('hidden');
+
+        } else {
+            if (txtReporteTitulo) txtReporteTitulo.textContent = "Reporte TRIMESTRAL de Estudiantes";
+            if (badgeModo) {
+                badgeModo.textContent = "MODO: ESTUDIANTE";
+                badgeModo.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase";
+            }
+            if (txtModalTitulo) txtModalTitulo.textContent = "REPORTA TU LISTA DE ESTUDIANTE CON BAJO RENDIMIENTO";
+            if (thAccion) thAccion.textContent = "Acción";
+            if (btnOpenModalLabel) btnOpenModalLabel.textContent = "🔍 SELECCIONAR ESTUDIANTES";
+
+            ui.btnGenerarReportes.textContent = "GUARDAR Reportes";
+            ui.btnGenerarReportes.classList.remove('hidden');
+        }
+    }
+
+    window.togglePadreAsistio = function(studentId) {
+        if (currentSystemMode === 'lectura') return;
+        const student = selectedList.find(s => String(s.id) === String(studentId));
+        if (!student) return;
+
+        student.asistio = !student.asistio;
+
+        const totalAsistieron = selectedList.filter(s => s.asistio).length;
+        ui.contadorEstudiantes.textContent = `${totalAsistieron} / ${selectedList.length} Padres Asistieron`;
+
+        const checkbox = document.querySelector(`input[onchange="window.togglePadreAsistio('${student.id}')"]`);
+        if (!checkbox) return;
+
+        const label = checkbox.closest("label");
+        const texto = label.querySelector("span");
+        checkbox.checked = student.asistio;
+
+        if (student.asistio) {
+            label.classList.remove("bg-red-100", "hover:bg-red-200", "border-red-300");
+            label.classList.add("bg-green-100", "hover:bg-green-200", "border-green-300");
+            texto.textContent = "PADRE ASISTIÓ";
+            texto.classList.remove("text-gray-500");
+            texto.classList.add("text-green-700");
+        } else {
+            label.classList.remove("bg-green-100", "hover:bg-green-200", "border-green-300");
+            label.classList.add("bg-red-100", "hover:bg-red-200", "border-red-300");
+            texto.textContent = "NO ASISTIÓ";
+            texto.classList.remove("text-green-700");
+            texto.classList.add("text-gray-500");
+        }
+    };
 
     function updateTableUI() {
         if (currentSystemMode === 'padre' || currentSystemMode === 'lectura') {
