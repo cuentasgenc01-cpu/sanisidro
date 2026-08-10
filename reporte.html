@@ -335,30 +335,24 @@ tr:hover { background-color: #f8fafc; }
         <!-- Main Workspace -->
         <div id="mainWorkspace" class="hidden">
             
-            <!-- Título y Botón Principal -->
-            <div class="flex flex-col sm:flex-row items-center justify-between py-6 border-b border-gray-200 gap-4 mb-6">
-                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
-                    <span class="text-2xl">📊</span>
-                    <span id="txtReporteTitulo">Reporte TRIMESTRAL de Estudiantes</span>
-                    <span id="badgeModo" class="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase">
-                        MODO: ESTUDIANTE
-                    </span>
-                </div>
-                <button id="btnOpenModal" class="bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                    <span class="text-sm btn-label">🔍 SELECCIONAR ESTUDIANTES</span>
-                </button>
-            </div>
-
-            <!-- SEGUNDA FILA: DESCARGAR REPORTE -->
-            <div class="flex flex-col border-b border-gray-200 py-5 gap-4">
-                
-                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
-                    <span class="text-2xl">📥</span>
-                    <span>DESCARGAR REPORTES</span>
+            <!-- PRIMERA FILA: Título, Botón y Panel Administrador -->
+            <div class="flex flex-col py-6 border-b border-gray-200 gap-4 mb-6">
+                <!-- Cabecera de la primera fila -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                        <span class="text-2xl">📊</span>
+                        <span id="txtReporteTitulo">Reporte TRIMESTRAL de Estudiantes</span>
+                        <span id="badgeModo" class="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase">
+                            MODO: ESTUDIANTE
+                        </span>
+                    </div>
+                    <button id="btnOpenModal" class="bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                        <span class="text-sm btn-label">🔍 SELECCIONAR ESTUDIANTES</span>
+                    </button>
                 </div>
 
-                <!-- PANEL ADMINISTRADOR -->
-                <div id="adminPanelDescargas" class="hidden w-full bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2 shadow-inner">
+                <!-- PANEL ADMINISTRADOR (Movido a la primera fila) -->
+                <div id="adminPanelDescargas" class="hidden w-full bg-amber-50 border border-amber-200 rounded-lg p-4 shadow-inner mt-2">
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-amber-600 text-lg">👑</span>
                         <span class="font-bold text-amber-800 uppercase tracking-wide text-sm">Modo Administrador Activo</span>
@@ -390,8 +384,17 @@ tr:hover { background-color: #f8fafc; }
                     </div>
                     <p class="text-[10px] text-amber-600 mt-2 font-medium">* Selecciona un profesor para ver su curso tutor y simular su usuario.</p>
                 </div>
+            </div>
 
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full justify-end mt-2">
+            <!-- SEGUNDA FILA: DESCARGAR REPORTE -->
+            <div class="flex flex-row items-center justify-between border-b border-gray-200 pb-5 gap-4 mb-5">
+                
+                <div class="flex items-center gap-3 text-[#0D47A1] font-bold text-xl uppercase tracking-wide">
+                    <span class="text-2xl">📥</span>
+                    <span>DESCARGAR REPORTES</span>
+                </div>
+
+                <div class="flex flex-row items-center gap-3 justify-end">
                     <!-- Selector de Trimestre para Descarga -->
                     <select id="selectTrimestreDescarga" class="custom-select bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5 min-w-[200px]">
                         <option value="">Seleccione Trimestre</option>
@@ -1098,12 +1101,12 @@ tr:hover { background-color: #f8fafc; }
                         let estado = "Reportado";
 
                         if (typeof val === 'object' && val.nombre) {
-                            nombreLimpio = String(val.nombre).trim(); // SE RESPETA EL FORMATO ORIGINAL
+                            nombreLimpio = String(val.nombre).trim(); 
                             if (val.asistio !== undefined) {
                                 estado = val.asistio ? "Asistió a Reunión" : "Bajo Rendimiento";
                             }
                         } else {
-                            nombreLimpio = String(val).trim(); // SE RESPETA EL FORMATO ORIGINAL
+                            nombreLimpio = String(val).trim(); 
                         }
 
                         tableData.push([contadorNro.toString(), nombreLimpio, estado]);
@@ -1200,12 +1203,12 @@ tr:hover { background-color: #f8fafc; }
                                     let marca = "X"; 
 
                                     if (typeof val === 'object' && val.nombre) {
-                                        nombreLimpio = String(val.nombre).trim(); // SE RESPETA EL FORMATO ORIGINAL
+                                        nombreLimpio = String(val.nombre).trim(); 
                                         if (val.asistio === true || val.asistio === "true") {
                                             marca = "SI";
                                         }
                                     } else {
-                                        nombreLimpio = String(val).trim(); // SE RESPETA EL FORMATO ORIGINAL
+                                        nombreLimpio = String(val).trim(); 
                                     }
 
                                     if (!mapEstudianteProfesores[nombreLimpio]) {
@@ -1282,7 +1285,7 @@ tr:hover { background-color: #f8fafc; }
                 
                 for (const [key, valor] of Object.entries(estudiantesData)) {
                     if (!valor) continue;
-                    const nombreEstudianteOriginal = String(valor).trim(); // SE RESPETA EL FORMATO ORIGINAL
+                    const nombreEstudianteOriginal = String(valor).trim(); 
                     
                     let nombreMostrar = nombreEstudianteOriginal;
                     if (nombreMostrar.length > 30) {
@@ -1430,7 +1433,6 @@ tr:hover { background-color: #f8fafc; }
                     const datos = {};
                     selectedList.forEach((student, index) => {
                       datos[index + 1] = {
-                            // Se guarda TAL CUAL esta en la lista, sin limpiar prefix numéricos
                             nombre: String(student.nombre),
                             asistio: !!student.asistio
                         };
@@ -1798,8 +1800,6 @@ tr:hover { background-color: #f8fafc; }
                             ? !!valor.asistio
                             : false;
 
-                        // YA NO CORTAMOS NADA, SE QUEDA EL STRING ORIGINAL
-                        
                         selectedList.push({
                             id: numero,
                             nombre: nombre,
