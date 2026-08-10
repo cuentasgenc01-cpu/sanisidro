@@ -1766,14 +1766,25 @@ tr:hover { background-color: #f8fafc; }
                 let count = 0;
 
                 for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
-                    if (!nombreEstudiante) continue;
-                    count++;
-                    const option = document.createElement("option");
-                    option.value = key;
-                    option.hidden = false;
-                    option.textContent = `${count}. ${nombreEstudiante}`;
-                    ui.selEstudiante.appendChild(option);
-                }
+    if (!nombreEstudiante) continue;
+    count++;
+
+    const option = document.createElement("option");
+
+    // ID original de Firebase
+    option.value = key;
+
+    // GUARDA EL NOMBRE EXACTAMENTE COMO ESTÁ EN FIREBASE
+    option.dataset.nombreOriginal = String(nombreEstudiante);
+
+    // Para mostrar correctamente espacios dobles, triples, etc.
+    const nombreVisual = String(nombreEstudiante).replace(/ /g, "\u00A0");
+
+    option.hidden = false;
+    option.textContent = `${count}. ${nombreVisual}`;
+
+    ui.selEstudiante.appendChild(option);
+}
 
                 ui.selEstudiante.disabled = count === 0;
                 if (count === 0) {
@@ -1893,9 +1904,13 @@ tr:hover { background-color: #f8fafc; }
             return;
         }
 
-        const idEstudiante = ui.selEstudiante.value;
-        const texto = ui.selEstudiante.options[ui.selEstudiante.selectedIndex].text.trim();
-        const nombreEstudiante = texto.replace(/^\d+\.\s*/, "").trim();
+       const idEstudiante = ui.selEstudiante.value;
+
+const optionSeleccionada =
+    ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
+
+// Recuperar EXACTAMENTE el nombre original de Firebase
+const nombreEstudiante = optionSeleccionada.dataset.nombreOriginal || "";
 
         if (!nombreEstudiante) {
             return;
