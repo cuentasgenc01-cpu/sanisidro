@@ -797,18 +797,15 @@ tr:hover { background-color: #f8fafc; }
         }
         document.getElementById('nombreProfesorSidebar').textContent = currentProfesorKey;
 
-        // --- VERIFICACIÓN DE ADMINISTRADOR (SOLO JUAN TUPA PUEDE VER EL BOTÓN) ---
-        // Se elimina la activación automática, ahora él decide cuándo activarlo.
         if (currentProfesorKey.trim().toUpperCase() === 'JUAN TUPA') {
-            ui.btnToggleAdmin.classList.remove('hidden'); // Mostramos el botón
+            ui.btnToggleAdmin.classList.remove('hidden'); 
         } else {
-            ui.btnToggleAdmin.classList.add('hidden');    // Oculto para todos los demás
+            ui.btnToggleAdmin.classList.add('hidden');    
         }
 
-        // Lógica para el botón de Toggle Admin
         ui.btnToggleAdmin.addEventListener('click', async () => {
             if (!isAdmin) {
-                activarModoAdmin(false); // false indica que fue accionado manualmente
+                activarModoAdmin(false); 
                 showNotification("Modo Administrador Activado", false);
             } else {
                 desactivarModoAdmin();
@@ -835,7 +832,6 @@ tr:hover { background-color: #f8fafc; }
         
         ui.btnCloseModalInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
 
-        // Evento de administrador: cuando se selecciona un profesor del SELECT, traer su curso tutor
         document.getElementById('adminInputProfesor').addEventListener('change', async (e) => {
             const profSeleccionado = e.target.value;
             const inputCurso = document.getElementById('adminInputCurso');
@@ -851,13 +847,10 @@ tr:hover { background-color: #f8fafc; }
                 
                 let cursoTutor = "";
 
-                // Análisis y extracción segura en caso de que la respuesta sea String o Objeto
                 if (tutoriaData) {
                     if (typeof tutoriaData === 'string') {
-                        // Si la base de datos está guardada directamente como un String (ej: "TERCEROB")
                         cursoTutor = tutoriaData;
                     } else if (typeof tutoriaData === 'object' && !Array.isArray(tutoriaData)) {
-                        // Si la base de datos está guardada como un Objeto con llaves (ej: { "TERCEROB": true/materia })
                         const keys = Object.keys(tutoriaData);
                         if (keys.length > 0) {
                             cursoTutor = keys[0];
@@ -879,7 +872,6 @@ tr:hover { background-color: #f8fafc; }
             }
         });
 
-        // NUEVA FUNCION ADMINISTRADOR: Actualizar Modo en Firebase
         document.getElementById('btnActualizarModo').addEventListener('click', async () => {
             const nuevoModo = document.getElementById('adminSelectModo').value;
             if (!nuevoModo) return;
@@ -896,7 +888,6 @@ tr:hover { background-color: #f8fafc; }
                     currentSystemMode = nuevoModo.toLowerCase();
                     applySystemModeUI();
                     
-                    // Limpiamos las listas y reseteamos selects para reflejar el nuevo modo sin errores
                     selectedList = [];
                     updateTableUI();
                     ui.selTrimestre.selectedIndex = 0;
@@ -1107,12 +1098,12 @@ tr:hover { background-color: #f8fafc; }
                         let estado = "Reportado";
 
                         if (typeof val === 'object' && val.nombre) {
-                            nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
+                            nombreLimpio = String(val.nombre).trim(); // SE RESPETA EL FORMATO ORIGINAL
                             if (val.asistio !== undefined) {
                                 estado = val.asistio ? "Asistió a Reunión" : "Bajo Rendimiento";
                             }
                         } else {
-                            nombreLimpio = String(val).replace(/^\d+[\:\.]\s*/, "").trim();
+                            nombreLimpio = String(val).trim(); // SE RESPETA EL FORMATO ORIGINAL
                         }
 
                         tableData.push([contadorNro.toString(), nombreLimpio, estado]);
@@ -1209,12 +1200,12 @@ tr:hover { background-color: #f8fafc; }
                                     let marca = "X"; 
 
                                     if (typeof val === 'object' && val.nombre) {
-                                        nombreLimpio = String(val.nombre).replace(/^\d+[\:\.]\s*/, "").trim();
+                                        nombreLimpio = String(val.nombre).trim(); // SE RESPETA EL FORMATO ORIGINAL
                                         if (val.asistio === true || val.asistio === "true") {
                                             marca = "SI";
                                         }
                                     } else {
-                                        nombreLimpio = String(val).replace(/^\d+[\:\.]\s*/, "").trim();
+                                        nombreLimpio = String(val).trim(); // SE RESPETA EL FORMATO ORIGINAL
                                     }
 
                                     if (!mapEstudianteProfesores[nombreLimpio]) {
@@ -1280,18 +1271,18 @@ tr:hover { background-color: #f8fafc; }
 
                 doc.setFontSize(14);
                 doc.setTextColor(13, 71, 161);
-                doc.text("Reporte Consolidado de Rendimiento Estudiantil", pageWidth / 2, 18, { align: "center" });
+                doc.text("Reporte Consolidado de Rendimiento Estudiantil", pageWidth / 2, 9, { align: "center" });
                 
                 doc.setFontSize(10);
                 doc.setTextColor(51, 51, 51);
-                doc.text(`Tutor a Cargo: ${tutorLabel}   |   Curso: ${cursoToDownload}   |   Trimestre: ${trimestreSel}`, 14, 26);
+                doc.text(`Tutor a Cargo: ${tutorLabel}   |   Curso: ${cursoToDownload}   |   Trimestre: ${trimestreSel}`, 14, 18);
 
                 const tableData = [];
                 let contadorNro = 1;
                 
                 for (const [key, valor] of Object.entries(estudiantesData)) {
                     if (!valor) continue;
-                    const nombreEstudianteOriginal = String(valor).replace(/^\d+[\:\.]\s*/, "").trim();
+                    const nombreEstudianteOriginal = String(valor).trim(); // SE RESPETA EL FORMATO ORIGINAL
                     
                     let nombreMostrar = nombreEstudianteOriginal;
                     if (nombreMostrar.length > 30) {
@@ -1333,7 +1324,7 @@ tr:hover { background-color: #f8fafc; }
                 }
 
                 doc.autoTable({
-                    startY: 30,
+                    startY: 20,
                     margin: { left: 10, right: 10, bottom: 10 },
                     head: headConfig,
                     body: tableData,
@@ -1439,7 +1430,8 @@ tr:hover { background-color: #f8fafc; }
                     const datos = {};
                     selectedList.forEach((student, index) => {
                       datos[index + 1] = {
-                            nombre: String(student.nombre).replace(/^\d+\:\s*/, ""),
+                            // Se guarda TAL CUAL esta en la lista, sin limpiar prefix numéricos
+                            nombre: String(student.nombre),
                             asistio: !!student.asistio
                         };
                     });
@@ -1513,17 +1505,14 @@ tr:hover { background-color: #f8fafc; }
         });
     });
 
-    // NUEVA FUNCIÓN: Activar Modo Admin
     async function activarModoAdmin(esAuto = false) {
         isAdmin = true;
         document.getElementById('adminPanelDescargas').classList.remove('hidden');
         
-        // Estilos para el botón cuando está activo
         ui.btnToggleAdmin.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-600');
         ui.btnToggleAdmin.classList.remove('bg-gray-100', 'border-gray-200', 'text-xl');
         ui.btnToggleAdmin.classList.add('text-2xl');
         
-        // Colocar el dropdown de modo en el valor actual
         const adminSelectModo = document.getElementById('adminSelectModo');
         if(adminSelectModo && currentSystemMode) {
             adminSelectModo.value = currentSystemMode.toUpperCase();
@@ -1532,21 +1521,17 @@ tr:hover { background-color: #f8fafc; }
         await cargarProfesoresAdmin();
     }
 
-    // NUEVA FUNCIÓN: Desactivar Modo Admin
     function desactivarModoAdmin() {
         isAdmin = false;
         document.getElementById('adminPanelDescargas').classList.add('hidden');
         
-        // Regresar estilos del botón a inactivo
         ui.btnToggleAdmin.classList.remove('bg-amber-100', 'border-amber-300', 'text-amber-600', 'text-2xl');
         ui.btnToggleAdmin.classList.add('bg-gray-100', 'border-gray-200', 'text-xl');
         
-        // Limpiar inputs del panel admin
         if(document.getElementById('adminInputProfesor')) document.getElementById('adminInputProfesor').value = '';
         if(document.getElementById('adminInputCurso')) document.getElementById('adminInputCurso').value = '';
     }
 
-    // NUEVA FUNCIÓN: Obtener la lista de profesores para el panel de Administrador
     async function cargarProfesoresAdmin() {
         const selectProf = document.getElementById('adminInputProfesor');
         try {
@@ -1581,7 +1566,6 @@ tr:hover { background-color: #f8fafc; }
             let materia = "Sin materia";
 
             if (tutoriaData) {
-                // Análisis y extracción segura igual que en el panel admin para consistencia
                 if (typeof tutoriaData === 'string') {
                     curso = tutoriaData;
                 } else if (typeof tutoriaData === 'object' && !Array.isArray(tutoriaData)) {
@@ -1766,25 +1750,26 @@ tr:hover { background-color: #f8fafc; }
                 let count = 0;
 
                 for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
-    if (!nombreEstudiante) continue;
-    count++;
+                    if (!nombreEstudiante) continue;
+                    count++;
 
-    const option = document.createElement("option");
+                    const option = document.createElement("option");
 
-    // ID original de Firebase
-    option.value = key;
+                    // ID original de Firebase
+                    option.value = key;
 
-    // GUARDA EL NOMBRE EXACTAMENTE COMO ESTÁ EN FIREBASE
-    option.dataset.nombreOriginal = String(nombreEstudiante);
+                    // GUARDA EL NOMBRE EXACTAMENTE COMO ESTÁ EN FIREBASE
+                    option.dataset.nombreOriginal = String(nombreEstudiante);
 
-    // Para mostrar correctamente espacios dobles, triples, etc.
-    const nombreVisual = String(nombreEstudiante).replace(/ /g, "\u00A0");
+                    // Para mostrar correctamente espacios dobles, triples, etc.
+                    const nombreVisual = String(nombreEstudiante).replace(/ /g, "\u00A0");
 
-    option.hidden = false;
-    option.textContent = `${count}. ${nombreVisual}`;
+                    option.hidden = false;
+                    // MUESTRA EL NOMBRE EXACTAMENTE COMO ESTÁ EN LA BASE (quitamos el prefix "count.")
+                   option.textContent = `${count}. ${nombreVisual}`;
 
-    ui.selEstudiante.appendChild(option);
-}
+                    ui.selEstudiante.appendChild(option);
+                }
 
                 ui.selEstudiante.disabled = count === 0;
                 if (count === 0) {
@@ -1813,8 +1798,8 @@ tr:hover { background-color: #f8fafc; }
                             ? !!valor.asistio
                             : false;
 
-                        nombre = nombre.replace(/^\d+\:\s*/, "");
-
+                        // YA NO CORTAMOS NADA, SE QUEDA EL STRING ORIGINAL
+                        
                         selectedList.push({
                             id: numero,
                             nombre: nombre,
@@ -1825,8 +1810,8 @@ tr:hover { background-color: #f8fafc; }
                         });
 
                         Array.from(ui.selEstudiante.options).forEach(op => {
-                            const texto = op.text.replace(/^\d+\.\s*/, "");
-                            if (texto === nombre) {
+                            // COMPARA EXACTAMENTE EL DATO ORIGINAL
+                            if (op.dataset.nombreOriginal === nombre) {
                                 op.hidden = true;
                             }
                         });
@@ -1853,12 +1838,13 @@ tr:hover { background-color: #f8fafc; }
                         if (!reportValue) continue;
 
                         const nombreReportado = (typeof reportValue === 'object' && reportValue.nombre) ? reportValue.nombre : reportValue;
-                        const nombreLimpio = String(nombreReportado).replace(/^\d+[\:\.]\s*/, "").trim();
+                        // MANTENEMOS EL NOMBRE ORIGINAL COMO SE REPORTÓ
+                        const nombreLimpio = String(nombreReportado).trim();
 
                         let originalId = reportKey;
                         for (const [key, nombreEstudiante] of Object.entries(estudiantesData)) {
                             if (!nombreEstudiante) continue;
-                            if (String(nombreEstudiante).replace(/^\d+[\:\.]\s*/, "").trim() === nombreLimpio) {
+                            if (String(nombreEstudiante).trim() === nombreLimpio) {
                                 originalId = key;
                                 break;
                             }
@@ -1906,11 +1892,10 @@ tr:hover { background-color: #f8fafc; }
 
        const idEstudiante = ui.selEstudiante.value;
 
-const optionSeleccionada =
-    ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
+        const optionSeleccionada = ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
 
-// Recuperar EXACTAMENTE el nombre original de Firebase
-const nombreEstudiante = optionSeleccionada.dataset.nombreOriginal || "";
+        // Recuperar EXACTAMENTE el nombre original de Firebase
+        const nombreEstudiante = optionSeleccionada.dataset.nombreOriginal || "";
 
         if (!nombreEstudiante) {
             return;
@@ -1955,7 +1940,8 @@ const nombreEstudiante = optionSeleccionada.dataset.nombreOriginal || "";
 
         if (eliminado) {
             Array.from(ui.selEstudiante.options).forEach(op => {
-                if (op.value === eliminado.id) {
+                // Comparamos usando el nombre original
+                if (op.dataset.nombreOriginal === eliminado.nombre) {
                     op.hidden = false;
                 }
             });
