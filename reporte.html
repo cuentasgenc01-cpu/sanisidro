@@ -1019,7 +1019,7 @@ tr:hover { background-color: #f8fafc; }
 
         selectTrimestreDescarga.addEventListener('change', (e) => {
             if (e.target.value) {
-                btnDescargarReporte.disabled = false;
+                btnDescargarReporte.disabled = true;
                 btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
                 
                 btnDescargarMisCursos.disabled = false;
