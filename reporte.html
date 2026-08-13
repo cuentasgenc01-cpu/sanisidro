@@ -1013,25 +1013,82 @@ tr:hover { background-color: #f8fafc; }
 
         ui.fileExcelNotas.addEventListener("change", handleExcelUpload);
 
-        const selectTrimestreDescarga = document.getElementById('selectTrimestreDescarga');
-        const btnDescargarReporte = document.getElementById('btnDescargarReporte');
-        const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
+    const selectTrimestreDescarga =
+    document.getElementById('selectTrimestreDescarga');
 
-        selectTrimestreDescarga.addEventListener('change', (e) => {
-            if (e.target.value) {
-                btnDescargarReporte.disabled = true;
-                btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
-                
-                btnDescargarMisCursos.disabled = false;
-                btnDescargarMisCursos.className = 'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
-            } else {
-                btnDescargarReporte.disabled = true;
-                btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
-                
-                btnDescargarMisCursos.disabled = true;
-                btnDescargarMisCursos.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
-            }
-        });
+const btnDescargarReporte =
+    document.getElementById('btnDescargarReporte');
+
+if (selectTrimestreDescarga && btnDescargarReporte) {
+
+    if (currentSystemMode === 'lectura' && selectTrimestreDescarga.value) {
+
+        btnDescargarReporte.disabled = false;
+
+        btnDescargarReporte.className =
+            'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+
+    } else {
+
+        btnDescargarReporte.disabled = true;
+
+        btnDescargarReporte.className =
+            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+    }
+}
+const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
+
+function actualizarBotonDescargarReporte() {
+
+    const trimestreSeleccionado = selectTrimestreDescarga.value;
+
+    // MODO LECTURA
+    if (currentSystemMode === 'lectura') {
+
+        if (trimestreSeleccionado) {
+
+            btnDescargarReporte.disabled = false;
+
+            btnDescargarReporte.className =
+                'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+
+        } else {
+
+            btnDescargarReporte.disabled = true;
+
+            btnDescargarReporte.className =
+                'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        }
+
+    } else {
+
+        // MODO ESTUDIANTE O PADRE
+        btnDescargarReporte.disabled = true;
+
+        btnDescargarReporte.className =
+            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+    }
+
+    // MIS CURSOS sigue funcionando según el trimestre
+    if (trimestreSeleccionado) {
+
+        btnDescargarMisCursos.disabled = false;
+
+        btnDescargarMisCursos.className =
+            'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+
+    } else {
+
+        btnDescargarMisCursos.disabled = true;
+
+        btnDescargarMisCursos.className =
+            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+    }
+}
+
+selectTrimestreDescarga.addEventListener('change', () => {
+    actualizarBotonDescargarReporte();
+});
 
         // DESCARGAR MIS CURSOS
         btnDescargarMisCursos.addEventListener('click', async () => {
