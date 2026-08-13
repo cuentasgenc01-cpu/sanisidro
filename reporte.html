@@ -1417,7 +1417,7 @@ doc.text(
                         cellPadding: 0.8,
                         overflow: "hidden",
                         valign: "middle",
-                        lineColor: [200, 200, 200],
+                        lineColor: [0, 0, 0],
                         lineWidth: 0.1
                     },
                     columnStyles: colStyles,
@@ -1451,11 +1451,11 @@ doc.text(
                             if (isProfesorHeader || isMateriaHeader || isTotalHeader) {
                                 let texto = (data.cell.customVerticalText || "").trim();
 
-                                if (isMateriaHeader && texto.length > 22) {
-                                    texto = texto.substring(0, 22) + "(...)";
+                                if (isMateriaHeader && texto.length > 15) {
+                                    texto = texto.substring(0, 15) + "(...)";
                                 }
                                 
-                                doc.setFontSize((isProfesorHeader || isTotalHeader) ? 6 : 5);
+                                doc.setFontSize((isProfesorHeader || isTotalHeader) ? 6 : 7);
                                 doc.setTextColor(255, 255, 255);
                                 
                                 const textHeight = doc.getTextDimensions(texto).h;
