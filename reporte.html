@@ -2003,21 +2003,30 @@ doc.text(
         updateTableUI();
     }
 
-    function removeStudent(keyId) {
-        if (currentSystemMode !== 'estudiante') return;
-        const eliminado = selectedList.find(s => s.keyId === keyId);
-        selectedList = selectedList.filter(s => s.keyId !== keyId);
+   function removeStudent(keyId) {
+    if (currentSystemMode !== 'estudiante') return;
 
-        if (eliminado) {
+    const eliminado = selectedList.find(s => s.keyId === keyId);
+
+    if (!eliminado) return;
+
+    showConfirm(
+        "Eliminar estudiante",
+        `¿Está seguro de eliminar a "${eliminado.nombre}" de la lista de seleccionados?`,
+        () => {
+
+            selectedList = selectedList.filter(s => s.keyId !== keyId);
+
             Array.from(ui.selEstudiante.options).forEach(op => {
-                // Comparamos usando el nombre original
                 if (op.dataset.nombreOriginal === eliminado.nombre) {
                     op.hidden = false;
                 }
             });
+
+            updateTableUI();
         }
-        updateTableUI();
-    }
+    );
+}
 
     function clearStudentList() {
         if (currentSystemMode !== 'estudiante') return;

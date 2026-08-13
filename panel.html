@@ -837,17 +837,31 @@ if (!profesor) {
             
             itemDiv.onclick = () => alternarTutor(index);
             
-            const btnEliminar = document.createElement("span");
-            btnEliminar.innerHTML = "❌";
-            btnEliminar.style.cursor = "pointer";
-            btnEliminar.style.marginLeft = "10px";
-            btnEliminar.onclick = (e) => {
-                e.stopPropagation(); 
-                misAsignaciones.splice(index, 1);
-                renderizarAsignaciones();
-                actualizarOpcionesSelects();
-                actualizarGuiaInteractiva();
-            };
+           const btnEliminar = document.createElement("span");
+btnEliminar.innerHTML = "❌";
+btnEliminar.style.cursor = "pointer";
+btnEliminar.style.marginLeft = "10px";
+
+btnEliminar.onclick = (e) => {
+    e.stopPropagation();
+
+    const asignacion = misAsignaciones[index];
+
+    const confirmar = confirm(
+        `¿Está seguro que desea eliminar esta asignación?\n\n` +
+        `${asignacion.cursoText} - ${asignacion.materiaText}`
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    misAsignaciones.splice(index, 1);
+
+    renderizarAsignaciones();
+    actualizarOpcionesSelects();
+    actualizarGuiaInteractiva();
+};
             
             itemDiv.appendChild(btnEliminar);
 
