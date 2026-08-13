@@ -1333,10 +1333,23 @@ selectTrimestreDescarga.addEventListener('change', () => {
                 doc.setTextColor(13, 71, 161);
                 doc.text("Reporte Consolidado de Rendimiento Estudiantil", pageWidth / 2, 9, { align: "center" });
                 
-                doc.setFontSize(10);
-                doc.setTextColor(51, 51, 51);
-                doc.text(`Tutor a Cargo: ${tutorLabel}   |   Curso: ${cursoToDownload}   |   Trimestre: ${trimestreSel}`, 14, 18);
+              doc.setFontSize(10);
+doc.setTextColor(51, 51, 51);
 
+const ahora = new Date();
+
+const fechaActual = ahora.toLocaleDateString('es-BO');
+const horaActual = ahora.toLocaleTimeString('es-BO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+});
+
+doc.text(
+    `Tutor a Cargo: ${tutorLabel}   |   Curso: ${cursoToDownload}   |   Trimestre: ${trimestreSel}   |   Fecha: ${fechaActual}   |   Hora: ${horaActual}`,
+    14,
+    18
+);
                 const tableData = [];
                 let contadorNro = 1;
                 
