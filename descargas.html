@@ -644,11 +644,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Generar tabla autoTable con anchos actualizados (Observación menos ancho, Firma más ancho)
                 doc.autoTable({
                     startY: 34,
-                    head: [['N°', 'MATERIA', 'PROFESOR', 'OBSERVACION', 'FIRMA Y SELLO']],
+                    head: [['N°', 'MATERIA', 'PROFESOR', 'OBSERVACION', 'FIRMA Y/O SELLO']],
                     body: tablaData,
                     theme: 'grid',
                     headStyles: { fillColor: [13, 71, 161], textColor: 255, halign: 'center', valign: 'middle' },
-                    styles: { fontSize: 9, minCellHeight: 14, valign: 'middle' },
+                  styles: {
+    fontSize: 9,
+    minCellHeight: 17,
+    valign: 'middle',
+    lineColor: [0, 0, 0],
+    lineWidth: 0.3
+},
+                  
                     columnStyles: {
                         0: { cellWidth: 10, halign: 'center' }, // N°
                         1: { cellWidth: 42 },                   // MATERIA
@@ -790,46 +797,150 @@ document.addEventListener("DOMContentLoaded", () => {
                 yPos += 8;
 
                 // Extraer materias observadas para este alumno (Se autocompletan las áreas con problemas)
-                let materiasObservadas = [];
-                profesoresCurso.forEach((p) => {
-                    const reportesProf = reportesCache[p.profesor];
-                    if (reportesProf) {
-                        for (const key in reportesProf) {
-                            const reg = reportesProf[key];
-                            if (reg && reg.nombre && String(reg.nombre).trim().toUpperCase() === estudiante) {
-                                materiasObservadas.push(p.materia);
-                                break;
-                            }
-                        }
-                    }
-                });
+              // Extraer materias observadas para este alumno (Se autocompletan las áreas con problemas)
+let materiasObservadas = [];
+profesoresCurso.forEach((p) => {
+    const reportesProf = reportesCache[p.profesor];
+    if (reportesProf) {
+        for (const key in reportesProf) {
+            const reg = reportesProf[key];
+            if (reg && reg.nombre && String(reg.nombre).trim().toUpperCase() === estudiante) {
+                materiasObservadas.push(p.materia);
+                break;
+            }
+        }
+    }
+});
 
-                doc.setFont(undefined, 'bold');
-                doc.setFontSize(9); // Reducir un poco el tamaño para encajar bien en 3 columnas
-                if (materiasObservadas.length > 0) {
-                    let maxRows = 0;
-                    materiasObservadas.forEach((mat, idx) => {
-                        const col = idx % 3;             // Calcular columna: 0, 1, 2
-                        const row = Math.floor(idx / 3); // Calcular fila actual
-                        const x = 15 + (col * 60);       // Distribuir equitativamente: 15, 75, 135
-                        const y = yPos + (row * 6);      // Separación de 6 unidades entre filas
-                        
-                        // Recortar texto si el nombre de la materia es largo para no cruzar columnas
-                        let matTexto = mat;
-                        if (matTexto.length > 23) matTexto = matTexto.substring(0, 23) + "...";
-                        
-                        doc.text(`   ${idx + 1}.   ${matTexto}`, x, y);
-                        maxRows = Math.max(maxRows, row + 1);
-                    });
-                    yPos += (maxRows * 6) + 4; // Ajustar la altura dinámicamente según la cantidad de filas
-                } else {
-                     doc.text("   1.", 15, yPos); 
-                     doc.text("   2.", 75, yPos); 
-                     doc.text("   3.", 135, yPos); 
-                     yPos += 10;
+doc.setFont(undefined, 'bold');
+doc.setFontSize(9);
+
+if (materiasObservadas.length > 0) {
+
+    // Crear filas de 3 materias por fila
+    const filasMaterias = [];
+
+    for (let i = 0; i < materiasObservadas.length; i += 3) {
+
+        const fila = [];
+
+        for (let j = 0; j < 3; j++) {
+
+            const idx = i + j;
+
+            if (idx < materiasObservadas.length) {
+
+                let matTexto = materiasObservadas[idx];
+
+                // Máximo 22 caracteres + ...
+                if (matTexto.length > 22) {
+                    matTexto = matTexto.substring(0, 22) + "...";
                 }
-                doc.setFontSize(11); // Restaurar tamaño de letra para la Conformidad
 
+                fila.push(`${idx + 1}.   ${matTexto}`);
+
+            } else {
+                fila.push("");
+            }
+        }
+
+        filasMaterias.push(fila);
+    }
+
+    // TABLA DE MATERIAS OBSERVADAS
+    doc.autoTable({
+        startY: yPos - 4,
+
+        margin: {
+            left: 15,
+            right: 15
+        },
+
+        tableWidth: 180,
+
+        body: filasMaterias,
+
+        theme: 'grid',
+
+        styles: {
+            fontSize: 9,
+            fontStyle: 'bold',
+            cellPadding: 3,
+            minCellHeight: 8,
+            valign: 'middle',
+            lineColor: [0, 0, 0],
+            lineWidth: 0.3
+        },
+
+        columnStyles: {
+            0: {
+                cellWidth: 60,
+                halign: 'left'
+            },
+            1: {
+                cellWidth: 60,
+                halign: 'left'
+            },
+            2: {
+                cellWidth: 60,
+                halign: 'left'
+            }
+        }
+    });
+
+    // Continuar después de la tabla
+    yPos = doc.lastAutoTable.finalY + 8;
+
+} else {
+
+    // Si no existen materias observadas,
+    // mostrar las tres casillas vacías
+    doc.autoTable({
+        startY: yPos - 4,
+
+        margin: {
+            left: 15,
+            right: 15
+        },
+
+        tableWidth: 180,
+
+        body: [
+            ["1.", "2.", "3."]
+        ],
+
+        theme: 'grid',
+
+        styles: {
+            fontSize: 9,
+            fontStyle: 'bold',
+            cellPadding: 3,
+            minCellHeight: 8,
+            valign: 'middle',
+            lineColor: [0, 0, 0],
+            lineWidth: 0.3
+        },
+
+        columnStyles: {
+            0: {
+                cellWidth: 60,
+                halign: 'left'
+            },
+            1: {
+                cellWidth: 60,
+                halign: 'left'
+            },
+            2: {
+                cellWidth: 60,
+                halign: 'left'
+            }
+        }
+    });
+
+    yPos = doc.lastAutoTable.finalY + 8;
+}
+
+doc.setFontSize(11); // Restaurar tamaño de letra para la Conformidad
                 // --- IV. CONFORMIDAD ---
                 doc.setFont(undefined, 'bold');
                 doc.text("IV. CONFORMIDAD", 15, yPos); 
@@ -866,7 +977,7 @@ doc.setFont(undefined, 'bold');
 doc.text(
     `Santa Cruz, ........ de ${nombreMes} del ${currentYear}`,
     105,
-    sigY + 20,
+    sigY + 13,
     { align: "center" }
 );
 
