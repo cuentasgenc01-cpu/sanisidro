@@ -833,8 +833,8 @@ if (materiasObservadas.length > 0) {
                 let matTexto = materiasObservadas[idx];
 
                 // Máximo 22 caracteres + ...
-                if (matTexto.length > 22) {
-                    matTexto = matTexto.substring(0, 22) + "...";
+                if (matTexto.length > 20) {
+                    matTexto = matTexto.substring(0, 20) + "...";
                 }
 
                 fila.push(`${idx + 1}.   ${matTexto}`);
@@ -953,7 +953,7 @@ doc.setFontSize(11); // Restaurar tamaño de letra para la Conformidad
                 // --- Bloque de Firmas ---
                 // Calculamos dinámicamente la posición de la firma asegurándonos de que 
                 // siempre quede margen respecto al texto anterior y se fije abajo.
-                const sigY = Math.max(yPos + 35, 250); 
+                const sigY = Math.max(yPos + 28, 250); 
                 
                 doc.setDrawColor(0, 0, 0);
                 doc.setLineDashPattern([], 0);
@@ -986,7 +986,7 @@ doc.setFont(undefined, 'normal');
 
             // Guardar PDF
             doc.save(`Ficha_Seguimiento_${cursoSeleccionado}_${trimestreSeleccionado}.pdf`);
-            modalFichaSeguimiento.style.display = "none";
+          
             
         } catch (ex) {
             console.error("Error al generar Ficha de Seguimiento", ex);
@@ -2154,133 +2154,768 @@ doc.setFont(undefined, 'normal');
         }
     });
 
-    btnDescargarAnual.addEventListener("click", async () => {
-        try {
-            const cursoSeleccionado = tutor.value;
-            const trimestreSeleccionado = trimestre.value; 
+   btnDescargarAnual.addEventListener("click", async () => {
+    try {
+        const cursoSeleccionado = tutor.value;
+        const trimestreSeleccionado = trimestre.value; 
 
-            if (!cursoSeleccionado) { 
-                alert("Seleccione un curso."); 
-                return; 
-            }
+        if (!cursoSeleccionado) { 
+            alert("Seleccione un curso."); 
+            return; 
+        }
 
-            btnDescargarAnual.disabled = true;
-            btnDescargarAnual.innerText = "⏳ Generando...";
+        btnDescargarAnual.disabled = true;
+        btnDescargarAnual.innerText = "⏳ Generando...";
 
-            const [estudiantesData, todosProfes] = await Promise.all([
-                fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`).then(r => r.json()),
-                obtenerProfesoresCache()
-            ]);
+        // OPTIMIZADO: Descargas concurrentes
+        const [estudiantesData, todosProfes] = await Promise.all([
+            fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`).then(r => r.json()),
+            obtenerProfesoresCache()
+        ]);
 
-            if (!estudiantesData || Object.keys(estudiantesData).length === 0) {
-                alert("No hay estudiantes en este curso.");
-                btnDescargarAnual.innerText = "⬇ Descargar Anual";
-                btnDescargarAnual.disabled = false;
-                return;
-            }
+        if (!estudiantesData || Object.keys(estudiantesData).length === 0) {
+            alert("No hay estudiantes en este curso.");
+            btnDescargarAnual.innerText = "⬇ Descargar Anual";
+            btnDescargarAnual.disabled = false;
+            return;
+        }
 
-            const listaEstudiantes = [];
-            if (Array.isArray(estudiantesData)) {
-                estudiantesData.forEach((val, index) => {
-                    if (val) listaEstudiantes.push(String(val).includes(":") ? String(val) : `${index}:${val}`);
-                });
-            } else {
-                for (const key in estudiantesData) {
-                    const val = estudiantesData[key];
-                    if (key.includes(":")) listaEstudiantes.push(key);
-                    else listaEstudiantes.push(`${key}:${val}`);
+        const listaEstudiantes = [];
+
+        if (Array.isArray(estudiantesData)) {
+            estudiantesData.forEach((val, index) => {
+                if (val) {
+                    listaEstudiantes.push(
+                        String(val).includes(":")
+                            ? String(val)
+                            : `${index}:${val}`
+                    );
+                }
+            });
+        } else {
+            for (const key in estudiantesData) {
+                const val = estudiantesData[key];
+
+                if (key.includes(":")) {
+                    listaEstudiantes.push(key);
+                } else {
+                    listaEstudiantes.push(`${key}:${val}`);
                 }
             }
+        }
 
-            const estudiantesOrdenados = listaEstudiantes.sort((a, b) => {
-                const numA = parseInt(a.split(":")[0]) || 9999;
-                const numB = parseInt(b.split(":")[0]) || 9999;
-                return numA - numB;
-            });
+        const estudiantesOrdenados = listaEstudiantes.sort((a, b) => {
+            const numA = parseInt(a.split(":")[0]) || 9999;
+            const numB = parseInt(b.split(":")[0]) || 9999;
+            return numA - numB;
+        });
 
-            const profesoresCurso = [];
-            if (todosProfes) {
-                for (const nomProf in todosProfes) {
-                    const profUpp = String(nomProf).toUpperCase();
-                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+        const profesoresCurso = [];
 
-                    const pData = todosProfes[nomProf];
-                    if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
-                        const materia = pData.CURSO[cursoSeleccionado];
-                        const matUpp = String(materia).toUpperCase();
-                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
-                            profesoresCurso.push({ nombre: nomProf, materia: materia });
-                        }
+        if (todosProfes) {
+            for (const nomProf in todosProfes) {
+
+                const profUpp = String(nomProf).toUpperCase();
+
+                if (
+                    profUpp.includes("REGENTA") ||
+                    profUpp.includes("DIRECTOR")
+                ) {
+                    continue;
+                }
+
+                const pData = todosProfes[nomProf];
+
+                if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
+
+                    const materia = pData.CURSO[cursoSeleccionado];
+                    const matUpp = String(materia).toUpperCase();
+
+                    if (
+                        !matUpp.includes("REGENTA") &&
+                        !matUpp.includes("DIRECTOR")
+                    ) {
+                        profesoresCurso.push({
+                            nombre: nomProf,
+                            materia: materia
+                        });
                     }
                 }
             }
+        }
 
-            if (profesoresCurso.length === 0) {
-                alert("No se encontraron profesores asignados a este curso.");
-                btnDescargarAnual.innerText = "⬇ Descargar Anual";
-                btnDescargarAnual.disabled = false;
-                return;
-            }
-
-            const cacheNotasAnual = {};
-            const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
-            const fetchProms = [];
-
-            for (const p of profesoresCurso) {
-                cacheNotasAnual[p.nombre] = {};
-                for (const trim of trimestres) {
-                    fetchProms.push(
-                        fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`)
-                        .then(r => r.json())
-                        .then(nData => { cacheNotasAnual[p.nombre][trim] = nData || null; })
-                        .catch(() => {})
-                    );
-                }
-            }
-            await Promise.all(fetchProms);
-
-            const wb = new ExcelJS.Workbook();
-            const ws = wb.addWorksheet("ANUAL");
-            
-            ws.pageSetup.orientation = 'landscape';
-            ws.pageSetup.fitToPage = true;
-            ws.pageSetup.fitToWidth = 1;
-            ws.pageSetup.fitToHeight = 0; 
-            ws.pageSetup.margins = { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 };
-
-            ws.getCell('C1').value = "CURSO:";
-            ws.getCell('D1').value = cursoSeleccionado;
-            ws.getCell('G1').value = "REPORTE:";
-            ws.getCell('J1').value = "CENTRALIZADOR ANUAL";
-            ws.getRow(1).font = { bold: true };
-
-            ws.mergeCells('B3:B5');
-            const cellNombres = ws.getCell('B3');
-            cellNombres.value = "APELLIDO Y NOMBRE";
-            cellNombres.alignment = { horizontal: 'center', vertical: 'middle' };
-            cellNombres.font = { bold: true, size: 10 };
-
-            ws.mergeCells('A3:A5');
-            const cellNum = ws.getCell('A3');
-            cellNum.value = "N°";
-            cellNum.alignment = { horizontal: 'center', vertical: 'middle' };
-            cellNum.font = { bold: true, size: 10 };
-
-            // Cierre seguro del código que se cortó en el input
-            const buffer = await wb.xlsx.writeBuffer();
-            const nombreArchivo = `Anual_${cursoSeleccionado}.xlsx`;
-            saveAs(new Blob([buffer]), nombreArchivo);
-            
-            alert("Excel Anual generado correctamente.");
-
-        } catch (ex) {
-            console.error(ex);
-            alert("Error al generar centralizador anual: " + ex.message);
-        } finally {
+        if (profesoresCurso.length === 0) {
+            alert("No se encontraron profesores asignados a este curso.");
             btnDescargarAnual.innerText = "⬇ Descargar Anual";
             btnDescargarAnual.disabled = false;
+            return;
         }
-    });
+
+        // OPTIMIZADO: Descargar TODAS las notas de todos los trimestres a la vez
+        const cacheNotasAnual = {};
+        const trimestres = ["PRIMERO", "SEGUNDO", "TERCERO"];
+        const fetchProms = [];
+
+        for (const p of profesoresCurso) {
+
+            cacheNotasAnual[p.nombre] = {};
+
+            for (const trim of trimestres) {
+
+                fetchProms.push(
+                    fetch(
+                        `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`
+                    )
+                    .then(r => r.json())
+                    .then(nData => {
+                        cacheNotasAnual[p.nombre][trim] = nData || null;
+                    })
+                    .catch(() => {})
+                );
+            }
+        }
+
+        await Promise.all(fetchProms);
+
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet("ANUAL");
+
+        ws.pageSetup.orientation = 'landscape';
+        ws.pageSetup.fitToPage = true;
+        ws.pageSetup.fitToWidth = 1;
+        ws.pageSetup.fitToHeight = 0;
+
+        ws.pageSetup.margins = {
+            left: 0.2,
+            right: 0.2,
+            top: 0.4,
+            bottom: 0.4,
+            header: 0.2,
+            footer: 0.2
+        };
+
+        ws.getCell('C1').value = "CURSO:";
+        ws.getCell('D1').value = cursoSeleccionado;
+        ws.getCell('G1').value = "REPORTE:";
+        ws.getCell('J1').value = "CENTRALIZADOR ANUAL";
+
+        ws.getRow(1).font = {
+            bold: true
+        };
+
+        ws.mergeCells('B3:B5');
+
+        const cellNombres = ws.getCell('B3');
+
+        cellNombres.value = "APELLIDO Y NOMBRE";
+
+        cellNombres.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
+        };
+
+        cellNombres.font = {
+            bold: true,
+            size: 10
+        };
+
+        ws.mergeCells('A3:A5');
+
+        const cellNum = ws.getCell('A3');
+
+        cellNum.value = "N°";
+
+        cellNum.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
+        };
+
+        cellNum.font = {
+            bold: true,
+            size: 10
+        };
+
+        let col = 3;
+
+        const headerColors = [
+            'FFB3E5FC',
+            'FFC8E6C9',
+            'FFFFE0B2',
+            'FFE1BEE7',
+            'FFFFCCBC',
+            'FFD7CCC8',
+            'FFCFD8DC',
+            'FFF0F4C3',
+            'FFB2DFDB',
+            'FFFFD54F',
+            'FFD1C4E9',
+            'FFC5CAE9'
+        ];
+
+        profesoresCurso.forEach((p, idx) => {
+
+            const color = headerColors[idx % headerColors.length];
+
+            const startCol = col;
+            const endCol = col + 3;
+
+            ws.mergeCells(3, startCol, 3, endCol);
+
+            const cellProf = ws.getCell(3, startCol);
+
+            cellProf.value = p.nombre.toUpperCase();
+
+            cellProf.alignment = {
+                horizontal: 'center',
+                vertical: 'middle',
+                wrapText: true
+            };
+
+            cellProf.font = {
+                bold: true,
+                size: 8
+            };
+
+            cellProf.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: color
+                }
+            };
+
+            ws.mergeCells(4, startCol, 4, endCol);
+
+            const cellMat = ws.getCell(4, startCol);
+
+            cellMat.value = p.materia.toUpperCase();
+
+            cellMat.alignment = {
+                textRotation: 90,
+                horizontal: 'center',
+                vertical: 'middle',
+                wrapText: true
+            };
+
+            cellMat.font = {
+                bold: true,
+                size: 7
+            };
+
+            cellMat.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: color
+                }
+            };
+
+            const headersT = ['1T', '2T', '3T', 'A'];
+
+            headersT.forEach((t, i) => {
+
+                const cCol = startCol + i;
+
+                const cT = ws.getCell(5, cCol);
+
+                cT.value = t;
+
+                cT.alignment = {
+                    horizontal: 'center',
+                    vertical: 'middle'
+                };
+
+                cT.font = {
+                    bold: true,
+                    size: 9
+                };
+
+                cT.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: {
+                        argb: color
+                    }
+                };
+
+                ws.getColumn(cCol).width = 4.5;
+
+                if (
+                    trimestreSeleccionado === "PRIMERO" &&
+                    (t === "2T" || t === "3T" || t === "A")
+                ) {
+                    ws.getColumn(cCol).hidden = true;
+
+                } else if (
+                    trimestreSeleccionado === "SEGUNDO" &&
+                    (t === "3T" || t === "A")
+                ) {
+                    ws.getColumn(cCol).hidden = true;
+                }
+            });
+
+            col += 4;
+        });
+
+        const colPromedio = col;
+
+        ws.mergeCells(
+            3,
+            colPromedio,
+            5,
+            colPromedio
+        );
+
+        const cellPromHeader = ws.getCell(3, colPromedio);
+
+        cellPromHeader.value = "PROM.\nANUAL";
+
+        cellPromHeader.alignment = {
+            horizontal: 'center',
+            vertical: 'middle',
+            wrapText: true
+        };
+
+        cellPromHeader.font = {
+            bold: true,
+            size: 9
+        };
+
+        cellPromHeader.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {
+                argb: 'FFFFFF00'
+            }
+        };
+
+        ws.getColumn(colPromedio).width = 6.5;
+
+        ws.getRow(3).height = 25;
+        ws.getRow(4).height = 57;
+        ws.getRow(5).height = 20;
+
+        let trimestresActivos = [];
+
+        if (trimestreSeleccionado === "PRIMERO") {
+            trimestresActivos = ["PRIMERO"];
+
+        } else if (trimestreSeleccionado === "SEGUNDO") {
+            trimestresActivos = ["PRIMERO", "SEGUNDO"];
+
+        } else {
+            trimestresActivos = [
+                "PRIMERO",
+                "SEGUNDO",
+                "TERCERO"
+            ];
+        }
+
+        let fila = 6;
+        let numero = 1;
+
+        const listaCeldasPromedio = [];
+
+        for (let i = 0; i < estudiantesOrdenados.length; i++) {
+
+            const estudianteItem = estudiantesOrdenados[i];
+
+            const partes = estudianteItem.split(":");
+
+            const nombreEstudiante =
+                (partes.length >= 2
+                    ? partes[1]
+                    : estudianteItem
+                ).trim().toUpperCase();
+
+            ws.getCell(fila, 1).value = numero;
+            ws.getCell(fila, 2).value = nombreEstudiante;
+
+            ws.getRow(fila).height = 14;
+
+            let colNotas = 3;
+            let sumaAnualGeneral = 0;
+            let materiasValidasGeneral = 0;
+            let promedioCompleto = true;
+
+            profesoresCurso.forEach((p, idx) => {
+
+                const color =
+                    headerColors[idx % headerColors.length];
+
+                let sumaAnualMateria = 0;
+                let trimestresValidos = 0;
+                let tieneNotasCompletasMateria = true;
+
+                trimestres.forEach((trim, tIdx) => {
+
+                    const cellNota =
+                        ws.getCell(
+                            fila,
+                            colNotas + tIdx
+                        );
+
+                    cellNota.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: {
+                            argb: color
+                        }
+                    };
+
+                    if (trimestresActivos.includes(trim)) {
+
+                        let notaFinal = null;
+
+                        const cursoDoc =
+                            cacheNotasAnual[p.nombre][trim];
+
+                        if (cursoDoc) {
+
+                            let notaRoot =
+                                cursoDoc[nombreEstudiante];
+
+                            if (!notaRoot) {
+
+                                for (const k in cursoDoc) {
+
+                                    if (
+                                        k.trim().toUpperCase() ===
+                                        nombreEstudiante
+                                    ) {
+                                        notaRoot = cursoDoc[k];
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (notaRoot) {
+
+                                const nt =
+                                    calcPromedioInterno(
+                                        notaRoot,
+                                        "NOTA_TRIMESTRAL"
+                                    );
+
+                                if (nt !== null) {
+
+                                    notaFinal = nt;
+
+                                } else {
+
+                                    const ser =
+                                        calcPromedioInterno(
+                                            notaRoot,
+                                            "SER"
+                                        );
+
+                                    const sab =
+                                        calcPromedioInterno(
+                                            notaRoot,
+                                            "SABER"
+                                        );
+
+                                    const hac =
+                                        calcPromedioInterno(
+                                            notaRoot,
+                                            "HACER"
+                                        );
+
+                                    const aut =
+                                        calcSumaInterna(
+                                            notaRoot,
+                                            "AUTOEVALUACION"
+                                        );
+
+                                    if (
+                                        ser !== null &&
+                                        sab !== null &&
+                                        hac !== null &&
+                                        aut !== null
+                                    ) {
+
+                                        const ext =
+                                            calcSumaInterna(
+                                                notaRoot,
+                                                "NOTAS_EXTRAS"
+                                            ) || 0;
+
+                                        notaFinal =
+                                            ser +
+                                            sab +
+                                            hac +
+                                            aut +
+                                            ext;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (
+                            notaFinal !== null &&
+                            notaFinal > 0
+                        ) {
+
+                            const valorRedondeado =
+                                Math.round(notaFinal);
+
+                            cellNota.value =
+                                valorRedondeado;
+
+                            if (valorRedondeado < 30) {
+
+                                cellNota.fill = {
+                                    type: 'pattern',
+                                    pattern: 'solid',
+                                    fgColor: {
+                                        argb: 'FF9370DB'
+                                    }
+                                };
+
+                                cellNota.font = {
+                                    bold: true,
+                                    color: {
+                                        argb: 'FFFFFFFF'
+                                    }
+                                };
+
+                            } else if (valorRedondeado < 51) {
+
+                                cellNota.fill = {
+                                    type: 'pattern',
+                                    pattern: 'solid',
+                                    fgColor: {
+                                        argb: 'FFFF0000'
+                                    }
+                                };
+
+                                cellNota.font = {
+                                    bold: true,
+                                    color: {
+                                        argb: 'FFFFFFFF'
+                                    }
+                                };
+                            }
+
+                            sumaAnualMateria +=
+                                valorRedondeado;
+
+                            trimestresValidos++;
+
+                        } else {
+
+                            tieneNotasCompletasMateria = false;
+                        }
+                    }
+                });
+
+                const cellA =
+                    ws.getCell(
+                        fila,
+                        colNotas + 3
+                    );
+
+                cellA.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: {
+                        argb: 'FFF5F5F5'
+                    }
+                };
+
+                if (
+                    tieneNotasCompletasMateria &&
+                    trimestresValidos ===
+                        trimestresActivos.length
+                ) {
+
+                    const notaA =
+                        Math.round(
+                            sumaAnualMateria /
+                            trimestresValidos
+                        );
+
+                    cellA.value = notaA;
+
+                    cellA.font = {
+                        bold: true
+                    };
+
+                    if (notaA < 51) {
+
+                        cellA.font = {
+                            bold: true,
+                            color: {
+                                argb: 'FFFF0000'
+                            }
+                        };
+                    }
+
+                    sumaAnualGeneral += notaA;
+                    materiasValidasGeneral++;
+
+                } else {
+
+                    cellA.value = "";
+                    promedioCompleto = false;
+                }
+
+                colNotas += 4;
+            });
+
+            const cellProm =
+                ws.getCell(
+                    fila,
+                    colPromedio
+                );
+
+            if (
+                promedioCompleto &&
+                materiasValidasGeneral ===
+                    profesoresCurso.length &&
+                materiasValidasGeneral > 0
+            ) {
+
+                const promGral =
+                    Math.round(
+                        (
+                            sumaAnualGeneral /
+                            materiasValidasGeneral
+                        ) * 100
+                    ) / 100;
+
+                cellProm.value = promGral;
+
+                cellProm.font = {
+                    bold: true
+                };
+
+                if (promGral < 51) {
+
+                    cellProm.font = {
+                        bold: true,
+                        color: {
+                            argb: 'FFFF0000'
+                        }
+                    };
+                }
+
+                listaCeldasPromedio.push({
+                    cell: cellProm,
+                    value: promGral
+                });
+
+            } else {
+
+                cellProm.value = "";
+
+                const cellNombre =
+                    ws.getCell(fila, 2);
+
+                cellNombre.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: {
+                        argb: 'FFFFFF00'
+                    }
+                };
+            }
+
+            fila++;
+            numero++;
+        }
+
+        listaCeldasPromedio.sort(
+            (a, b) => b.value - a.value
+        );
+
+        const mejores3 =
+            listaCeldasPromedio.slice(0, 3);
+
+        mejores3.forEach(item => {
+
+            item.cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: 'FF0000FF'
+                }
+            };
+
+            item.cell.font = {
+                bold: true,
+                color: {
+                    argb: 'FFFFFFFF'
+                }
+            };
+        });
+
+        const borderOpts = {
+            style: 'thin',
+            color: {
+                argb: 'FF000000'
+            }
+        };
+
+        for (let r = 3; r < fila; r++) {
+
+            for (let c = 1; c <= colPromedio; c++) {
+
+                const celdaFinal =
+                    ws.getCell(r, c);
+
+                celdaFinal.border = {
+                    top: borderOpts,
+                    left: borderOpts,
+                    bottom: borderOpts,
+                    right: borderOpts
+                };
+
+                if (c > 2 && r > 5) {
+
+                    celdaFinal.alignment = {
+                        horizontal: 'center',
+                        vertical: 'middle'
+                    };
+                }
+            }
+        }
+
+        ws.getColumn(1).width = 6;
+        ws.getColumn(2).width = 35;
+
+        const buffer =
+            await wb.xlsx.writeBuffer();
+
+        const nombreArchivo =
+            `ANUAL_${cursoSeleccionado}.xlsx`;
+
+        saveAs(
+            new Blob([buffer]),
+            nombreArchivo
+        );
+
+        alert(
+            "Excel Anual generado correctamente."
+        );
+
+    } catch (ex) {
+
+        console.error(ex);
+
+        alert(
+            "Error al exportar a Excel: " +
+            ex.message
+        );
+
+    } finally {
+
+        btnDescargarAnual.innerText =
+            "⬇ Descargar Anual";
+
+        btnDescargarAnual.disabled = false;
+    }
+});
 
 });
 </script>
