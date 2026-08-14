@@ -657,11 +657,11 @@ document.addEventListener("DOMContentLoaded", () => {
 },
                   
                     columnStyles: {
-                        0: { cellWidth: 10, halign: 'center' }, // N°
-                        1: { cellWidth: 42 },                   // MATERIA
-                        2: { cellWidth: 45 },                   // PROFESOR
-                        3: { cellWidth: 38, halign: 'center' }, // OBSERVACION (Menos ancho y centrado)
-                        4: { cellWidth: 47 }                    // FIRMA Y SELLO (Aumenta ancho)
+                      0: { cellWidth: 10, halign: 'center' },
+    1: { cellWidth: 42, textColor: [0, 0, 0] }, // MATERIA
+    2: { cellWidth: 45, textColor: [0, 0, 0] }, // PROFESOR
+    3: { cellWidth: 38, halign: 'center' },
+    4: { cellWidth: 47 }               // FIRMA Y SELLO (Aumenta ancho)
                     },
                     didParseCell: function(data) {
                         // Dar formato resaltado a la "X" en OBSERVACION
@@ -704,7 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 yPos += 8;
                 
                 // Línea Padre/Madre
-                doc.setDrawColor(120, 120, 120);
+                doc.setDrawColor(0, 0, 0);
                 doc.setLineDashPattern([2, 2], 0);
                 doc.line(15, yPos, 195, yPos); 
                 yPos += 7;

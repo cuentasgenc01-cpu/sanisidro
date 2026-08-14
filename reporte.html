@@ -472,9 +472,13 @@ tr:hover { background-color: #f8fafc; }
 
             <!-- Table Section -->
             <div>
-                <div class="flex justify-between items-center mb-3">
-                    <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Lista de Seleccionados</h4>
-                    <span class="bg-blue-100 text-[#1565C0] text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200" id="contadorEstudiantes">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-3 gap-3">
+                    <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide whitespace-nowrap">Lista de Seleccionados</h4>
+                    
+                    <!-- NUEVO: BUSCADOR DE ESTUDIANTES EN LA TABLA -->
+                    <input type="text" id="inputBuscarEstudianteModal" placeholder="🔍 Buscar estudiante en la lista..." class="hidden w-full sm:max-w-xs px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1565C0] shadow-sm">
+                    
+                    <span class="bg-blue-100 text-[#1565C0] text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="contadorEstudiantes">
                         0 Seleccionados
                     </span>
                 </div>
@@ -677,6 +681,7 @@ tr:hover { background-color: #f8fafc; }
         emptyState: document.getElementById('emptyState'),
         tableWrapper: document.getElementById('tableWrapper'),
         tableBody: document.getElementById('studentsTableBody'),
+        inputBuscarModal: document.getElementById('inputBuscarEstudianteModal'), // NUEVO CAMPO DE BUSQUEDA
         btnLimpiarLista: document.getElementById('btnLimpiarLista'),
         btnGenerarReportes: document.getElementById('btnGenerarReportes'),
 
@@ -814,6 +819,19 @@ tr:hover { background-color: #f8fafc; }
                 desactivarModoAdmin();
                 showNotification("Modo Administrador Desactivado", false);
             }
+        });
+
+        // NUEVO: Funcionalidad del buscador en la tabla del modal
+        ui.inputBuscarModal.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = ui.tableBody.getElementsByTagName('tr');
+            Array.from(rows).forEach(row => {
+                const nameCell = row.cells[1];
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(term) ? '' : 'none';
+                }
+            });
         });
 
         cargarTutoria();
@@ -1417,7 +1435,7 @@ doc.text(
                         cellPadding: 0.8,
                         overflow: "hidden",
                         valign: "middle",
-                        lineColor: [0, 0, 0],
+                        lineColor: [200, 200, 200],
                         lineWidth: 0.1
                     },
                     columnStyles: colStyles,
@@ -1451,11 +1469,11 @@ doc.text(
                             if (isProfesorHeader || isMateriaHeader || isTotalHeader) {
                                 let texto = (data.cell.customVerticalText || "").trim();
 
-                                if (isMateriaHeader && texto.length > 15) {
-                                    texto = texto.substring(0, 15) + "(...)";
+                                if (isMateriaHeader && texto.length > 22) {
+                                    texto = texto.substring(0, 22) + "(...)";
                                 }
                                 
-                                doc.setFontSize((isProfesorHeader || isTotalHeader) ? 6 : 7);
+                                doc.setFontSize((isProfesorHeader || isTotalHeader) ? 6 : 5);
                                 doc.setTextColor(255, 255, 255);
                                 
                                 const textHeight = doc.getTextDimensions(texto).h;
@@ -1529,40 +1547,47 @@ doc.text(
                     ui.selEstudiante.disabled = true;
                     ui.selCurso.focus();
 
-                } else if (currentSystemMode === 'padre') {
-                    const urlPadres = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
-                    const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+              } else if (currentSystemMode === 'padre') {
+    const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
 
-                    const datosPadres = {};
-                    const datosGen = {};
-                    let countGen = 1;
+    const datosGen = {};
+    let countGen = 1;
 
-                    selectedList.forEach((student) => {
-                        datosPadres[student.id] = {
-                            nombre: student.nombre,
-                            asistio: !!student.asistio
-                        };
-                        datosGen[countGen++] = {
-                            nombre: student.nombre,
-                            asistio: !!student.asistio
-                        };
-                    });
+    selectedList.forEach((student) => {
+        datosGen[countGen++] = {
+            nombre: student.nombre,
+            asistio: !!student.asistio
+        };
+    });
 
-                    await fetch(urlPadres, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(datosPadres)
-                    });
+    const response = await fetch(urlReporteGen, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datosGen)
+    });
 
-                    await fetch(urlReporteGen, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(datosGen)
-                    });
+    if (!response.ok) {
+        throw new Error("No se pudo guardar la asistencia de padres.");
+    }
 
-                    hideLoading();
-                    showNotification("Asistencia de Padres de Familia guardada exitosamente.");
-                }
+    // IGUAL QUE EN MODO ESTUDIANTE
+    selectedList = [];
+    updateTableUI();
+
+    // VOLVER A SELECCIONAR EL CURSO
+    ui.selCurso.selectedIndex = 0;
+
+    // BLOQUEAR ESTUDIANTE
+    ui.selEstudiante.innerHTML =
+        '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+    ui.selEstudiante.disabled = true;
+
+    // DEJAR EL CURSOR EN CURSO
+    ui.selCurso.focus();
+
+    hideLoading();
+    showNotification("Asistencia de Padres de Familia guardada exitosamente.");
+}
 
             } catch (error) {
                 console.error("Error guardando reporte:", error);
@@ -1895,10 +1920,6 @@ doc.text(
                     ? '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>'
                     : '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
 
-                const repPadresURL = `${DB_URL}/REPORTE_PADRES/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
-                const repPadresResp = await fetch(repPadresURL);
-                const repPadresData = await repPadresResp.json();
-
                 const repGenURL = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(ui.selTrimestre.value)}/${encodeURIComponent(selectedCurso)}.json`;
                 const repGenResp = await fetch(repGenURL);
                 const repGenData = await repGenResp.json();
@@ -1921,10 +1942,7 @@ doc.text(
                         }
 
                         let asistio = false;
-                        if (repPadresData && repPadresData[originalId]) {
-                            const savedVal = repPadresData[originalId];
-                            asistio = (typeof savedVal === 'object') ? !!savedVal.asistio : !!savedVal;
-                        } else if (typeof reportValue === 'object' && reportValue.asistio !== undefined) {
+                        if (typeof reportValue === 'object' && reportValue.asistio !== undefined) {
                             asistio = reportValue.asistio;
                         }
 
@@ -2161,6 +2179,7 @@ doc.text(
     }
 
     function openModal() {
+        ui.inputBuscarModal.value = ''; // NUEVO: Se limpia la búsqueda al abrir
         selectedList = [];
         updateTableUI();
         ui.selTrimestre.selectedIndex = 0;
@@ -2284,11 +2303,14 @@ doc.text(
             ui.tableWrapper.classList.add('hidden');
             ui.btnLimpiarLista.classList.add('hidden');
             ui.btnGenerarReportes.disabled = true;
+            ui.inputBuscarModal.classList.add('hidden'); // NUEVO: Oculta el buscador si no hay elementos
+            ui.inputBuscarModal.value = ''; // NUEVO: Limpia el buscador si no hay elementos
             return;
         }
 
         ui.emptyState.classList.add('hidden');
         ui.tableWrapper.classList.remove('hidden');
+        ui.inputBuscarModal.classList.remove('hidden'); // NUEVO: Muestra el buscador cuando hay elementos
 
         if (currentSystemMode === 'estudiante') {
             ui.btnLimpiarLista.classList.remove('hidden');
@@ -2306,6 +2328,12 @@ doc.text(
         ui.tableBody.innerHTML = '';
         selectedList.forEach((student, index) => {
             const tr = document.createElement('tr');
+            
+            // NUEVO: Reaplicar el filtro de búsqueda si hay texto escrito
+            const searchTerm = ui.inputBuscarModal.value.toLowerCase();
+            if (searchTerm && !student.nombre.toLowerCase().includes(searchTerm)) {
+                tr.style.display = 'none';
+            }
 
             let actionColHtml = '';
             if (currentSystemMode === 'estudiante') {
