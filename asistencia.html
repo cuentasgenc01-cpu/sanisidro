@@ -608,7 +608,7 @@
 </button>
           
             <!--<button class="btn-guardar" id="btnGuardar" onclick="guardarAsistencia()" disabled style="display: none;">GUARDAR</button>-->
-            <button class="btn-actualizar" id="btnActualizar" onclick="actualizarDatos()" disabled>ACTUALIZAR</button>
+        <button class="btn-actualizar" id="btnActualizar" onclick="abrirModalActualizar()" disabled>ACTUALIZAR</button>
             <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
         </div>
     </div>
@@ -792,6 +792,85 @@ border-left:8px solid #1976D2;
     </div>
 </div>
 
+<!-- MODAL CONFIRMAR ACTUALIZACIÓN -->
+<div class="modal" id="modalConfirmarActualizar">
+    <div class="modal-content"
+         style="
+            max-width:420px;
+            text-align:center;
+            padding:30px;
+            border-radius:16px;
+         ">
+
+        <div style="
+            font-size:50px;
+            margin-bottom:10px;
+        ">
+            ⚠️
+        </div>
+
+        <h2 style="
+            color:#0D47A1;
+            margin-bottom:15px;
+        ">
+            VOLVER A CARGAR
+        </h2>
+
+        <p style="
+            color:#555;
+            line-height:1.5;
+            margin-bottom:10px;
+        ">
+            ¿DESEAS VOLVER A CARGAR la asistencia de HOY?
+        </p>
+
+        <p style="
+            color:#777;
+            font-size:13px;
+            margin-bottom:20px;
+        ">
+            Los cambios que no hayas guardado se perderán.
+        </p>
+
+        <div style="
+            display:flex;
+            gap:10px;
+            justify-content:center;
+        ">
+
+            <button
+                onclick="cerrarModalActualizar()"
+                style="
+                    background:#757575;
+                    color:white;
+                    border:none;
+                    padding:11px 20px;
+                    border-radius:8px;
+                    cursor:pointer;
+                    font-weight:bold;
+                ">
+                CANCELAR
+            </button>
+
+            <button
+                onclick="confirmarActualizar()"
+                style="
+                    background:#FF9800;
+                    color:white;
+                    border:none;
+                    padding:11px 20px;
+                    border-radius:8px;
+                    cursor:pointer;
+                    font-weight:bold;
+                ">
+                🔄 SÍ, RECARGAR
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, onValue, update, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -945,17 +1024,46 @@ cargarEstados();
         mostrarAlumnos();
     }
 
-    window.actualizarDatos = async function() {
-        if (!cursoActual || !fechaElegida) return;
-        document.getElementById("loading").classList.add("active");
-        document.getElementById("loadingText").textContent = "Actualizando datos...";
-        try {
-            await cargarAlumnos();
-            await cargarEstados();
-        } finally {
-            document.getElementById("loading").classList.remove("active");
-        }
+  // MODAL DE CONFIRMACIÓN PARA ACTUALIZAR
+window.abrirModalActualizar = function() {
+
+    if (!cursoActual || !fechaElegida) {
+        return;
     }
+
+    document
+        .getElementById("modalConfirmarActualizar")
+        .classList.add("active");
+};
+
+window.cerrarModalActualizar = function() {
+
+    document
+        .getElementById("modalConfirmarActualizar")
+        .classList.remove("active");
+};
+
+window.confirmarActualizar = async function() {
+
+    cerrarModalActualizar();
+
+    await actualizarDatos();
+};
+
+
+window.actualizarDatos = async function() {
+    if (!cursoActual || !fechaElegida) return;
+
+    document.getElementById("loading").classList.add("active");
+    document.getElementById("loadingText").textContent = "Actualizando datos...";
+
+    try {
+        await cargarAlumnos();
+        await cargarEstados();
+    } finally {
+        document.getElementById("loading").classList.remove("active");
+    }
+}
 
     function mostrarAlumnos() {
         const container = document.getElementById("alumnosList");
