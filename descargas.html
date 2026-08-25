@@ -1984,7 +1984,7 @@ doc.setFont(undefined, 'normal');
 
             const cacheNotas = {};
             const fetchProms = profesoresCurso.map(p => 
-                fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${encodeURIComponent(trimestreSeleccionado)}/${encodeURIComponent(cursoSeleccionado)}.json`)
+                fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(p.nombre)}/${encodeURIComponent(trimestreSeleccionado)}/${encodeURIComponent(cursoSeleccionado)}.json`)
                 .then(r => r.json())
                 .then(nData => { if (nData) cacheNotas[p.nombre] = nData; })
                 .catch(() => {})
