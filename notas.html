@@ -368,13 +368,28 @@
 
         .dimension-title {
             font-weight: 800 !important;
-            font-size: 16px !important;
+            font-size: 14px !important;
             color: #0D47A1;
             letter-spacing: .5px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
+        /* CHECK: completar automáticamente las notas vacías */
+        .dimension-auto-check {
+            width: 22px !important;
+            height: 22px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            flex: 0 0 22px;
+            cursor: pointer;
+            accent-color: #2E7D32;
+        }
+
+        .dimension-header .dimension-auto-check {
+            display: block !important;
+        }
+
 
         .dimension-info {
             font-size: 13px !important;
@@ -413,7 +428,7 @@
             display: grid;
             grid-template-columns: 1fr 45px 45px;
             gap: 8px;
-            margin-bottom: 6px;
+           margin-bottom: 0 !important;
             align-items: center;
             background: #ffffff;
             padding: 6px 12px;
@@ -1193,6 +1208,12 @@ style="
         <!-- SER -->
         <div class="dimension-card">
             <div class="dimension-header" onclick="toggleDimension('ser')">
+                <input type="checkbox"
+       class="dimension-auto-check"
+       id="checkVacioSer"
+       title="Marcar notas vacías de SER con 10"
+       onclick="event.stopPropagation()"
+       onchange="confirmarNotaVacia('ser', 10, this)">
                 <span class="dimension-title">🛠️SER (10pts)</span>
                 <span class="dimension-info">
                     Prom: <span id="promSer">-</span>
@@ -1214,6 +1235,12 @@ style="
         <!-- SABER -->
         <div class="dimension-card">
             <div class="dimension-header" onclick="toggleDimension('saber')">
+               <input type="checkbox"
+       class="dimension-auto-check"
+       id="checkVacioSaber"
+       title="Marcar notas vacías de SABER con 45"
+       onclick="event.stopPropagation()"
+       onchange="confirmarNotaVacia('saber', 45, this)">
                 <span class="dimension-title">🧠SABER (45pts)</span>
                 <span class="dimension-info">
                     Prom: <span id="promSaber">-</span>
@@ -1235,6 +1262,12 @@ style="
         <!-- HACER -->
         <div class="dimension-card">
             <div class="dimension-header" onclick="toggleDimension('hacer')">
+                <input type="checkbox"
+       class="dimension-auto-check"
+       id="checkVacioHacer"
+       title="Marcar notas vacías de HACER con 40"
+       onclick="event.stopPropagation()"
+       onchange="confirmarNotaVacia('hacer', 40, this)">
                 <span class="dimension-title">📚HACER (40pts)</span>
                 <span class="dimension-info">
                     Prom: <span id="promHacer">-</span>
@@ -1747,6 +1780,17 @@ document.getElementById('checkboxContainer').style.display = 'flex';
 
      function renderizarDimensiones() {
 
+    // No conservar el estado del check al cambiar de estudiante.
+    const checkVacioSer = document.getElementById('checkVacioSer');
+    const checkVacioSaber = document.getElementById('checkVacioSaber');
+    const checkVacioHacer = document.getElementById('checkVacioHacer');
+
+    if (checkVacioSer) checkVacioSer.checked = false;
+    if (checkVacioSaber) checkVacioSaber.checked = false;
+    if (checkVacioHacer) checkVacioHacer.checked = false;
+
+
+
     renderizarDimension('ser', 'SER', MAXIMOS.ser);
     renderizarDimension('saber', 'SABER', MAXIMOS.saber);
     renderizarDimension('hacer', 'HACER', MAXIMOS.hacer);
@@ -1839,9 +1883,11 @@ document.getElementById('checkboxContainer').style.display = 'flex';
         text-overflow:ellipsis;
         box-shadow:none!important;
         outline:none!important;
-        font-size:13px!important;
+        font-size:12px!important;
         border-radius:12px;
-        padding:8px 10px;
+      padding:5px 10px;
+height:36px!important;
+box-sizing:border-box;
 
         ${
             Number(valor) > 0
@@ -1952,6 +1998,60 @@ document.getElementById('checkboxContainer').style.display = 'flex';
 
         function updateActivityValue(dimension, nombre, valor) {
             notasData[dimension][nombre] = parseInt(valor) || 0;
+        }
+
+        // ============================================================
+        // CHECK DE NOTAS VACÍAS POR DIMENSIÓN
+        function confirmarNotaVacia(dimension, notaMaxima, checkbox) {
+
+    // Si se está desmarcando, no preguntar
+    if (!checkbox.checked) {
+        return;
+    }
+
+    const nombres = {
+        ser: 'SER',
+        saber: 'SABER',
+        hacer: 'HACER'
+    };
+
+    const confirmar = confirm(
+        `¿Está seguro de colocar ${notaMaxima} en todas las notas vacías de ${nombres[dimension]}?`
+    );
+
+    if (confirmar) {
+        aplicarNotaVacia(dimension, notaMaxima, true);
+    } else {
+        checkbox.checked = false;
+    }
+}
+        // SER   -> 10
+        // SABER -> 45
+        // HACER -> 40
+        // ============================================================
+        function aplicarNotaVacia(dimension, notaMaxima, marcado) {
+            if (!marcado || !notasData[dimension]) return;
+
+            let cantidad = 0;
+
+            Object.keys(notasData[dimension]).forEach(nombre => {
+                const valor = Number(notasData[dimension][nombre]);
+
+                // Las notas vacías se manejan como 0 en notasData.
+                if (!Number.isFinite(valor) || valor === 0) {
+                    notasData[dimension][nombre] = notaMaxima;
+                    cantidad++;
+                }
+            });
+
+            // Mostrar inmediatamente las notas colocadas y recalcular.
+            renderizarDimension(
+                dimension,
+                dimension.toUpperCase(),
+                notaMaxima
+            );
+
+            calcularTotal();
         }
 
         function deleteActivity(dimension, nombre) {
@@ -2604,6 +2704,7 @@ setTimeout(() => {
 
       window.updateActivityName = updateActivityName;
 window.updateActivityValue = updateActivityValue;
+window.aplicarNotaVacia = aplicarNotaVacia;
 window.deleteActivity = deleteActivity;
 window.confirmDelete = confirmDelete;
 window.addActivity = addActivity;
