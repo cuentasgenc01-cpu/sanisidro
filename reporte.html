@@ -351,37 +351,142 @@ tr:hover { background-color: #f8fafc; }
                     </button>
                 </div>
 
-                <!-- PANEL ADMINISTRADOR (Movido a la primera fila) -->
+                <!-- PANEL ADMINISTRADOR -->
                 <div id="adminPanelDescargas" class="hidden w-full bg-amber-50 border border-amber-200 rounded-lg p-4 shadow-inner mt-2">
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-amber-600 text-lg">👑</span>
                         <span class="font-bold text-amber-800 uppercase tracking-wide text-sm">Modo Administrador Activo</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-amber-700 mb-1">Simular Profesor (Para descargar 'Mis Cursos')</label>
-                            <select id="adminInputProfesor" class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
-                                <option value="">Cargando profesores...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-amber-700 mb-1">Forzar Curso Tutor (Para descargar 'Tutor')</label>
-                            <input type="text" id="adminInputCurso" class="w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-amber-500 focus:border-amber-500 shadow-sm" placeholder="Ej: 1A SEC" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-amber-700 mb-1">Actualizar Modo Sistema</label>
-                            <div class="flex gap-2">
-                                <select id="adminSelectModo" class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
-                                    <option value="ESTUDIANTE">ESTUDIANTE</option>
-                                    <option value="PADRE">PADRE</option>
-                                    <option value="LECTURA">LECTURA</option>
-                                </select>
-                                <button id="btnActualizarModo" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-colors" title="Actualizar Modo">
-                                    🔄
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+    <!-- =====================================================
+         1. SIMULAR PROFESOR
+         ===================================================== -->
+
+    <div>
+
+        <label class="block text-xs font-bold text-amber-700 mb-1">
+            Simular Profesor (Para descargar 'Mis Cursos')
+        </label>
+
+        <select
+            id="adminInputProfesor"
+            class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+
+            <option value="">
+                Cargando profesores...
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- =====================================================
+         2. FORZAR CURSO TUTOR
+         ===================================================== -->
+
+    <div>
+
+        <label class="block text-xs font-bold text-amber-700 mb-1">
+            Forzar Curso Tutor (Para descargar 'Tutor')
+        </label>
+
+        <input
+            type="text"
+            id="adminInputCurso"
+            class="w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+            placeholder="Ej: 1A SEC"
+            readonly>
+
+    </div>
+
+
+    <!-- =====================================================
+         3. MODO SISTEMA
+         ===================================================== -->
+
+    <div>
+
+        <label class="block text-xs font-bold text-amber-700 mb-1">
+            Actualizar Modo Sistema
+        </label>
+
+        <select
+            id="adminSelectModo"
+            class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+
+            <option value="ESTUDIANTE">
+                ESTUDIANTE
+            </option>
+
+            <option value="PADRE">
+                PADRE
+            </option>
+
+            <option value="LECTURA">
+                LECTURA
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <!-- =====================================================
+         4. TRIMESTRE/ACTIVO
+         ===================================================== -->
+
+    <div>
+
+        <label class="block text-xs font-bold text-amber-700 mb-1">
+            Actualizar TRIMESTRE/ACTIVO
+        </label>
+
+        <div class="flex gap-2">
+
+            <select
+                id="adminSelectActivo"
+                class="custom-select w-full text-sm p-2.5 border border-amber-300 rounded-lg bg-white text-gray-800 focus:ring-amber-500 focus:border-amber-500 shadow-sm">
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                <option value="false">
+                    false
+                </option>
+
+                <option value="true">
+                    true
+                </option>
+
+                <option value="EDITAR">
+                    EDITAR
+                </option>
+
+                <option value="LECTURA">
+                    LECTURA
+                </option>
+
+            </select>
+
+
+            <!-- ESTE ES EL MISMO BOTÓN -->
+            <button
+                id="btnActualizarModo"
+                class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-colors"
+                title="Actualizar Modo y ACTIVO">
+
+                🔄
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
                     <p class="text-[10px] text-amber-600 mt-2 font-medium">* Selecciona un profesor para ver su curso tutor y simular su usuario.</p>
                 </div>
             </div>
@@ -520,7 +625,7 @@ tr:hover { background-color: #f8fafc; }
     </div>
 </div>
 
-<!-- MODAL: SUBIR NOTAS -->
+<!-- MODAL: SUBIR NOTAS (MODIFICADO CON BOTON DESCARGAR) -->
 <div id="modalSubirNotas" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
         <!-- Header -->
@@ -535,12 +640,48 @@ tr:hover { background-color: #f8fafc; }
 
         <!-- Body -->
         <div class="p-6 flex-1 space-y-6">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Seleccionar Trimestre</label>
-                <select id="selectTrimestreSubirNotas" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5">
-                    <option value="">Cargando trimestres...</option>
-                </select>
-            </div>
+           <div class="grid grid-cols-2 gap-6 items-end">
+
+    <!-- COLUMNA 1 -->
+    <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+            Seleccionar Trimestre
+        </label>
+
+        <select id="selectTrimestreSubirNotas"
+            class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5">
+            <option value="">Cargando trimestres...</option>
+        </select>
+    </div>
+
+    <!-- COLUMNA 2 -->
+    <div>
+        <p id="lblCursoTutorSubirNotas"
+            class="text-xs font-bold text-gray-600 mb-1.5 bg-gray-100 px-2 py-1 rounded border border-gray-200 whitespace-nowrap inline-block">
+            Curso Tutor: Cargando...
+        </p>
+
+      <button id="btnDescargarNotasTutorModal"
+    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled
+    title="Descargar notas del curso tutor">
+    <span class="text-sm">⬇️ DESCARGAR</span>
+</button>
+    </div>
+
+</div>
+            
+            <!-- CONTENEDOR CURSOS YA SUBIDOS -->
+           <div id="containerCursosSubidos" class="hidden">
+    <label id="lblCursosSubidos"
+           class="block text-sm font-semibold text-gray-700 mb-1.5">
+        Cursos ya subidos en este trimestre: (0)
+    </label>
+
+    <div id="listaCursosSubidos" class="flex flex-wrap gap-2 text-sm">
+        <!-- Badges -->
+    </div>
+</div>
             
             <div id="containerCentralizador" class="hidden space-y-4">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
@@ -555,6 +696,38 @@ tr:hover { background-color: #f8fafc; }
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR NOTAS -->
+<div id="modalEditarNotas" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[130] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+            <h3 class="text-lg font-bold text-amber-600 flex items-center gap-2">
+                <span>✏️</span> EDITAR NOTA ESTUDIANTE
+            </h3>
+            <button id="btnCloseModalEditar" class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <!-- Body -->
+        <div class="p-6 flex-1 space-y-4">
+            <p id="lblCursoEditar" class="text-sm font-bold text-gray-700 bg-gray-100 p-2 rounded text-center"></p>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Seleccionar Estudiante</label>
+                <select id="selectEstudianteEditar" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5">
+                    <option value="">Seleccione estudiante...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nota Trimestral (Modificar)</label>
+                <input type="text" id="inputNotaEditar" class="w-full text-lg font-bold text-gray-800 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1565C0] focus:outline-none" disabled placeholder="-">
+            </div>
+            <button id="btnGuardarEdicion" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-colors mt-4 shadow-md disabled:opacity-50" disabled>
+                GUARDAR NOTA
+            </button>
         </div>
     </div>
 </div>
@@ -613,7 +786,7 @@ tr:hover { background-color: #f8fafc; }
 </div>
 
 <!-- NUEVO MODAL DE VALIDACIÓN EXCEL -->
-<div id="excelValidationModal" class="hidden fixed inset-0 bg-gray-900/80 z-[120] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+<div id="excelValidationModal" class="hidden fixed inset-0 bg-gray-900/80 z-[150] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full flex flex-col max-h-[90vh]">
         <div id="validationIcon" class="text-5xl text-center mb-4">⚠️</div>
         <h3 id="validationTitle" class="text-xl font-bold text-gray-800 text-center mb-2">Título</h3>
@@ -659,8 +832,16 @@ tr:hover { background-color: #f8fafc; }
     // Variable global para habilitar funciones de administrador
     let isAdmin = false;
 
-    // Variable global para almacenar las notas extraídas del Excel
-    let notasExtraidasGlobal = [];
+  // Variables globales
+let notasExtraidasGlobal = [];
+let cursosYaSubidosGlobal = [];
+
+let isEditMode = false; 
+let isLecturaMode = false;
+
+// Variables para el modal de edición
+let cursoEditandoActual = '';
+let trimestreEditandoActual = '';
 
     // UI Elements
     const ui = {
@@ -681,7 +862,7 @@ tr:hover { background-color: #f8fafc; }
         emptyState: document.getElementById('emptyState'),
         tableWrapper: document.getElementById('tableWrapper'),
         tableBody: document.getElementById('studentsTableBody'),
-        inputBuscarModal: document.getElementById('inputBuscarEstudianteModal'), // NUEVO CAMPO DE BUSQUEDA
+        inputBuscarModal: document.getElementById('inputBuscarEstudianteModal'), 
         btnLimpiarLista: document.getElementById('btnLimpiarLista'),
         btnGenerarReportes: document.getElementById('btnGenerarReportes'),
 
@@ -791,11 +972,117 @@ tr:hover { background-color: #f8fafc; }
         ui.fileExcelNotas.value = ""; 
     }
 
-    function proceedToSaveExcel() {
+    // LÓGICA PARA GUARDAR EN FIREBASE (NOTASTRIMESTRE) EXACTAMENTE COMO SE PIDIÓ
+   // LÓGICA PARA GUARDAR EN FIREBASE (NOTASTRIMESTRE) EXACTAMENTE COMO SE PIDIÓ
+async function proceedToSaveExcel() {
+    closeValidationModal();
+    ui.modalInfoExcel.classList.add('hidden');
+    showLoading("Guardando notas en la base de datos...");
+
+    const trimestre = ui.selectTrimestreSubirNotas.value;
+    const curso = ui.infoExcelCurso.textContent.trim();
+    const prof = currentProfesorKey;
+
+    if (!trimestre || !curso || !prof) {
+        hideLoading();
+        showNotification("Faltan datos requeridos (Trimestre, Curso o Profesor).", true);
+        return;
+    }
+
+    const payload = {};
+    notasExtraidasGlobal.forEach(est => {
+        let safeName = String(est.nombre).replace(/[.#$\[\]]/g, '').trim();
+        payload[safeName] = {
+            NOTA_TRIMESTRAL: est.nota !== "" ? est.nota : "-"
+        };
+    });
+
+    const url = `${DB_URL}/NOTASTRIMESTRE/${encodeURIComponent(prof)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+
+    try {
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error("No se pudo guardar la información en Firebase");
+        }
+
+        hideLoading();
+
+        showNotification("¡Notas guardadas exitosamente!", false);
+
+        // ==========================================
+        // VOLVER AL MODAL SUBIR NOTAS
+        // ==========================================
+
         closeValidationModal();
         ui.modalInfoExcel.classList.add('hidden');
-        showNotification("Validación exitosa. Notas listas para ser guardadas. (Lógica de guardado pendiente)", false);
+
+        // Volver al modal
+        ui.modalSubirNotas.classList.remove('hidden');
+
+        // ==========================================
+        // LIMPIAR SOLAMENTE EL EXCEL ANTERIOR
+        // ==========================================
+
+        ui.fileExcelNotas.value = "";
+        notasExtraidasGlobal = [];
+
+        // ==========================================
+        // MANTENER EL TRIMESTRE SELECCIONADO
+        // ==========================================
+        // NO hacemos:
+        // ui.selectTrimestreSubirNotas.value = "";
+
+        // ==========================================
+        // ACTUALIZAR "CURSOS YA SUBIDOS"
+        // ==========================================
+        // Ejecutamos nuevamente el evento change
+        // del trimestre para volver a consultar
+        // Firebase y actualizar listaCursosSubidos.
+
+        cursosYaSubidosGlobal = [];
+
+        ui.selectTrimestreSubirNotas.dispatchEvent(
+            new Event("change")
+        );
+
+        // ==========================================
+        // MANTENER BUSCAR ARCHIVO EXCEL VISIBLE
+        // ==========================================
+
+        ui.containerCentralizador.classList.remove("hidden");
+
+        // ==========================================
+        // MANTENER BOTÓN DESCARGAR HABILITADO
+        // ==========================================
+
+        const btnDescargarModal =
+            document.getElementById('btnDescargarNotasTutorModal');
+
+        if (btnDescargarModal && trimestre && tutorCursoDescarga) {
+            btnDescargarModal.disabled = false;
+        }
+
+    } catch (error) {
+        console.error(
+            "Error guardando notas en Firebase:",
+            error
+        );
+
+        hideLoading();
+
+        showNotification(
+            "Ocurrió un error al intentar guardar las notas.",
+            true
+        );
     }
+}
 
     document.addEventListener('DOMContentLoaded', async () => {
         currentProfesorKey = localStorage.getItem('profesor');
@@ -821,7 +1108,6 @@ tr:hover { background-color: #f8fafc; }
             }
         });
 
-        // NUEVO: Funcionalidad del buscador en la tabla del modal
         ui.inputBuscarModal.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const rows = ui.tableBody.getElementsByTagName('tr');
@@ -852,6 +1138,23 @@ tr:hover { background-color: #f8fafc; }
         ui.btnCloseModalSubirNotas.addEventListener("click", () => ui.modalSubirNotas.classList.add("hidden"));
         
         ui.btnCloseModalInfoExcel.addEventListener("click", () => ui.modalInfoExcel.classList.add("hidden"));
+
+        // EVENTO PARA EL INPUT DE EDICION DE NOTA: Solo números y color rojo si es < 50
+        const inputNotaEditar = document.getElementById('inputNotaEditar');
+        inputNotaEditar.addEventListener('input', function(e) {
+            // Solo permite números
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Si la nota es menor a 50, pinta el texto de rojo
+            let val = parseInt(this.value);
+            if (!isNaN(val) && val < 51) {
+                this.classList.remove('text-gray-800');
+                this.classList.add('text-red-600');
+            } else {
+                this.classList.remove('text-red-600');
+                this.classList.add('text-gray-800');
+            }
+        });
 
         document.getElementById('adminInputProfesor').addEventListener('change', async (e) => {
             const profSeleccionado = e.target.value;
@@ -893,46 +1196,295 @@ tr:hover { background-color: #f8fafc; }
             }
         });
 
-        document.getElementById('btnActualizarModo').addEventListener('click', async () => {
-            const nuevoModo = document.getElementById('adminSelectModo').value;
-            if (!nuevoModo) return;
+        document
+    .getElementById('btnActualizarModo')
+    .addEventListener('click', async () => {
 
-            showLoading("Actualizando modo del sistema...");
-            try {
-                const resp = await fetch(`${DB_URL}/TRIMESTRE/MODO.json`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(nuevoModo)
-                });
 
-                if (resp.ok) {
-                    currentSystemMode = nuevoModo.toLowerCase();
-                    applySystemModeUI();
-                    
-                    selectedList = [];
-                    updateTableUI();
-                    ui.selTrimestre.selectedIndex = 0;
-                    ui.selCurso.innerHTML = '<option value="">Seleccione trimestre</option>';
-                    ui.selCurso.disabled = true;
-                    if (currentSystemMode === 'estudiante') {
-                        ui.selEstudiante.innerHTML = '<option value="">Seleccione curso</option>';
-                    } else if (currentSystemMode === 'padre') {
-                        ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
-                    } else {
-                        ui.selEstudiante.innerHTML = '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+        // =====================================================
+        // OBTENER MODO
+        // =====================================================
+
+        const nuevoModo =
+            document
+                .getElementById('adminSelectModo')
+                .value;
+
+
+        // =====================================================
+        // OBTENER ACTIVO
+        // =====================================================
+
+        const nuevoActivo =
+            document
+                .getElementById('adminSelectActivo')
+                .value;
+
+
+        // =====================================================
+        // VALIDAR MODO
+        // =====================================================
+
+        if (!nuevoModo) {
+
+            showNotification(
+                "Seleccione un modo del sistema.",
+                true
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // VALIDAR ACTIVO
+        // =====================================================
+
+        if (!nuevoActivo) {
+
+            showNotification(
+                "Seleccione TRIMESTRE/ACTIVO.",
+                true
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // CONVERTIR TRUE/FALSE A BOOLEAN REAL
+        // =====================================================
+
+        let valorActivo;
+
+
+        if (nuevoActivo === "true") {
+
+            valorActivo = true;
+
+        }
+
+        else if (nuevoActivo === "false") {
+
+            valorActivo = false;
+
+        }
+
+        else {
+
+            valorActivo =
+                nuevoActivo;
+
+        }
+
+
+        // =====================================================
+        // MOSTRAR LOADING
+        // =====================================================
+
+        showLoading(
+            "Actualizando MODO y ACTIVO..."
+        );
+
+
+        try {
+
+
+            // =================================================
+            // 1. ACTUALIZAR TRIMESTRE/MODO
+            // =================================================
+
+            const respModo =
+                await fetch(
+                    `${DB_URL}/TRIMESTRE/MODO.json`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                nuevoModo
+                            )
                     }
-                    ui.selEstudiante.disabled = true;
+                );
 
-                    showNotification(`Modo del sistema actualizado a: ${nuevoModo}`, false);
-                } else {
-                    showNotification("Error al actualizar el modo en la base de datos", true);
-                }
-            } catch (error) {
-                console.error("Error al actualizar modo:", error);
-                showNotification("Error de red al intentar actualizar el modo.", true);
+
+            if (!respModo.ok) {
+
+                throw new Error(
+                    "No se pudo actualizar TRIMESTRE/MODO."
+                );
+
             }
+
+
+            // =================================================
+            // 2. ACTUALIZAR TRIMESTRE/ACTIVO
+            // =================================================
+
+            const respActivo =
+                await fetch(
+                    `${DB_URL}/TRIMESTRE/ACTIVO.json`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                valorActivo
+                            )
+                    }
+                );
+
+
+            if (!respActivo.ok) {
+
+                throw new Error(
+                    "No se pudo actualizar TRIMESTRE/ACTIVO."
+                );
+
+            }
+
+
+            // =================================================
+            // ACTUALIZAR VARIABLES LOCALES
+            // =================================================
+
+            currentSystemMode =
+                nuevoModo.toLowerCase();
+
+
+            isEditMode =
+                nuevoActivo === "EDITAR";
+
+
+            isLecturaMode =
+                nuevoActivo === "LECTURA";
+
+
+            // =================================================
+            // ACTUALIZAR INTERFAZ DEL MODO
+            // =================================================
+
+            applySystemModeUI();
+
+
+            // =================================================
+            // LIMPIAR LISTA
+            // =================================================
+
+            selectedList = [];
+
+            updateTableUI();
+
+
+            // =================================================
+            // REINICIAR TRIMESTRE
+            // =================================================
+
+            ui.selTrimestre.selectedIndex =
+                0;
+
+
+            // =================================================
+            // REINICIAR CURSO
+            // =================================================
+
+            ui.selCurso.innerHTML =
+                '<option value="">Seleccione trimestre</option>';
+
+            ui.selCurso.disabled =
+                true;
+
+
+            // =================================================
+            // REINICIAR ESTUDIANTE
+            // =================================================
+
+            if (
+                currentSystemMode ===
+                'estudiante'
+            ) {
+
+                ui.selEstudiante.innerHTML =
+                    '<option value="">Seleccione curso</option>';
+
+            }
+
+            else if (
+                currentSystemMode ===
+                'padre'
+            ) {
+
+                ui.selEstudiante.innerHTML =
+                    '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+
+            }
+
+            else {
+
+                ui.selEstudiante.innerHTML =
+                    '<option value="">[SELECCIÓN BLOQUEADA EN MODO LECTURA]</option>';
+
+            }
+
+
+            ui.selEstudiante.disabled =
+                true;
+
+
+            // =================================================
+            // ACTUALIZAR VALIDACIÓN DE SUBIR NOTAS
+            // =================================================
+
+            await validarSubirNotas();
+
+
+            // =================================================
+            // OCULTAR LOADING
+            // =================================================
+
             hideLoading();
-        });
+
+
+            // =================================================
+            // MENSAJE FINAL
+            // =================================================
+
+            showNotification(
+                `MODO: ${nuevoModo} | ACTIVO: ${nuevoActivo}`,
+                false
+            );
+
+
+        } catch (error) {
+
+
+            console.error(
+                "Error al actualizar MODO y ACTIVO:",
+                error
+            );
+
+
+            hideLoading();
+
+
+            showNotification(
+                "Error al actualizar MODO y ACTIVO.",
+                true
+            );
+
+        }
+
+    });
 
         ui.btnOkInfoExcel.addEventListener("click", () => {
             const notasBajas = [];
@@ -945,13 +1497,13 @@ tr:hover { background-color: #f8fafc; }
                 if (notaStr === "" || notaStr === "-" || notaStr === null || notaStr === undefined) {
                     notasVacias.push(est.nombre);
                 } 
-                else if (!isNaN(notaNum) && notaNum >= 0 && notaNum <= 30) {
+                else if (!isNaN(notaNum) && notaNum >= 0 && notaNum < 30) {
                     notasBajas.push({ nombre: est.nombre, nota: notaNum });
                 }
             });
 
             if (notasBajas.length > 0) {
-                let mensaje = "Se encontraron notas inusualmente bajas (entre 0 y 30). Revise el archivo Excel antes de continuar:\n\n";
+                let mensaje = "Se encontraron notas inusualmente bajas (entre 0 y 29). Revise el archivo Excel antes de continuar:\n\n";
                 notasBajas.forEach((est, i) => {
                     mensaje += `${i + 1}. ${est.nombre}   (${est.nota})\n`;
                 });
@@ -963,9 +1515,10 @@ tr:hover { background-color: #f8fafc; }
                 ui.valContent.className = "flex-1 overflow-y-auto text-sm text-red-800 mb-6 bg-red-50 p-4 rounded-xl border border-red-200 whitespace-pre-wrap font-medium";
                 
                 ui.valFooter.innerHTML = `
-                    <button id="btnValVolverAtras" class="px-5 py-3 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors">
-                        VOLVER ATRÁS PARA VOLVER A SUBIR EL ARCHIVO
-                    </button>
+                  <button id="btnValVolverAtras"
+                    class="px-5 py-3 w-full bg-[#1565C0] hover:bg-[#0D47A1] text-white rounded-xl text-sm font-bold transition-colors shadow-md">
+                    VOLVER ATRÁS PARA VOLVER A SUBIR EL ARCHIVO
+                  </button>
                 `;
                 
                 document.getElementById('btnValVolverAtras').addEventListener('click', resetToUploadModal);
@@ -990,6 +1543,7 @@ tr:hover { background-color: #f8fafc; }
                     <button id="btnValReSubir" class="px-4 py-3 flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors whitespace-normal">
                         VOLVER A SUBIR EL ARCHIVO
                     </button>
+                    <!-- EL BOTÓN "SÍ, CONTINUAR" CONECTADO A LA FUNCIÓN DE GUARDADO -->
                     <button id="btnValSiGuardar" class="px-4 py-3 flex-1 bg-[#1565C0] hover:bg-[#0D47A1] text-white rounded-xl text-sm font-bold transition-colors">
                         SÍ, CONTINUAR
                     </button>
@@ -1017,96 +1571,831 @@ tr:hover { background-color: #f8fafc; }
             ui.validationModal.classList.remove('hidden');
         });
 
-        ui.selectTrimestreSubirNotas.addEventListener("change", (e) => {
-            if(e.target.value) {
-                ui.containerCentralizador.classList.remove("hidden");
-            } else {
-                ui.containerCentralizador.classList.add("hidden");
-            }
-        });
+     ui.selectTrimestreSubirNotas.addEventListener("change", async (e) => {
 
+    const trimestre = e.target.value;
+
+    const containerCursos =
+        document.getElementById("containerCursosSubidos");
+
+    const listaCursos =
+        document.getElementById("listaCursosSubidos");
+
+
+    // =========================================================
+    // BOTÓN DESCARGAR NOTAS DEL CURSO TUTOR
+    // =========================================================
+
+    const btnDescargarModal =
+        document.getElementById(
+            'btnDescargarNotasTutorModal'
+        );
+
+
+    if (trimestre && tutorCursoDescarga) {
+
+        btnDescargarModal.disabled = false;
+
+    } else {
+
+        btnDescargarModal.disabled = true;
+    }
+
+
+    // =========================================================
+    // SI SE SELECCIONÓ UN TRIMESTRE
+    // =========================================================
+
+    if (trimestre) {
+
+
+        // =====================================================
+        // CONTROL SEGÚN EL MODO
+        //
+        // EDITAR   → OCULTAR EXCEL
+        // LECTURA  → OCULTAR EXCEL
+        // NORMAL   → MOSTRAR EXCEL
+        // =====================================================
+
+        if (
+            isEditMode ||
+            isLecturaMode
+        ) {
+
+            ui.containerCentralizador.classList.add(
+                "hidden"
+            );
+
+        } else {
+
+            ui.containerCentralizador.classList.remove(
+                "hidden"
+            );
+        }
+
+
+        // =====================================================
+        // MOSTRAR "CURSOS YA SUBIDOS"
+        // =====================================================
+
+        listaCursos.innerHTML =
+            '<span class="text-gray-500 italic">' +
+            'Cargando cursos subidos...' +
+            '</span>';
+
+        containerCursos.classList.remove(
+            "hidden"
+        );
+
+        cursosYaSubidosGlobal = [];
+
+
+        try {
+
+            // =================================================
+            // CONSULTAR FIREBASE
+            //
+            // NOTASTRIMESTRE/
+            // PROFESOR/
+            // TRIMESTRE
+            // =================================================
+
+            const url =
+                `${DB_URL}/NOTASTRIMESTRE/` +
+                `${encodeURIComponent(currentProfesorKey)}/` +
+                `${encodeURIComponent(trimestre)}.json`;
+
+
+            const resp =
+                await fetch(url);
+
+
+            const data =
+                await resp.json();
+
+
+            // =================================================
+            // SI HAY CURSOS
+            // =================================================
+
+            if (
+                data &&
+                Object.keys(data).length > 0
+            ) {
+
+                cursosYaSubidosGlobal =
+                    Object.keys(data);
+
+                listaCursos.innerHTML = "";
+
+
+                // =============================================
+                // ACTUALIZAR CONTADOR
+                // =============================================
+
+                const lblCursosSubidos =
+                    document.getElementById(
+                        "lblCursosSubidos"
+                    );
+
+
+                if (lblCursosSubidos) {
+
+                    lblCursosSubidos.textContent =
+                        `Cursos ya subidos en este trimestre: (${cursosYaSubidosGlobal.length})`;
+                }
+
+
+                // =============================================
+                // CREAR LOS CURSOS
+                // =============================================
+
+                cursosYaSubidosGlobal.forEach(
+                    cursoSubido => {
+
+                        const badge =
+                            document.createElement(
+                                'span'
+                            );
+
+
+                        badge.textContent =
+                            cursoSubido;
+
+
+                        // =====================================
+                        // MODO EDITAR
+                        // =====================================
+
+                        if (isEditMode) {
+
+                            badge.className =
+                                'bg-amber-100 ' +
+                                'text-amber-800 ' +
+                                'border border-amber-300 ' +
+                                'px-2 py-1 rounded-md ' +
+                                'font-bold text-xs ' +
+                                'shadow-sm cursor-pointer ' +
+                                'hover:bg-amber-200 ' +
+                                'transition-colors';
+
+
+                            badge.title =
+                                "Clic para editar notas de este curso";
+
+
+                            badge.addEventListener(
+                                'click',
+                                () => {
+
+                                    abrirModalEditarNotas(
+                                        trimestre,
+                                        cursoSubido
+                                    );
+
+                                }
+                            );
+
+
+                        // =====================================
+                        // MODO LECTURA
+                        // =====================================
+
+                        } else if (isLecturaMode) {
+
+                            badge.className =
+                                'bg-amber-100 ' +
+                                'text-amber-800 ' +
+                                'border border-amber-300 ' +
+                                'px-2 py-1 rounded-md ' +
+                                'font-bold text-xs ' +
+                                'shadow-sm cursor-pointer ' +
+                                'hover:bg-amber-200 ' +
+                                'transition-colors';
+
+
+                            badge.title =
+                                "Clic para descargar PDF de este curso";
+
+
+                            badge.addEventListener(
+                                'click',
+                                () => {
+
+                                    descargarPdfCursoLectura(
+                                        trimestre,
+                                        cursoSubido
+                                    );
+
+                                }
+                            );
+
+
+                        // =====================================
+                        // MODO NORMAL
+                        // =====================================
+
+                        } else {
+
+                            badge.className =
+                                'bg-green-100 ' +
+                                'text-green-800 ' +
+                                'border border-green-300 ' +
+                                'px-2 py-1 rounded-md ' +
+                                'font-bold text-xs ' +
+                                'shadow-sm';
+                        }
+
+
+                        listaCursos.appendChild(
+                            badge
+                        );
+
+                    }
+                );
+
+
+            } else {
+
+                // =============================================
+                // NO EXISTEN CURSOS
+                // =============================================
+
+                listaCursos.innerHTML =
+                    '<span class="text-gray-500 italic">' +
+                    'Ningún curso subido aún en este trimestre.' +
+                    '</span>';
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Error al cargar cursos subidos:",
+                error
+            );
+
+
+            listaCursos.innerHTML =
+                '<span class="text-red-500 italic">' +
+                'Error al cargar cursos.' +
+                '</span>';
+        }
+
+
+    } else {
+
+        // =====================================================
+        // NO SE SELECCIONÓ TRIMESTRE
+        // =====================================================
+
+        ui.containerCentralizador.classList.add(
+            "hidden"
+        );
+
+        containerCursos.classList.add(
+            "hidden"
+        );
+
+        cursosYaSubidosGlobal = [];
+    }
+
+});
         ui.btnBuscarExcel.addEventListener("click", () => {
             ui.fileExcelNotas.click();
         });
 
         ui.fileExcelNotas.addEventListener("change", handleExcelUpload);
 
-    const selectTrimestreDescarga =
-    document.getElementById('selectTrimestreDescarga');
+        // EVENTOS DEL NUEVO MODAL EDITAR
+        document.getElementById('btnCloseModalEditar').addEventListener('click', () => {
+            document.getElementById('modalEditarNotas').classList.add('hidden');
+        });
 
-const btnDescargarReporte =
-    document.getElementById('btnDescargarReporte');
+      document.getElementById('selectEstudianteEditar').addEventListener('change', async (e) => {
 
-if (selectTrimestreDescarga && btnDescargarReporte) {
+    const select = e.target;
 
-    if (currentSystemMode === 'lectura' && selectTrimestreDescarga.value) {
+    const inputNota =
+        document.getElementById('inputNotaEditar');
 
-        btnDescargarReporte.disabled = false;
+    const btnGuardar =
+        document.getElementById('btnGuardarEdicion');
 
-        btnDescargarReporte.className =
-            'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+    const nombreEstudiante = select.value;
 
-    } else {
+    // ==========================================================
+    // SI NO SE SELECCIONÓ ESTUDIANTE
+    // ==========================================================
 
-        btnDescargarReporte.disabled = true;
+    if (!nombreEstudiante) {
 
-        btnDescargarReporte.className =
-            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        inputNota.value = '';
+        inputNota.disabled = true;
+        btnGuardar.disabled = true;
+
+        inputNota.classList.remove('text-red-600');
+        inputNota.classList.add('text-gray-800');
+
+        return;
     }
-}
-const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
 
-function actualizarBotonDescargarReporte() {
+    // ==========================================================
+    // MOSTRAR CARGANDO
+    // ==========================================================
 
-    const trimestreSeleccionado = selectTrimestreDescarga.value;
+    inputNota.value = 'Cargando...';
+    inputNota.disabled = true;
+    btnGuardar.disabled = true;
 
-    // MODO LECTURA
-    if (currentSystemMode === 'lectura') {
+    inputNota.classList.remove('text-red-600');
+    inputNota.classList.add('text-gray-800');
 
-        if (trimestreSeleccionado) {
+    try {
 
-            btnDescargarReporte.disabled = false;
+        // ======================================================
+        // BUSCAR NOTA EN:
+        //
+        // NOTASTRIMESTRE/
+        // PROFESOR/
+        // TRIMESTRE/
+        // CURSO/
+        // ESTUDIANTE/
+        // NOTA_TRIMESTRAL
+        //
+        // EJEMPLO:
+        //
+        // NOTASTRIMESTRE/JHON/PRIMERO/CUARTOA/ANTONIO/
+        // NOTA_TRIMESTRAL
+        // ======================================================
 
-            btnDescargarReporte.className =
-                'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+        const urlNota =
+            `${DB_URL}/NOTASTRIMESTRE/` +
+            `${encodeURIComponent(currentProfesorKey)}/` +
+            `${encodeURIComponent(trimestreEditandoActual)}/` +
+            `${encodeURIComponent(cursoEditandoActual)}/` +
+            `${encodeURIComponent(nombreEstudiante)}/` +
+            `NOTA_TRIMESTRAL.json`;
+
+        const respNota = await fetch(urlNota);
+
+        if (!respNota.ok) {
+            throw new Error("No se pudo consultar la nota");
+        }
+
+        const nota = await respNota.json();
+
+        // ======================================================
+        // SI EXISTE NOTA
+        // ======================================================
+
+        if (
+            nota !== null &&
+            nota !== undefined &&
+            nota !== '' &&
+            nota !== '-'
+        ) {
+
+            inputNota.value = nota;
 
         } else {
 
-            btnDescargarReporte.disabled = true;
+            // No tiene nota registrada
+            inputNota.value = '';
 
-            btnDescargarReporte.className =
-                'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
         }
 
-    } else {
+        // ======================================================
+        // HABILITAR EDICIÓN
+        // ======================================================
 
-        // MODO ESTUDIANTE O PADRE
-        btnDescargarReporte.disabled = true;
+        inputNota.disabled = false;
+        btnGuardar.disabled = false;
 
-        btnDescargarReporte.className =
-            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        // ======================================================
+        // COLOR ROJO SI ES MENOR A 51
+        // ======================================================
+
+        const val = parseInt(inputNota.value);
+
+        if (!isNaN(val) && val < 51) {
+
+            inputNota.classList.remove('text-gray-800');
+            inputNota.classList.add('text-red-600');
+
+        } else {
+
+            inputNota.classList.remove('text-red-600');
+            inputNota.classList.add('text-gray-800');
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando NOTA_TRIMESTRAL:",
+            error
+        );
+
+        inputNota.value = '';
+        inputNota.disabled = true;
+        btnGuardar.disabled = true;
+
+        inputNota.classList.remove('text-red-600');
+        inputNota.classList.add('text-gray-800');
+
+        showNotification(
+            "Error cargando la nota del estudiante",
+            true
+        );
     }
-
-    // MIS CURSOS sigue funcionando según el trimestre
-    if (trimestreSeleccionado) {
-
-        btnDescargarMisCursos.disabled = false;
-
-        btnDescargarMisCursos.className =
-            'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
-
-    } else {
-
-        btnDescargarMisCursos.disabled = true;
-
-        btnDescargarMisCursos.className =
-            'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
-    }
-}
-
-selectTrimestreDescarga.addEventListener('change', () => {
-    actualizarBotonDescargarReporte();
 });
+
+        document.getElementById('btnGuardarEdicion').addEventListener('click', async () => {
+            const select = document.getElementById('selectEstudianteEditar');
+            const nombreEstudiante = select.value;
+            let nuevaNota = document.getElementById('inputNotaEditar').value.trim();
+
+            if (!nombreEstudiante) return;
+            
+            // VERIFICACIÓN DE NOTA: OBLIGATORIA Y ENTRE 31 Y 100
+            const notaNum = parseInt(nuevaNota);
+
+            if (
+                nuevaNota === "" ||
+                isNaN(notaNum) ||
+                notaNum < 31 ||
+                notaNum > 100
+            ) {
+                ui.valIcon.textContent = "❌";
+                ui.valTitle.textContent = "Nota Inválida";
+                ui.valTitle.className = "text-xl font-bold text-red-600 text-center mb-2";
+
+                ui.valContent.textContent =
+                    "La nota ingresada debe estar entre 31 y 100. Por favor, corrija la nota antes de guardar.";
+
+                ui.valContent.className =
+                    "flex-1 overflow-y-auto text-sm text-red-800 mb-6 bg-red-50 p-4 rounded-xl border border-red-200 whitespace-pre-wrap font-medium text-center";
+
+                ui.valFooter.innerHTML = `
+                    <button
+                        id="btnErrorNotaOk"
+                        class="px-5 py-3 w-full bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-colors shadow-md">
+                        ENTENDIDO
+                    </button>
+                `;
+
+                ui.validationModal.classList.remove('hidden');
+
+                document.getElementById('btnErrorNotaOk').addEventListener('click', () => {
+                    ui.validationModal.classList.add('hidden');
+                    document.getElementById('inputNotaEditar').focus();
+                });
+
+                return;
+            }
+
+            showLoading("Guardando edición...");
+
+            const safeName = nombreEstudiante; 
+            const url = `${DB_URL}/NOTASTRIMESTRE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestreEditandoActual)}/${encodeURIComponent(cursoEditandoActual)}/${encodeURIComponent(safeName)}/NOTA_TRIMESTRAL.json`;
+
+            try {
+                const resp = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevaNota)
+                });
+
+                if (resp.ok) {
+                    select.options[select.selectedIndex].dataset.nota = nuevaNota;
+                    hideLoading();
+                    showNotification(`Nota de ${nombreEstudiante} actualizada a ${nuevaNota}`);
+                    
+                    // Limpiar campos y esperar otra selección
+                    select.value = '';
+                    document.getElementById('inputNotaEditar').value = '';
+                    document.getElementById('inputNotaEditar').disabled = true;
+                    document.getElementById('inputNotaEditar').classList.remove('text-red-600');
+                    document.getElementById('inputNotaEditar').classList.add('text-gray-800');
+                    document.getElementById('btnGuardarEdicion').disabled = true;
+                } else {
+                    throw new Error("No se pudo guardar");
+                }
+            } catch(e) {
+                hideLoading();
+                showNotification("Error al guardar la nota.", true);
+            }
+        });
+
+        // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS
+       // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS (HOJA VERTICAL, PROMEDIO Y TOP 3 RESALTADO)
+        document.getElementById('btnDescargarNotasTutorModal').addEventListener('click', async () => {
+            const trimestreSel = ui.selectTrimestreSubirNotas.value;
+            const cursoTutor = tutorCursoDescarga;
+
+            if (!trimestreSel || !cursoTutor) {
+                showNotification("Por favor seleccione un trimestre. Debe tener un curso tutor asignado.", true);
+                return;
+            }
+
+            showLoading(`Generando reporte de notas consolidadas para ${cursoTutor}...`);
+
+            try {
+                // 1. Obtener lista de estudiantes del curso tutor
+                const respEstudiantes = await fetch(`${DB_URL}/CURSOS/${encodeURIComponent(cursoTutor)}.json`);
+                const estudiantesData = await respEstudiantes.json();
+
+                if (!estudiantesData) {
+                    hideLoading();
+                    showNotification(`No se encontraron estudiantes en el curso ${cursoTutor}.`, true);
+                    return;
+                }
+
+                // 2. Obtener materias que dictan los profesores en este curso tutor
+                const respProfes = await fetch(`${DB_URL}/PROFESORES.json`);
+                const profesData = await respProfes.json() || {};
+
+                const profesMaterias = {}; // Mapa para saber qué materia da cada profesor
+                for (const prof in profesData) {
+                    if (profesData[prof].CURSO && profesData[prof].CURSO[cursoTutor]) {
+                        profesMaterias[prof] = profesData[prof].CURSO[cursoTutor];
+                    }
+                }
+
+                // 3. Obtener TODAS las notas del trimestre
+                const respNotas = await fetch(`${DB_URL}/NOTASTRIMESTRE.json`);
+                const notasData = await respNotas.json() || {};
+
+                // 4. Organizar la data para el PDF (Separando Profesor y Materia)
+                const profesoresConNotas = new Set();
+                const mapNotasEstudiante = {}; 
+
+                for (const prof in notasData) {
+                    if (notasData[prof][trimestreSel] && notasData[prof][trimestreSel][cursoTutor]) {
+                        const notasCurso = notasData[prof][trimestreSel][cursoTutor];
+                        profesoresConNotas.add(prof);
+
+                        for (const estudiante in notasCurso) {
+                            if (!mapNotasEstudiante[estudiante]) {
+                                mapNotasEstudiante[estudiante] = {};
+                            }
+                            mapNotasEstudiante[estudiante][prof] = notasCurso[estudiante].NOTA_TRIMESTRAL;
+                        }
+                    }
+                }
+
+                const profList = Array.from(profesoresConNotas);
+
+                if (profList.length === 0) {
+                    hideLoading();
+                    showNotification(`Aún no hay profesores que hayan subido notas para ${cursoTutor} en el trimestre ${trimestreSel}.`, true);
+                    return;
+                }
+
+                // 5. Configurar Encabezados Dobles
+                const headerRow1 = [
+                    { content: "N°", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25,118,210] } },
+                    { content: "APELLIDOS Y NOMBRES", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25,118,210] } }
+                ];
+
+                const headerRow2 = [];
+
+                if (profList.length > 0) {
+                    profList.forEach(prof => {
+                        headerRow1.push({ content: prof, styles: { halign: "center", valign: "middle", fillColor: [123,31,162], fontStyle: "bold" } });
+                        headerRow2.push({ content: profesMaterias[prof] || "S/M", styles: { halign: "center", valign: "middle", fillColor: [156,39,176], fontStyle: "normal" } });
+                    });
+
+                    // PROMEDIO al final
+                    headerRow1.push({ content: "PROMEDIO", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25, 118, 210], fontStyle: "bold" } });
+                }
+
+                const headConfig = [headerRow1, headerRow2];
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait' }); // HOJA VERTICAL
+                const pageWidth = doc.internal.pageSize.getWidth();
+
+                doc.setFontSize(14);
+                doc.setTextColor(13, 71, 161);
+                doc.text(`Consolidado de Notas - ${trimestreSel} Trimestre`, pageWidth / 2, 12, { align: "center" });
+
+                doc.setFontSize(10);
+                doc.setTextColor(51, 51, 51);
+                doc.text(`Tutor a cargo: ${currentProfesorKey}   |   Curso: ${cursoTutor}`, 14, 20);
+
+                // 6. Preparar los datos de los estudiantes
+                const tableData = [];
+                let contador = 1;
+                const promediosCalculados = []; // Array para guardar todos los promedios
+
+                Object.values(estudiantesData).forEach(estName => {
+                    if (!estName) return; 
+                    
+                    const nombre = String(estName).trim();
+                    if (nombre === "null" || nombre === "") return; 
+
+                    const row = [contador.toString(), nombre];
+
+                    let sumaNotas = 0;
+                    let materiasValidas = 0;
+
+                    profList.forEach(prof => {
+                        const notaStr = (mapNotasEstudiante[nombre] && mapNotasEstudiante[nombre][prof]) ? mapNotasEstudiante[nombre][prof] : "-";
+                        row.push(notaStr);
+                        
+                        const notaNum = parseFloat(notaStr);
+                        if (!isNaN(notaNum)) {
+                            sumaNotas += notaNum;
+                            materiasValidas++;
+                        }
+                    });
+
+                    // Calcular promedio con 2 decimales
+                    if (materiasValidas > 0) {
+                        const promedio = (sumaNotas / materiasValidas).toFixed(2);
+                        row.push(promedio);
+                        promediosCalculados.push(parseFloat(promedio)); // Guardamos el promedio como número
+                    } else {
+                        row.push("-");
+                    }
+
+                    tableData.push(row);
+                    contador++;
+                });
+
+                // --- NUEVO: Obtener los 3 mejores promedios únicos ---
+                const promediosUnicos = [...new Set(promediosCalculados)].sort((a, b) => b - a);
+                const top3Promedios = promediosUnicos.slice(0, 3).map(p => p.toFixed(2)); // Los 3 mejores en formato texto (2 decimales)
+
+                // Estilos de columnas para que encajen en vertical
+                const colStyles = { 
+                    0: { halign: 'center', cellWidth: 8 },
+                    1: { cellWidth: 'auto' } 
+                };
+                
+                if (profList.length > 0) {
+                    profList.forEach((prof, idx) => {
+                        colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold' };
+                    });
+                    const promedioColIndex = 2 + profList.length;
+                    colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33] };
+                }
+
+                // 7. Generar AutoTable
+                doc.autoTable({
+                    startY: 25,
+                    margin: { left: 10, right: 10, bottom: 10 },
+                    head: headConfig,
+                    body: tableData,
+                    theme: "grid",
+                    
+                    headStyles: {
+                        textColor: 255,
+                        halign: "center",
+                        valign: "middle",
+                        fontSize: 7,
+                        lineColor: [200, 200, 200],
+                        lineWidth: 0.1
+                    },
+                    styles: {
+                        fontSize: 7,
+                        cellPadding: 0.8,
+                        overflow: "hidden", 
+                        valign: "middle",
+                        lineColor: [200, 200, 200],
+                        lineWidth: 0.1
+                    },
+                    columnStyles: colStyles,
+
+                    didParseCell: function(data) {
+                        if (data.section === "head") {
+                            const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isPromedioHeader) {
+                                data.cell.styles.minCellHeight = 22;
+                                data.cell.customVerticalText = data.cell.text.join(" ");
+                                data.cell.text = [];
+                            }
+                            
+                            if (isMateriaHeader) {
+                                data.cell.styles.minCellHeight = 32;
+                                data.cell.customVerticalText = data.cell.text.join(" ");
+                                data.cell.text = [];
+                            }
+                        }
+                        
+                        if (data.section === 'body' && data.column.index > 1) {
+                            data.cell.styles.halign = 'center';
+                            const rawValue = String(data.cell.raw);
+                            const notaVal = parseFloat(rawValue); 
+                            
+                            // Notas por debajo de 51 en rojo
+                            if (!isNaN(notaVal) && notaVal < 51) {
+                                data.cell.styles.textColor = [220, 38, 38]; 
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+
+                            // --- NUEVO: Resaltar en verde si es la columna PROMEDIO y está en el TOP 3 ---
+                            const isPromedioCol = data.column.index === 2 + profList.length;
+                            if (isPromedioCol && top3Promedios.includes(rawValue)) {
+                                 // Fondo dorado
+    data.cell.styles.fillColor =
+        [255, 215, 0];
+
+    // Texto oscuro para que resalte
+    data.cell.styles.textColor =
+        [120, 53, 15];
+           // Texto Verde Oscuro
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+                        }
+                    },
+
+                    didDrawCell: function(data) {
+                        if (data.section === "head") {
+                            const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isMateriaHeader || isPromedioHeader) {
+                                let texto = (data.cell.customVerticalText || "").trim();
+
+                                if (isMateriaHeader && texto.length > 20) {
+                                    texto = texto.substring(0, 20) + "(...)";
+                                }
+                                
+                                doc.setFontSize((isProfesorHeader || isPromedioHeader) ? 7 : 6);
+                                doc.setTextColor(255, 255, 255);
+                                
+                                const textHeight = doc.getTextDimensions(texto).h;
+                                const centroX = data.cell.x + (data.cell.width / 2);
+                                
+                                const margenInferior = 2;
+                                const posY = data.cell.y + data.cell.height - margenInferior;
+                                const posX = centroX + (textHeight / 3);
+
+                                doc.text(texto, posX, posY, { angle: 90 });
+                            }
+                        }
+                    }
+                });
+
+                doc.save(`Notas_Consolidadas_${cursoTutor}_${trimestreSel}.pdf`);
+                hideLoading();
+
+            } catch (error) {
+                console.error("Error generando PDF de notas consolidadas:", error);
+                hideLoading();
+                showNotification("Ocurrió un error al intentar generar el PDF.", true);
+            }
+        });
+
+    const selectTrimestreDescarga = document.getElementById('selectTrimestreDescarga');
+    const btnDescargarReporte = document.getElementById('btnDescargarReporte');
+
+    if (selectTrimestreDescarga && btnDescargarReporte) {
+        if (currentSystemMode === 'lectura' && selectTrimestreDescarga.value) {
+            btnDescargarReporte.disabled = false;
+            btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+        } else {
+            btnDescargarReporte.disabled = true;
+            btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        }
+    }
+    
+    const btnDescargarMisCursos = document.getElementById('btnDescargarMisCursos');
+
+    function actualizarBotonDescargarReporte() {
+        const trimestreSeleccionado = selectTrimestreDescarga.value;
+
+        if (currentSystemMode === 'lectura') {
+            if (trimestreSeleccionado) {
+                btnDescargarReporte.disabled = false;
+                btnDescargarReporte.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+            } else {
+                btnDescargarReporte.disabled = true;
+                btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+            }
+        } else {
+            btnDescargarReporte.disabled = true;
+            btnDescargarReporte.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        }
+
+        if (trimestreSeleccionado) {
+            btnDescargarMisCursos.disabled = false;
+            btnDescargarMisCursos.className = 'bg-[#1565C0] hover:bg-[#0D47A1] text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto';
+        } else {
+            btnDescargarMisCursos.disabled = true;
+            btnDescargarMisCursos.className = 'bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md cursor-not-allowed w-full sm:w-auto';
+        }
+    }
+
+    selectTrimestreDescarga.addEventListener('change', () => {
+        actualizarBotonDescargarReporte();
+    });
 
         // DESCARGAR MIS CURSOS
         btnDescargarMisCursos.addEventListener('click', async () => {
@@ -1548,46 +2837,40 @@ doc.text(
                     ui.selCurso.focus();
 
               } else if (currentSystemMode === 'padre') {
-    const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+                    const urlReporteGen = `${DB_URL}/REPORTE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
 
-    const datosGen = {};
-    let countGen = 1;
+                    const datosGen = {};
+                    let countGen = 1;
 
-    selectedList.forEach((student) => {
-        datosGen[countGen++] = {
-            nombre: student.nombre,
-            asistio: !!student.asistio
-        };
-    });
+                    selectedList.forEach((student) => {
+                        datosGen[countGen++] = {
+                            nombre: student.nombre,
+                            asistio: !!student.asistio
+                        };
+                    });
 
-    const response = await fetch(urlReporteGen, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datosGen)
-    });
+                    const response = await fetch(urlReporteGen, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(datosGen)
+                    });
 
-    if (!response.ok) {
-        throw new Error("No se pudo guardar la asistencia de padres.");
-    }
+                    if (!response.ok) {
+                        throw new Error("No se pudo guardar la asistencia de padres.");
+                    }
 
-    // IGUAL QUE EN MODO ESTUDIANTE
-    selectedList = [];
-    updateTableUI();
+                    selectedList = [];
+                    updateTableUI();
+                    ui.selCurso.selectedIndex = 0;
 
-    // VOLVER A SELECCIONAR EL CURSO
-    ui.selCurso.selectedIndex = 0;
+                    ui.selEstudiante.innerHTML =
+                        '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
+                    ui.selEstudiante.disabled = true;
+                    ui.selCurso.focus();
 
-    // BLOQUEAR ESTUDIANTE
-    ui.selEstudiante.innerHTML =
-        '<option value="">[SELECCIÓN BLOQUEADA EN MODO PADRE]</option>';
-    ui.selEstudiante.disabled = true;
-
-    // DEJAR EL CURSOR EN CURSO
-    ui.selCurso.focus();
-
-    hideLoading();
-    showNotification("Asistencia de Padres de Familia guardada exitosamente.");
-}
+                    hideLoading();
+                    showNotification("Asistencia de Padres de Familia guardada exitosamente.");
+                }
 
             } catch (error) {
                 console.error("Error guardando reporte:", error);
@@ -1602,21 +2885,487 @@ doc.text(
         });
     });
 
-    async function activarModoAdmin(esAuto = false) {
-        isAdmin = true;
-        document.getElementById('adminPanelDescargas').classList.remove('hidden');
-        
-        ui.btnToggleAdmin.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-600');
-        ui.btnToggleAdmin.classList.remove('bg-gray-100', 'border-gray-200', 'text-xl');
-        ui.btnToggleAdmin.classList.add('text-2xl');
-        
-        const adminSelectModo = document.getElementById('adminSelectModo');
-        if(adminSelectModo && currentSystemMode) {
-            adminSelectModo.value = currentSystemMode.toUpperCase();
+    // FUNCIÓN NUEVA PARA ABRIR EL MODAL DE EDICIÓN
+   // FUNCIÓN PARA ABRIR EL MODAL DE EDICIÓN
+// LOS ESTUDIANTES SE CARGAN DESDE CURSOS/{CURSO}
+// LA NOTA SE BUSCA DESDE NOTASTRIMESTRE/{PROFESOR}/{TRIMESTRE}/{CURSO}/{ESTUDIANTE}
+// =========================================================
+// FUNCIÓN PARA MODO LECTURA
+// DESCARGAR PDF DEL CURSO
+// =========================================================
+
+// =========================================================
+// FUNCIÓN PARA MODO LECTURA
+// DESCARGAR PDF DEL CURSO
+// =========================================================
+
+async function descargarPdfCursoLectura(trimestre, curso) {
+
+    showLoading(`Generando PDF de ${curso}...`);
+
+    try {
+        // =====================================================
+        // 1. CARGAR ESTUDIANTES DEL CURSO
+        // =====================================================
+        const urlCursos = `${DB_URL}/CURSOS/${encodeURIComponent(curso)}.json`;
+        const respCursos = await fetch(urlCursos);
+
+        if (!respCursos.ok) {
+            throw new Error("No se pudo cargar CURSOS/" + curso);
         }
 
-        await cargarProfesoresAdmin();
+        const estudiantesData = await respCursos.json();
+
+        if (!estudiantesData) {
+            hideLoading();
+            showNotification(`No se encontraron estudiantes en ${curso}.`, true);
+            return;
+        }
+
+        // =====================================================
+        // 2. CARGAR SOLAMENTE LAS NOTAS DEL PROFESOR QUE HIZO LOGIN
+        // =====================================================
+        const urlNotasProfesor = `${DB_URL}/NOTASTRIMESTRE/${encodeURIComponent(currentProfesorKey)}/${encodeURIComponent(trimestre)}/${encodeURIComponent(curso)}.json`;
+        
+        const respNotas = await fetch(urlNotasProfesor);
+
+        if (!respNotas.ok) {
+            throw new Error("No se pudieron cargar las notas del profesor.");
+        }
+
+        const notasCurso = await respNotas.json();
+
+        // =====================================================
+        // 3. VERIFICAR QUE EL PROFESOR TENGA NOTAS
+        // =====================================================
+        if (!notasCurso) {
+            hideLoading();
+            showNotification(`El profesor ${currentProfesorKey} no tiene notas registradas para ${curso} en ${trimestre}.`, true);
+            return;
+        }
+
+        // =====================================================
+        // 4. OBTENER LA MATERIA DEL PROFESOR
+        // =====================================================
+        const urlMateria = `${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/CURSO/${encodeURIComponent(curso)}.json`;
+        const respMateria = await fetch(urlMateria);
+
+        let materiaProfesor = "NOTA TRIMESTRAL";
+
+        if (respMateria.ok) {
+            const materiaData = await respMateria.json();
+            if (materiaData !== null && materiaData !== undefined && String(materiaData).trim() !== "") {
+                materiaProfesor = String(materiaData).trim();
+            }
+        }
+
+        // =====================================================
+        // 5. CREAR PDF (VERTICAL / PORTRAIT)
+        // =====================================================
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "portrait" });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // =====================================================
+        // 6. TÍTULO
+        // =====================================================
+        doc.setFontSize(14);
+        doc.setTextColor(13, 71, 161);
+        doc.text(`Notas - ${trimestre} Trimestre`, pageWidth / 2, 12, { align: "center" });
+
+        // =====================================================
+        // 7. INFORMACIÓN
+        // =====================================================
+        doc.setFontSize(10);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Curso: ${curso}   |   Profesor: ${currentProfesorKey}   |   Materia: ${materiaProfesor}`, 14, 20);
+
+        // =====================================================
+        // 8. ENCABEZADO DE TABLA
+        // =====================================================
+        const headRow = [
+            "N°",
+            "APELLIDOS Y NOMBRES",
+            `${materiaProfesor}\n(${currentProfesorKey})`
+        ];
+
+        // =====================================================
+        // 9. CREAR DATOS DE ESTUDIANTES
+        // =====================================================
+        const tableData = [];
+        let contador = 1;
+
+        Object.keys(estudiantesData).forEach(key => {
+            const estData = estudiantesData[key];
+            let nombre = "";
+
+            if (typeof estData === "string") {
+                nombre = estData.trim();
+            } else if (estData && typeof estData === "object") {
+                nombre = String(estData.nombre || estData.NOMBRE || "").trim();
+            }
+
+            if (!nombre) return;
+
+            let nota = "-";
+            if (notasCurso[nombre] && notasCurso[nombre].NOTA_TRIMESTRAL !== undefined) {
+                nota = notasCurso[nombre].NOTA_TRIMESTRAL;
+            }
+
+            tableData.push([
+                contador.toString(),
+                nombre,
+                nota
+            ]);
+
+            contador++;
+        });
+
+        // =====================================================
+        // 10. GENERAR TABLA (REDUCIDA Y CENTRADA)
+        // =====================================================
+        doc.autoTable({
+            startY: 25, 
+            margin: { left: 36, right: 36 }, // Aumenta los márgenes para centrar la tabla
+            head: [headRow],
+            body: tableData,
+            theme: "grid",
+            styles: {
+                fontSize: 7.5, 
+                cellPadding: 1, 
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            },
+            headStyles: {
+                fillColor: [21, 101, 192],
+                textColor: 255,
+                halign: "center",
+                valign: "middle",
+                fontSize: 7.5
+            },
+            columnStyles: {
+                0: { halign: "center", cellWidth: 12 },
+                1: { cellWidth: 60 }, // Se reduce drásticamente el ancho de los nombres
+                2: { halign: "center", cellWidth: 35 } 
+            },
+            didParseCell: function(data) {
+                if (data.section === "body" && data.column.index === 2) {
+                    data.cell.styles.halign = "center";
+                    const notaVal = parseInt(data.cell.raw);
+                    if (!isNaN(notaVal) && notaVal < 51) {
+                        data.cell.styles.textColor = [220, 38, 38];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                }
+            }
+        });
+
+        // =====================================================
+        // 11. DESCARGAR PDF
+        // =====================================================
+        doc.save(`Notas_${curso}_${trimestre}_${currentProfesorKey}.pdf`);
+
+        hideLoading();
+        showNotification(`PDF de ${curso} generado correctamente para ${currentProfesorKey}.`, false);
+
+    } catch (error) {
+        console.error("Error generando PDF en modo LECTURA:", error);
+        hideLoading();
+        showNotification("Ocurrió un error al generar el PDF.", true);
     }
+}
+// =========================================================
+// FUNCIÓN PARA ABRIR EL MODAL DE EDICIÓN
+// =========================================================
+
+// LOS ESTUDIANTES SE CARGAN DESDE CURSOS/{CURSO}
+// LA NOTA SE BUSCA DESDE NOTASTRIMESTRE/{PROFESOR}/{TRIMESTRE}/{CURSO}/{ESTUDIANTE}
+
+async function abrirModalEditarNotas(trimestre, curso) {
+
+    // Guardar curso y trimestre actuales
+    cursoEditandoActual = curso;
+    trimestreEditandoActual = trimestre;
+
+    // Mostrar curso en el modal
+    document.getElementById('lblCursoEditar').textContent = `Curso: ${curso}`;
+
+    // Elementos del modal
+    const selectEst = document.getElementById('selectEstudianteEditar');
+    const inputNota = document.getElementById('inputNotaEditar');
+    const btnGuardar = document.getElementById('btnGuardarEdicion');
+
+    // Estado inicial
+    selectEst.innerHTML = '<option value="">Cargando estudiantes...</option>';
+
+    inputNota.value = '';
+    inputNota.disabled = true;
+
+    btnGuardar.disabled = true;
+
+    // Abrir modal
+    document.getElementById('modalEditarNotas').classList.remove('hidden');
+
+    try {
+
+        // ==========================================================
+        // 1. CARGAR ESTUDIANTES DESDE:
+        //
+        // CURSOS/{CURSO}
+        //
+        // EJEMPLO:
+        // CURSOS/CUARTOA
+        // ==========================================================
+
+        const urlCursos =
+            `${DB_URL}/CURSOS/${encodeURIComponent(curso)}.json`;
+
+        const respCursos = await fetch(urlCursos);
+
+        if (!respCursos.ok) {
+            throw new Error("No se pudo cargar el curso");
+        }
+
+        const estudiantesCurso = await respCursos.json();
+
+        // Limpiar select
+        selectEst.innerHTML =
+            '<option value="">Seleccione estudiante...</option>';
+
+        // Verificar que existan estudiantes
+        if (!estudiantesCurso) {
+
+            selectEst.innerHTML =
+                '<option value="">No hay estudiantes en este curso</option>';
+
+            return;
+        }
+
+        // ==========================================================
+        // 2. OBTENER LOS NOMBRES DESDE CURSOS/{CURSO}
+        // ==========================================================
+
+        let estudiantes = [];
+
+        Object.keys(estudiantesCurso).forEach(key => {
+
+            const valor = estudiantesCurso[key];
+
+            let nombre = '';
+
+            // Caso normal:
+            // 1: "JUAN"
+            if (typeof valor === 'string') {
+                nombre = valor.trim();
+            }
+
+            // Por si la estructura fuera un objeto
+            // 1: { NOMBRE: "JUAN" }
+            else if (
+                valor &&
+                typeof valor === 'object' &&
+                valor.NOMBRE
+            ) {
+                nombre = String(valor.NOMBRE).trim();
+            }
+
+            if (nombre) {
+                estudiantes.push(nombre);
+            }
+
+        });
+
+        // Ordenar alfabéticamente
+        estudiantes.sort((a, b) =>
+            a.localeCompare(b, 'es', {
+                sensitivity: 'base'
+            })
+        );
+
+        // ==========================================================
+        // 3. CREAR EL SELECT CON TODOS LOS ESTUDIANTES
+        // ==========================================================
+
+        estudiantes.forEach((nombre, index) => {
+
+            const opt = document.createElement('option');
+
+            // Valor real que se utilizará para Firebase
+            opt.value = nombre;
+
+            // Mostrar enumerado
+            opt.textContent = `${index + 1}. ${nombre}`;
+
+            // IMPORTANTE:
+            // Ya NO colocamos aquí la nota.
+            // La nota se buscará cuando el usuario seleccione
+            // al estudiante.
+            opt.dataset.nota = '';
+
+            selectEst.appendChild(opt);
+        });
+
+        // ==========================================================
+        // 4. SI NO HAY ESTUDIANTES
+        // ==========================================================
+
+        if (estudiantes.length === 0) {
+
+            selectEst.innerHTML =
+                '<option value="">No hay estudiantes en este curso</option>';
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando estudiantes desde CURSOS:",
+            error
+        );
+
+        selectEst.innerHTML =
+            '<option value="">Error cargando estudiantes</option>';
+
+        showNotification(
+            "Error cargando estudiantes para editar",
+            true
+        );
+    }
+}
+
+   async function activarModoAdmin(esAuto = false) {
+
+    isAdmin = true;
+
+    document
+        .getElementById('adminPanelDescargas')
+        .classList.remove('hidden');
+
+
+    ui.btnToggleAdmin.classList.add(
+        'bg-amber-100',
+        'border-amber-300',
+        'text-amber-600'
+    );
+
+    ui.btnToggleAdmin.classList.remove(
+        'bg-gray-100',
+        'border-gray-200',
+        'text-xl'
+    );
+
+    ui.btnToggleAdmin.classList.add(
+        'text-2xl'
+    );
+
+
+    // =====================================================
+    // CARGAR MODO ACTUAL
+    // =====================================================
+
+    const adminSelectModo =
+        document.getElementById(
+            'adminSelectModo'
+        );
+
+
+    if (
+        adminSelectModo &&
+        currentSystemMode
+    ) {
+
+        adminSelectModo.value =
+            currentSystemMode.toUpperCase();
+
+    }
+
+
+    // =====================================================
+    // CARGAR TRIMESTRE/ACTIVO ACTUAL
+    // =====================================================
+
+    const adminSelectActivo =
+        document.getElementById(
+            'adminSelectActivo'
+        );
+
+
+    if (adminSelectActivo) {
+
+        try {
+
+            const respActivo =
+                await fetch(
+                    `${DB_URL}/TRIMESTRE/ACTIVO.json?t=${Date.now()}`
+                );
+
+
+            if (respActivo.ok) {
+
+                const activo =
+                    await respActivo.json();
+
+
+                if (activo === true) {
+
+                    adminSelectActivo.value =
+                        "true";
+
+                }
+
+                else if (activo === false) {
+
+                    adminSelectActivo.value =
+                        "false";
+
+                }
+
+                else if (
+                    activo === "EDITAR"
+                ) {
+
+                    adminSelectActivo.value =
+                        "EDITAR";
+
+                }
+
+                else if (
+                    activo === "LECTURA"
+                ) {
+
+                    adminSelectActivo.value =
+                        "LECTURA";
+
+                }
+
+                else {
+
+                    adminSelectActivo.value =
+                        "";
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando TRIMESTRE/ACTIVO:",
+                error
+            );
+
+        }
+
+    }
+
+
+    // =====================================================
+    // CARGAR PROFESORES
+    // =====================================================
+
+    await cargarProfesoresAdmin();
+}
 
     function desactivarModoAdmin() {
         isAdmin = false;
@@ -1791,27 +3540,112 @@ doc.text(
         }
     }
 
-    async function validarSubirNotas() {
-        try {
-            const resp = await fetch(`${DB_URL}/TRIMESTRE/ACTIVO.json?t=${Date.now()}`);
-            const activo = await resp.json();
+  async function validarSubirNotas() {
+    try {
 
-            if (activo === true) {
-                ui.btnSubirNotas.disabled = false;
-                ui.btnSubirNotas.className =
-                    "bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5";
-                ui.btnSubirNotas.title = "";
-            } else {
-                ui.btnSubirNotas.disabled = true;
-                ui.btnSubirNotas.className =
-                    "bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-lg cursor-not-allowed flex items-center gap-2 shadow-md";
-                ui.btnSubirNotas.title = "La subida de notas está deshabilitada.";
+        const resp = await fetch(
+            `${DB_URL}/TRIMESTRE/ACTIVO.json?t=${Date.now()}`
+        );
+
+        const activo = await resp.json();
+
+        // =====================================================
+        // MODOS PERMITIDOS
+        // =====================================================
+
+        if (
+            activo === true ||
+            String(activo).toUpperCase() === "TRUE" ||
+            activo === "EDITAR" ||
+            activo === "LECTURA"
+        ) {
+
+            // Habilitar botón
+            ui.btnSubirNotas.disabled = false;
+
+            ui.btnSubirNotas.className =
+                "bg-green-600 hover:bg-green-700 text-white " +
+                "font-semibold py-2.5 px-6 rounded-lg " +
+                "transition-colors flex items-center gap-2 " +
+                "shadow-md hover:shadow-lg " +
+                "transform hover:-translate-y-0.5";
+
+            ui.btnSubirNotas.title = "";
+
+            // =================================================
+            // IDENTIFICAR MODO
+            // =================================================
+
+            isEditMode = (activo === "EDITAR");
+
+            isLecturaMode = (activo === "LECTURA");
+
+
+            // =================================================
+            // SI EL MODAL YA ESTÁ ABIERTO
+            // =================================================
+
+            const trimSeleccionado =
+                ui.selectTrimestreSubirNotas.value;
+
+            if (
+                trimSeleccionado &&
+                !ui.modalSubirNotas.classList.contains("hidden")
+            ) {
+
+                // EDITAR Y LECTURA:
+                // NO mostrar Excel
+
+                if (isEditMode || isLecturaMode) {
+
+                    ui.containerCentralizador.classList.add(
+                        "hidden"
+                    );
+
+                } else {
+
+                    // MODO NORMAL:
+                    // mostrar Excel
+
+                    ui.containerCentralizador.classList.remove(
+                        "hidden"
+                    );
+                }
             }
-        } catch (error) {
-            console.error(error);
+
+        } else {
+
+            // =================================================
+            // MODO NO PERMITIDO
+            // =================================================
+
             ui.btnSubirNotas.disabled = true;
+
+            ui.btnSubirNotas.className =
+                "bg-gray-400 text-white font-semibold " +
+                "py-2.5 px-6 rounded-lg cursor-not-allowed " +
+                "flex items-center gap-2 shadow-md";
+
+            ui.btnSubirNotas.title =
+                "La subida de notas está deshabilitada.";
+
+            isEditMode = false;
+            isLecturaMode = false;
         }
+
+    } catch (error) {
+
+        console.error(
+            "Error validando modo de subida de notas:",
+            error
+        );
+
+        ui.btnSubirNotas.disabled = true;
+
+        isEditMode = false;
+        isLecturaMode = false;
     }
+}
 
     async function handleCursoChange(e) {
         const selectedCurso = e.target.value;
@@ -1852,18 +3686,11 @@ doc.text(
 
                     const option = document.createElement("option");
 
-                    // ID original de Firebase
                     option.value = key;
-
-                    // GUARDA EL NOMBRE EXACTAMENTE COMO ESTÁ EN FIREBASE
                     option.dataset.nombreOriginal = String(nombreEstudiante);
-
-                    // Para mostrar correctamente espacios dobles, triples, etc.
                     const nombreVisual = String(nombreEstudiante).replace(/ /g, "\u00A0");
-
                     option.hidden = false;
-                    // MUESTRA EL NOMBRE EXACTAMENTE COMO ESTÁ EN LA BASE (quitamos el prefix "count.")
-                   option.textContent = `${count}. ${nombreVisual}`;
+                    option.textContent = `${count}. ${nombreVisual}`;
 
                     ui.selEstudiante.appendChild(option);
                 }
@@ -1905,7 +3732,6 @@ doc.text(
                         });
 
                         Array.from(ui.selEstudiante.options).forEach(op => {
-                            // COMPARA EXACTAMENTE EL DATO ORIGINAL
                             if (op.dataset.nombreOriginal === nombre) {
                                 op.hidden = true;
                             }
@@ -1929,7 +3755,6 @@ doc.text(
                         if (!reportValue) continue;
 
                         const nombreReportado = (typeof reportValue === 'object' && reportValue.nombre) ? reportValue.nombre : reportValue;
-                        // MANTENEMOS EL NOMBRE ORIGINAL COMO SE REPORTÓ
                         const nombreLimpio = String(nombreReportado).trim();
 
                         let originalId = reportKey;
@@ -1979,10 +3804,7 @@ doc.text(
         }
 
        const idEstudiante = ui.selEstudiante.value;
-
         const optionSeleccionada = ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
-
-        // Recuperar EXACTAMENTE el nombre original de Firebase
         const nombreEstudiante = optionSeleccionada.dataset.nombreOriginal || "";
 
         if (!nombreEstudiante) {
@@ -2007,7 +3829,6 @@ doc.text(
             keyId: Date.now() + Math.random()
         });
 
-        // Ordenar alfabéticamente por nombre del estudiante
         selectedList.sort((a, b) =>
             a.nombre.localeCompare(b.nombre, 'es', {
                 sensitivity: 'base'
@@ -2022,29 +3843,25 @@ doc.text(
     }
 
    function removeStudent(keyId) {
-    if (currentSystemMode !== 'estudiante') return;
+        if (currentSystemMode !== 'estudiante') return;
 
-    const eliminado = selectedList.find(s => s.keyId === keyId);
+        const eliminado = selectedList.find(s => s.keyId === keyId);
+        if (!eliminado) return;
 
-    if (!eliminado) return;
-
-    showConfirm(
-        "Eliminar estudiante",
-        `¿Está seguro de eliminar a "${eliminado.nombre}" de la lista de seleccionados?`,
-        () => {
-
-            selectedList = selectedList.filter(s => s.keyId !== keyId);
-
-            Array.from(ui.selEstudiante.options).forEach(op => {
-                if (op.dataset.nombreOriginal === eliminado.nombre) {
-                    op.hidden = false;
-                }
-            });
-
-            updateTableUI();
-        }
-    );
-}
+        showConfirm(
+            "Eliminar estudiante",
+            `¿Está seguro de eliminar a "${eliminado.nombre}" de la lista de seleccionados?`,
+            () => {
+                selectedList = selectedList.filter(s => s.keyId !== keyId);
+                Array.from(ui.selEstudiante.options).forEach(op => {
+                    if (op.dataset.nombreOriginal === eliminado.nombre) {
+                        op.hidden = false;
+                    }
+                });
+                updateTableUI();
+            }
+        );
+    }
 
     function clearStudentList() {
         if (currentSystemMode !== 'estudiante') return;
@@ -2060,37 +3877,47 @@ doc.text(
     }
 
     function openModalSubirNotas() {
-        ui.modalSubirNotas.classList.remove("hidden");
-        ui.containerCentralizador.classList.add("hidden");
-        ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Cargando...</option>';
-        ui.fileExcelNotas.value = "";
-        notasExtraidasGlobal = [];
+    ui.modalSubirNotas.classList.remove("hidden");
+    ui.containerCentralizador.classList.add("hidden");
+    document.getElementById("containerCursosSubidos").classList.add("hidden");
+    document.getElementById("listaCursosSubidos").innerHTML = "";
+    
+    // MODIFICADO: Actualizar la vista del botón y etiqueta
+    const btnDescargarModal = document.getElementById('btnDescargarNotasTutorModal');
+    const lblCurso = document.getElementById('lblCursoTutorSubirNotas');
+    lblCurso.textContent = `Curso Tutor: ${tutorCursoDescarga || 'No asignado'}`;
+    btnDescargarModal.disabled = true;
 
-        fetch(`${DB_URL}/TRIMESTRE.json`)
-            .then(resp => resp.json())
-            .then(data => {
-                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Seleccione Trimestre...</option>';
-                let addedCount = 0;
-                
-                ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
-                    if (data && data[trim] === true) {
-                        const option = document.createElement('option');
-                        option.value = trim;
-                        option.textContent = trim; 
-                        ui.selectTrimestreSubirNotas.appendChild(option);
-                        addedCount++;
-                    }
-                });
+    cursosYaSubidosGlobal = [];
+    ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Cargando...</option>';
+    ui.fileExcelNotas.value = "";
+    notasExtraidasGlobal = [];
 
-                if(addedCount === 0) {
-                    ui.selectTrimestreSubirNotas.innerHTML = '<option value="">No hay trimestres habilitados</option>';
+    fetch(`${DB_URL}/TRIMESTRE.json`)
+        .then(resp => resp.json())
+        .then(data => {
+            ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Seleccione Trimestre...</option>';
+            let addedCount = 0;
+            
+            ['PRIMERO', 'SEGUNDO', 'TERCERO'].forEach(trim => {
+                if (data && data[trim] === true) {
+                    const option = document.createElement('option');
+                    option.value = trim;
+                    option.textContent = trim; 
+                    ui.selectTrimestreSubirNotas.appendChild(option);
+                    addedCount++;
                 }
-            })
-            .catch(error => {
-                console.error("Error al cargar trimestres:", error);
-                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Error de red</option>';
             });
-    }
+
+            if(addedCount === 0) {
+                ui.selectTrimestreSubirNotas.innerHTML = '<option value="">No hay trimestres habilitados</option>';
+            }
+        })
+        .catch(error => {
+            console.error("Error al cargar trimestres:", error);
+            ui.selectTrimestreSubirNotas.innerHTML = '<option value="">Error de red</option>';
+        });
+}
 
     function handleExcelUpload(e) {
         const file = e.target.files[0];
@@ -2114,7 +3941,7 @@ doc.text(
                 if (workbook.SheetNames.includes(nombreHojaBuscada)) {
                     const sheet = workbook.Sheets[nombreHojaBuscada];
                     
-                    const curso = sheet['D5'] ? sheet['D5'].v : "No encontrado";
+                    const curso = sheet['D5'] ? String(sheet['D5'].v).trim() : "No encontrado";
                     const materia = sheet['D9'] ? sheet['D9'].v : "No encontrada";
 
                     let colNota = "K"; 
@@ -2163,8 +3990,38 @@ doc.text(
                     ui.infoExcelMateria.textContent = materia;
                     ui.infoExcelEstudiantes.textContent = notasExtraidasGlobal.length.toString();
 
-                    ui.modalSubirNotas.classList.add("hidden");
-                    ui.modalInfoExcel.classList.remove("hidden");
+                    if (cursosYaSubidosGlobal.includes(curso)) {
+                        ui.valIcon.textContent = "⚠️";
+                        ui.valTitle.textContent = "Curso Ya Subido";
+                        ui.valTitle.className = "text-xl font-bold text-amber-500 text-center mb-2";
+                        ui.valContent.textContent = `Atención: Ya existen notas guardadas para el curso "${curso}" en el trimestre ${trimestreSeleccionado}.\n\nSi continúa, las notas anteriores serán REEMPLAZADAS por las de este archivo Excel.`;
+                        ui.valContent.className = "flex-1 overflow-y-auto text-sm text-amber-900 mb-6 bg-amber-50 p-4 rounded-xl border border-amber-200 whitespace-pre-wrap font-medium";
+
+                        ui.valFooter.innerHTML = `
+                            <button id="btnValCancelarExistente" class="px-4 py-3 flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl text-sm font-bold transition-colors">
+                                CANCELAR
+                            </button>
+                            <button id="btnValSobreescribir" class="px-4 py-3 flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-colors">
+                                CONTINUAR Y REEMPLAZAR
+                            </button>
+                        `;
+
+                        document.getElementById('btnValCancelarExistente').addEventListener('click', () => {
+                            closeValidationModal();
+                            ui.fileExcelNotas.value = "";
+                        });
+
+                        document.getElementById('btnValSobreescribir').addEventListener('click', () => {
+                            closeValidationModal();
+                            ui.modalSubirNotas.classList.add("hidden");
+                            ui.modalInfoExcel.classList.remove("hidden");
+                        });
+
+                        ui.validationModal.classList.remove('hidden');
+                    } else {
+                        ui.modalSubirNotas.classList.add("hidden");
+                        ui.modalInfoExcel.classList.remove("hidden");
+                    }
 
                 } else {
                     showNotification(`El archivo Excel no contiene una hoja llamada "${nombreHojaBuscada}".`, true);
@@ -2179,7 +4036,7 @@ doc.text(
     }
 
     function openModal() {
-        ui.inputBuscarModal.value = ''; // NUEVO: Se limpia la búsqueda al abrir
+        ui.inputBuscarModal.value = ''; 
         selectedList = [];
         updateTableUI();
         ui.selTrimestre.selectedIndex = 0;
@@ -2303,14 +4160,14 @@ doc.text(
             ui.tableWrapper.classList.add('hidden');
             ui.btnLimpiarLista.classList.add('hidden');
             ui.btnGenerarReportes.disabled = true;
-            ui.inputBuscarModal.classList.add('hidden'); // NUEVO: Oculta el buscador si no hay elementos
-            ui.inputBuscarModal.value = ''; // NUEVO: Limpia el buscador si no hay elementos
+            ui.inputBuscarModal.classList.add('hidden'); 
+            ui.inputBuscarModal.value = ''; 
             return;
         }
 
         ui.emptyState.classList.add('hidden');
         ui.tableWrapper.classList.remove('hidden');
-        ui.inputBuscarModal.classList.remove('hidden'); // NUEVO: Muestra el buscador cuando hay elementos
+        ui.inputBuscarModal.classList.remove('hidden'); 
 
         if (currentSystemMode === 'estudiante') {
             ui.btnLimpiarLista.classList.remove('hidden');
@@ -2329,7 +4186,6 @@ doc.text(
         selectedList.forEach((student, index) => {
             const tr = document.createElement('tr');
             
-            // NUEVO: Reaplicar el filtro de búsqueda si hay texto escrito
             const searchTerm = ui.inputBuscarModal.value.toLowerCase();
             if (searchTerm && !student.nombre.toLowerCase().includes(searchTerm)) {
                 tr.style.display = 'none';
