@@ -2747,6 +2747,46 @@ doc.text(
                                 data.cell.text = [];
                             }
                         }
+
+
+                        // =====================================================
+                        // MODO LECTURA:
+                        //
+                        // X  = profesor reportó al estudiante.
+                        // SI = el padre SÍ vino; reemplaza la X.
+                        //
+                        // REGLA:
+                        // - Si existe AL MENOS UN SI -> SIN fondo amarillo.
+                        // - Si todas las marcas existentes son X -> AMARILLO.
+                        // - Las celdas vacías se ignoran porque ese profesor
+                        //   no reportó a ese estudiante.
+                        // =====================================================
+                        if (
+                            currentSystemMode === 'lectura' &&
+                            data.section === 'body' &&
+                            data.column.index === 1 &&
+                            profList.length > 0
+                        ) {
+                            const filaActual = tableData[data.row.index];
+
+                            const marcas = profList.map((prof, idx) =>
+                                String(filaActual[2 + idx] ?? '').trim().toUpperCase()
+                            );
+
+                            const haySI = marcas.some(marca => marca === 'SI');
+
+                            const marcasReportadas = marcas.filter(marca => marca !== '');
+
+                            const todasSonX =
+                                marcasReportadas.length > 0 &&
+                                marcasReportadas.every(marca => marca === 'X');
+
+                            if (!haySI && todasSonX) {
+                                data.cell.styles.fillColor = [255, 235, 59];
+                                data.cell.styles.textColor = [0, 0, 0];
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+                        }
                     },
 
                     didDrawCell: function(data) {
