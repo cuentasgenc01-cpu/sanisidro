@@ -2002,9 +2002,13 @@ box-sizing:border-box;
 
         // ============================================================
         // CHECK DE NOTAS VACÍAS POR DIMENSIÓN
-        function confirmarNotaVacia(dimension, notaMaxima, checkbox) {
+      // ============================================================
+// CHECK DE NOTAS VACÍAS POR DIMENSIÓN
+// ============================================================
 
-    // Si se está desmarcando, no preguntar
+function confirmarNotaVacia(dimension, notaMaxima, checkbox) {
+
+    // Si se está desmarcando, no hacer nada
     if (!checkbox.checked) {
         return;
     }
@@ -2020,39 +2024,83 @@ box-sizing:border-box;
     );
 
     if (confirmar) {
+
+        // Aplicar la nota máxima solamente a las notas vacías
         aplicarNotaVacia(dimension, notaMaxima, true);
+
     } else {
+
+        // Si cancela, quitar el check
         checkbox.checked = false;
     }
 }
-        // SER   -> 10
-        // SABER -> 45
-        // HACER -> 40
-        // ============================================================
-        function aplicarNotaVacia(dimension, notaMaxima, marcado) {
-            if (!marcado || !notasData[dimension]) return;
 
-            let cantidad = 0;
 
-            Object.keys(notasData[dimension]).forEach(nombre => {
-                const valor = Number(notasData[dimension][nombre]);
+// ============================================================
+// HACER VISIBLE LA FUNCIÓN PARA EL HTML
+// IMPORTANTE PORQUE EL SCRIPT PRINCIPAL ES type="module"
+// ============================================================
 
-                // Las notas vacías se manejan como 0 en notasData.
-                if (!Number.isFinite(valor) || valor === 0) {
-                    notasData[dimension][nombre] = notaMaxima;
-                    cantidad++;
-                }
-            });
+window.confirmarNotaVacia = confirmarNotaVacia;
 
-            // Mostrar inmediatamente las notas colocadas y recalcular.
-            renderizarDimension(
-                dimension,
-                dimension.toUpperCase(),
-                notaMaxima
-            );
 
-            calcularTotal();
+// ============================================================
+// SER   -> 10
+// SABER -> 45
+// HACER -> 40
+// ============================================================
+
+function aplicarNotaVacia(dimension, notaMaxima, marcado) {
+
+    if (!marcado || !notasData[dimension]) {
+        return;
+    }
+
+    let cantidad = 0;
+
+    Object.keys(notasData[dimension]).forEach(nombre => {
+
+        const valor = notasData[dimension][nombre];
+
+        // ====================================================
+        // CONSIDERAR COMO VACÍA:
+        //
+        // 1. ""
+        // 2. null
+        // 3. undefined
+        // 4. 0
+        // ====================================================
+
+        if (
+            valor === '' ||
+            valor === null ||
+            valor === undefined ||
+            Number(valor) === 0
+        ) {
+
+            notasData[dimension][nombre] = notaMaxima;
+            cantidad++;
         }
+    });
+
+
+    // ====================================================
+    // MOSTRAR INMEDIATAMENTE LAS NOTAS EN PANTALLA
+    // ====================================================
+
+    renderizarDimension(
+        dimension,
+        dimension.toUpperCase(),
+        notaMaxima
+    );
+
+
+    // ====================================================
+    // RECALCULAR PROMEDIOS Y NOTA FINAL
+    // ====================================================
+
+    calcularTotal();
+}
 
         function deleteActivity(dimension, nombre) {
             deleteTarget = { dimension, nombre };
