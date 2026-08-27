@@ -686,7 +686,7 @@ tr:hover { background-color: #f8fafc; }
             <div id="containerCentralizador" class="hidden space-y-4">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                     <label for="inputNombreHoja" class="block text-sm font-bold text-[#0D47A1] mb-2 uppercase tracking-wider">Nombre de la Hoja a Buscar</label>
-                    <input type="text" id="inputNombreHoja" value="CENTRALIZADOR" class="w-full text-center font-bold text-gray-700 p-2 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="inputNombreHoja" value="CENTRALIZADOR" readonly class="w-full text-center font-bold text-gray-700 p-2 border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     <p class="text-xs text-gray-500 mt-2">Asegúrate de que tu archivo Excel contenga esta hoja exactamente como la escribes.</p>
                 </div>
                 <div>
@@ -1533,7 +1533,7 @@ async function proceedToSaveExcel() {
                 mensaje += "\n¿Está seguro de que desea continuar y guardar esta información?";
 
                 ui.valIcon.textContent = "⚠️";
-                ui.valTitle.textContent = "Advertencia de Notas Vacías";
+                ui.valTitle.textContent = "Advertencia de Notas Vacías o Cero";
                 ui.valTitle.className = "text-xl font-bold text-amber-500 text-center mb-2";
                 ui.valContent.textContent = mensaje;
                 ui.valContent.className = "flex-1 overflow-y-auto text-sm text-amber-900 mb-6 bg-amber-50 p-4 rounded-xl border border-amber-200 whitespace-pre-wrap font-medium";
@@ -3973,7 +3973,7 @@ async function abrirModalEditarNotas(trimestre, curso) {
         const nombreHojaBuscada = document.getElementById("inputNombreHoja").value.trim() || "CENTRALIZADOR";
 
         const reader = new FileReader();
-        reader.onload = function(evt) {
+     reader.onload = async function(evt) {
             try {
                 const data = new Uint8Array(evt.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
@@ -3981,15 +3981,16 @@ async function abrirModalEditarNotas(trimestre, curso) {
                 if (workbook.SheetNames.includes(nombreHojaBuscada)) {
                     const sheet = workbook.Sheets[nombreHojaBuscada];
                     
-                    const curso = sheet['D5'] ? String(sheet['D5'].v).trim() : "No encontrado";
+                 // Se añade .replace(/\s+/g, '') para quitar los espacios (Ej: "CUARTO C" pasa a ser "CUARTOC")
+const curso = sheet['D5'] ? String(sheet['D5'].v).replace(/\s+/g, '').trim() : "No encontrado";
                     const materia = sheet['D9'] ? sheet['D9'].v : "No encontrada";
 
                     let colNota = "K"; 
                     if (trimestreSeleccionado === "SEGUNDO") colNota = "S";
                     else if (trimestreSeleccionado === "TERCERO") colNota = "AA";
 
-                    notasExtraidasGlobal = []; 
-
+                    // 1. Extraer las notas del Excel a un diccionario temporal
+                    let notasExcelTemp = {};
                     for (let i = 15; i <= 60; i++) {
                         const celdaNombre = sheet['C' + i];
                         const celdaNota = sheet[colNota + i];
@@ -3999,29 +4000,85 @@ async function abrirModalEditarNotas(trimestre, curso) {
                             if (celdaNota) {
                                 valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
                             }
-
-                            notasExtraidasGlobal.push({
-                                filaExcel: i,
-                                nombre: String(celdaNombre.v).trim(),
-                                nota: valorNota
-                            });
+                            notasExcelTemp[String(celdaNombre.v).trim()] = valorNota;
                         }
                     }
 
+                    // 2. Obtener lista OFICIAL de estudiantes de la Base de Datos para el curso
+                    let estudiantesDB = {};
+                    try {
+                        showLoading(`Obteniendo estudiantes del curso ${curso}...`);
+                        const resp = await fetch(`${DB_URL}/CURSOS/${encodeURIComponent(curso)}.json`);
+                        if (resp.ok) estudiantesDB = await resp.json() || {};
+                        hideLoading();
+                    } catch (e) { 
+                        console.error("Error al obtener BD", e); 
+                        hideLoading(); 
+                    }
+
+                    if (!estudiantesDB || Object.keys(estudiantesDB).length === 0) {
+                        showNotification(`No se encontraron estudiantes en la base de datos para el curso: ${curso}.`, true);
+                        ui.fileExcelNotas.value = "";
+                        return;
+                    }
+
+                    notasExtraidasGlobal = []; 
+
+                    // 3. Basar la tabla ESTRICTAMENTE en los estudiantes de la Base de Datos
+                    let listaEstudiantes = [];
+                    Object.values(estudiantesDB).forEach(estDB => {
+                        if (!estDB) return;
+                        let nombreDB = (typeof estDB === 'object') ? (estDB.nombre || estDB.NOMBRE) : estDB;
+                        nombreDB = String(nombreDB).trim();
+                        if (nombreDB) listaEstudiantes.push(nombreDB);
+                    });
+
+                    // Ordenar alfabéticamente
+                    listaEstudiantes.sort((a, b) => a.localeCompare(b));
+
+                    // 4. Cruzar con el Excel
+                    listaEstudiantes.forEach(nombreDB => {
+                        if (notasExcelTemp[nombreDB] !== undefined) {
+                            // Coincide con Excel: Se bloquea
+                            notasExtraidasGlobal.push({ nombre: nombreDB, nota: notasExcelTemp[nombreDB], fromExcel: true });
+                        } else {
+                            // NO está en Excel: Editable manualmente
+                            notasExtraidasGlobal.push({ nombre: nombreDB, nota: "", fromExcel: false });
+                        }
+                    });
+
+                    // 5. Renderizar tabla (Solo estudiantes de la BD)
                     ui.tablaNotasExtraidasBody.innerHTML = '';
                     notasExtraidasGlobal.forEach((item, index) => {
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-gray-50 transition-colors";
                         
-                        let colorNota = "text-gray-700";
-                        if (item.nota !== "" && !isNaN(item.nota)) {
-                            colorNota = Number(item.nota) < 51 ? "text-red-600 font-bold" : "text-green-600 font-bold";
+                        let celdaNotaHtml = "";
+                        if (item.fromExcel) {
+                            // Está en el Excel: Mostrar como texto bloqueado
+                            let colorNota = "text-gray-700";
+                            if (item.nota !== "" && !isNaN(item.nota)) {
+                                colorNota = Number(item.nota) < 51 ? "text-red-600 font-bold" : "text-green-600 font-bold";
+                            }
+                            celdaNotaHtml = `<td class="px-4 py-2 text-center font-bold ${colorNota}">${item.nota !== "" ? item.nota : '-'}</td>`;
+                        } else {
+                           // NO está en el Excel: Input manual (Solo números enteros)
+                            celdaNotaHtml = `
+                                <td class="px-4 py-2 text-center">
+                                    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3"
+                                        class="w-16 p-1 text-center font-bold text-gray-800 border border-blue-400 rounded focus:ring-2 focus:ring-[#1565C0] focus:outline-none bg-blue-50" 
+                                        placeholder="-" 
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, ''); notasExtraidasGlobal[${index}].nota = this.value; this.classList.toggle('text-red-600', this.value !== '' && parseInt(this.value) < 51);" 
+                                        value="${item.nota}">
+                                </td>`;
                         }
 
                         tr.innerHTML = `
                             <td class="px-4 py-2 text-center text-gray-500 font-medium">${index + 1}</td>
-                            <td class="px-4 py-2 font-semibold text-[#0D47A1] truncate max-w-xs" title="${escapeHtml(item.nombre)}">${escapeHtml(item.nombre)}</td>
-                            <td class="px-4 py-2 text-center font-bold ${colorNota}">${item.nota !== "" ? item.nota : '-'}</td>
+                            <td class="px-4 py-2 font-semibold text-[#0D47A1] truncate max-w-xs" title="${escapeHtml(item.nombre)}">
+                                ${escapeHtml(item.nombre)} ${!item.fromExcel ? '<span class="text-[10px] text-red-500 ml-2 border border-red-200 bg-red-50 px-1 rounded" title="Falta en Excel, ingrese nota manual">MANUAL</span>' : ''}
+                            </td>
+                            ${celdaNotaHtml}
                         `;
                         ui.tablaNotasExtraidasBody.appendChild(tr);
                     });
