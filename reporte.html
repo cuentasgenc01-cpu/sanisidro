@@ -1491,41 +1491,19 @@ async function proceedToSaveExcel() {
             const notasVacias = [];
 
             notasExtraidasGlobal.forEach(est => {
-             let notaStr = est.nota;
-
-// Normalizar texto
-if (typeof notaStr === "string") {
-    notaStr = notaStr.trim();
-}
-
-// Considerar vacío: "", "-", null, undefined
-if (
-    notaStr === "" ||
-    notaStr === "-" ||
-    notaStr === null ||
-    notaStr === undefined
-) {
-    notasVacias.push(est.nombre);
-    return;
-}
-
-const notaNum = Number(notaStr);
-
-// Solo considerar como nota baja si realmente existe un número
-if (
-    !isNaN(notaNum) &&
-    notaNum >= 0 &&
-    notaNum < 30
-) {
-    notasBajas.push({
-        nombre: est.nombre,
-        nota: notaNum
-    });
-}
+                const notaStr = est.nota;
+                const notaNum = Number(notaStr);
+                
+                  if (notaStr === "" || notaStr === "-" || notaStr === null || notaStr === undefined || notaNum === 0) {
+                    notasVacias.push(est.nombre);
+                } 
+                else if (!isNaN(notaNum) && notaNum >= 1 && notaNum < 30) {
+                    notasBajas.push({ nombre: est.nombre, nota: notaNum });
+                }
             });
 
             if (notasBajas.length > 0) {
-                let mensaje = "Se encontraron notas inusualmente bajas (entre 0 y 29). Revise el archivo Excel antes de continuar:\n\n";
+                let mensaje = "Se encontraron notas inusualmente bajas (entre 1 y 29). Revise el archivo Excel antes de continuar:\n\n";
                 notasBajas.forEach((est, i) => {
                     mensaje += `${i + 1}. ${est.nombre}   (${est.nota})\n`;
                 });
@@ -1549,8 +1527,7 @@ if (
             }
 
             if (notasVacias.length > 0) {
-                let mensaje = "Los siguientes estudiantes NO tienen nota válida asignada:\n\n";
-                notasVacias.forEach((nombre, i) => {
+              let mensaje = "Los siguientes estudiantes NO tienen nota válida asignada o tienen nota 0:\n\n";   notasVacias.forEach((nombre, i) => {
                     mensaje += `${i + 1}. ${nombre}\n`;
                 });
                 mensaje += "\n¿Está seguro de que desea continuar y guardar esta información?";
@@ -1592,6 +1569,7 @@ if (
             document.getElementById('btnValOkFinal').addEventListener('click', proceedToSaveExcel);
             ui.validationModal.classList.remove('hidden');
         });
+
 
      ui.selectTrimestreSubirNotas.addEventListener("change", async (e) => {
 
@@ -4017,21 +3995,10 @@ async function abrirModalEditarNotas(trimestre, curso) {
                         const celdaNota = sheet[colNota + i];
 
                         if (celdaNombre && celdaNombre.v && String(celdaNombre.v).trim() !== "") {
-                          let valorNota = "";
-
-if (celdaNota) {
-    valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
-
-    // Si es texto, quitar espacios
-    if (typeof valorNota === "string") {
-        valorNota = valorNota.trim();
-    }
-
-    // Si después de quitar espacios quedó vacío
-    if (valorNota === "") {
-        valorNota = "";
-    }
-}
+                            let valorNota = "";
+                            if (celdaNota) {
+                                valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
+                            }
 
                             notasExtraidasGlobal.push({
                                 filaExcel: i,
