@@ -1491,15 +1491,37 @@ async function proceedToSaveExcel() {
             const notasVacias = [];
 
             notasExtraidasGlobal.forEach(est => {
-                const notaStr = est.nota;
-                const notaNum = Number(notaStr);
-                
-                if (notaStr === "" || notaStr === "-" || notaStr === null || notaStr === undefined) {
-                    notasVacias.push(est.nombre);
-                } 
-                else if (!isNaN(notaNum) && notaNum >= 0 && notaNum < 30) {
-                    notasBajas.push({ nombre: est.nombre, nota: notaNum });
-                }
+             let notaStr = est.nota;
+
+// Normalizar texto
+if (typeof notaStr === "string") {
+    notaStr = notaStr.trim();
+}
+
+// Considerar vacío: "", "-", null, undefined
+if (
+    notaStr === "" ||
+    notaStr === "-" ||
+    notaStr === null ||
+    notaStr === undefined
+) {
+    notasVacias.push(est.nombre);
+    return;
+}
+
+const notaNum = Number(notaStr);
+
+// Solo considerar como nota baja si realmente existe un número
+if (
+    !isNaN(notaNum) &&
+    notaNum >= 0 &&
+    notaNum < 30
+) {
+    notasBajas.push({
+        nombre: est.nombre,
+        nota: notaNum
+    });
+}
             });
 
             if (notasBajas.length > 0) {
@@ -3995,10 +4017,21 @@ async function abrirModalEditarNotas(trimestre, curso) {
                         const celdaNota = sheet[colNota + i];
 
                         if (celdaNombre && celdaNombre.v && String(celdaNombre.v).trim() !== "") {
-                            let valorNota = "";
-                            if (celdaNota) {
-                                valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
-                            }
+                          let valorNota = "";
+
+if (celdaNota) {
+    valorNota = celdaNota.v !== undefined ? celdaNota.v : (celdaNota.w || "");
+
+    // Si es texto, quitar espacios
+    if (typeof valorNota === "string") {
+        valorNota = valorNota.trim();
+    }
+
+    // Si después de quitar espacios quedó vacío
+    if (valorNota === "") {
+        valorNota = "";
+    }
+}
 
                             notasExtraidasGlobal.push({
                                 filaExcel: i,
