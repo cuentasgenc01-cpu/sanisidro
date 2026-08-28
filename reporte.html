@@ -2089,7 +2089,7 @@ async function proceedToSaveExcel() {
         });
 
         // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS
-       // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS (HOJA VERTICAL, PROMEDIO Y TOP 3 RESALTADO)
+       // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS (HOJA VERTICAL, SIN PROMEDIO)
         document.getElementById('btnDescargarNotasTutorModal').addEventListener('click', async () => {
             const trimestreSel = ui.selectTrimestreSubirNotas.value;
             const cursoTutor = tutorCursoDescarga;
@@ -2167,8 +2167,6 @@ async function proceedToSaveExcel() {
                         headerRow2.push({ content: profesMaterias[prof] || "S/M", styles: { halign: "center", valign: "middle", fillColor: [156,39,176], fontStyle: "normal" } });
                     });
 
-                    // PROMEDIO al final
-                    headerRow1.push({ content: "PROMEDIO", rowSpan: 2, styles: { halign: "center", valign: "middle", fillColor: [25, 118, 210], fontStyle: "bold" } });
                 }
 
                 const headConfig = [headerRow1, headerRow2];
@@ -2187,8 +2185,6 @@ async function proceedToSaveExcel() {
                 // 6. Preparar los datos de los estudiantes
                 const tableData = [];
                 let contador = 1;
-                const promediosCalculados = []; // Array para guardar todos los promedios
-
                 Object.values(estudiantesData).forEach(estName => {
                     if (!estName) return; 
                     
@@ -2197,36 +2193,16 @@ async function proceedToSaveExcel() {
 
                     const row = [contador.toString(), nombre];
 
-                    let sumaNotas = 0;
-                    let materiasValidas = 0;
-
                     profList.forEach(prof => {
                         const notaStr = (mapNotasEstudiante[nombre] && mapNotasEstudiante[nombre][prof]) ? mapNotasEstudiante[nombre][prof] : "-";
                         row.push(notaStr);
                         
-                        const notaNum = parseFloat(notaStr);
-                        if (!isNaN(notaNum)) {
-                            sumaNotas += notaNum;
-                            materiasValidas++;
-                        }
                     });
 
-                    // Calcular promedio con 2 decimales
-                    if (materiasValidas > 0) {
-                        const promedio = (sumaNotas / materiasValidas).toFixed(2);
-                        row.push(promedio);
-                        promediosCalculados.push(parseFloat(promedio)); // Guardamos el promedio como número
-                    } else {
-                        row.push("-");
-                    }
 
                     tableData.push(row);
                     contador++;
                 });
-
-                // --- NUEVO: Obtener los 3 mejores promedios únicos ---
-                const promediosUnicos = [...new Set(promediosCalculados)].sort((a, b) => b - a);
-                const top3Promedios = promediosUnicos.slice(0, 3).map(p => p.toFixed(2)); // Los 3 mejores en formato texto (2 decimales)
 
                 // Estilos de columnas para que encajen en vertical
                 const colStyles = { 
@@ -2238,8 +2214,6 @@ async function proceedToSaveExcel() {
                     profList.forEach((prof, idx) => {
                         colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold' };
                     });
-                    const promedioColIndex = 2 + profList.length;
-                    colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33] };
                 }
 
                 // 7. Generar AutoTable
@@ -2272,9 +2246,7 @@ async function proceedToSaveExcel() {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
-
-                            if (isProfesorHeader || isPromedioHeader) {
+                            if (isProfesorHeader) {
                                 data.cell.styles.minCellHeight = 22;
                                 data.cell.customVerticalText = data.cell.text.join(" ");
                                 data.cell.text = [];
@@ -2298,19 +2270,6 @@ async function proceedToSaveExcel() {
                                 data.cell.styles.fontStyle = 'bold';
                             }
 
-                            // --- NUEVO: Resaltar en verde si es la columna PROMEDIO y está en el TOP 3 ---
-                            const isPromedioCol = data.column.index === 2 + profList.length;
-                            if (isPromedioCol && top3Promedios.includes(rawValue)) {
-                                 // Fondo dorado
-    data.cell.styles.fillColor =
-        [255, 215, 0];
-
-    // Texto oscuro para que resalte
-    data.cell.styles.textColor =
-        [120, 53, 15];
-           // Texto Verde Oscuro
-                                data.cell.styles.fontStyle = 'bold';
-                            }
                         }
                     },
 
@@ -2318,16 +2277,14 @@ async function proceedToSaveExcel() {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
-
-                            if (isProfesorHeader || isMateriaHeader || isPromedioHeader) {
+                            if (isProfesorHeader || isMateriaHeader) {
                                 let texto = (data.cell.customVerticalText || "").trim();
 
                                 if (isMateriaHeader && texto.length > 20) {
                                     texto = texto.substring(0, 20) + "(...)";
                                 }
                                 
-                                doc.setFontSize((isProfesorHeader || isPromedioHeader) ? 7 : 6);
+                                doc.setFontSize(isProfesorHeader ? 7 : 6);
                                 doc.setTextColor(255, 255, 255);
                                 
                                 const textHeight = doc.getTextDimensions(texto).h;
