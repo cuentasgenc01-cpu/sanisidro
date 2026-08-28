@@ -1343,7 +1343,7 @@ doc.setFont(undefined, 'normal');
             for (let i = 0; i < 3; i++) {
                 const trim = trimestres[i];
                 for (const p of profesoresCurso) {
-                    const pUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`;
+                    const pUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`;
                     fetchPromises.push(
                         fetch(pUrl).then(r => r.json()).then(data => {
                             notasCache[i][p.nombre] = data;
@@ -1613,7 +1613,7 @@ doc.setFont(undefined, 'normal');
             for (let i = 0; i < 3; i++) {
                 const trim = trimestres[i];
                 for (const p of profesoresCurso) {
-                    const pUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`;
+                    const pUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(curso)}.json`;
                     fetchPromises.push(
                         fetch(pUrl).then(r => r.json()).then(cursoDoc => {
                             notasCache[i][p.nombre] = cursoDoc;
@@ -1655,21 +1655,67 @@ doc.setFont(undefined, 'normal');
                 }
             }
 
-            function obtenerLugarRankingTodos(trimIndex, estudianteUpper) {
-                const datosTrim = rankingData[trimIndex];
-                const promedios = [];
-                for (const est in datosTrim) {
-                    if (datosTrim[est].materias > 0) promedios.push({ nombre: est, promedio: datosTrim[est].suma / datosTrim[est].materias });
-                }
-                if (promedios.length === 0) return "";
-                promedios.sort((a, b) => b.promedio - a.promedio);
-                let lugar = 1; let ultimoProm = promedios[0].promedio;
-                for (let i = 0; i < promedios.length; i++) {
-                    if (promedios[i].promedio < ultimoProm) { lugar++; ultimoProm = promedios[i].promedio; }
-                    if (promedios[i].nombre === estudianteUpper) return `${lugar}º`;
-                }
-                return "";
+        function obtenerLugarRankingTodos(trimIndices, estudianteUpper) {
+
+    if (!Array.isArray(trimIndices)) {
+        trimIndices = [trimIndices];
+    }
+
+    const acumulado = {};
+
+    trimIndices.forEach(index => {
+
+        const datosTrim = rankingData[index];
+
+        for (const est in datosTrim) {
+
+            if (!acumulado[est]) {
+                acumulado[est] = {
+                    suma: 0,
+                    materias: 0
+                };
             }
+
+            acumulado[est].suma += datosTrim[est].suma;
+            acumulado[est].materias += datosTrim[est].materias;
+        }
+    });
+
+    const promedios = [];
+
+    for (const est in acumulado) {
+
+        if (acumulado[est].materias > 0) {
+
+            promedios.push({
+                nombre: est,
+                promedio: acumulado[est].suma / acumulado[est].materias
+            });
+
+        }
+    }
+
+    if (promedios.length === 0) return "";
+
+    promedios.sort((a, b) => b.promedio - a.promedio);
+
+    let lugar = 1;
+    let ultimoProm = promedios[0].promedio;
+
+    for (let i = 0; i < promedios.length; i++) {
+
+        if (promedios[i].promedio < ultimoProm) {
+            lugar++;
+            ultimoProm = promedios[i].promedio;
+        }
+
+        if (promedios[i].nombre === estudianteUpper) {
+            return `${lugar}º`;
+        }
+    }
+
+    return "";
+}
 
             const anioActual = new Date().getFullYear();
             const canvasContenedor = document.createElement('div');
@@ -1754,12 +1800,41 @@ doc.setFont(undefined, 'normal');
                     filasHTML += htmlRow;
                 }
 
-                const promTrim1 = matTrim[0] > 0 ? (sumaTrim[0] / matTrim[0]).toFixed(2) : "";
-                const promTrim2 = matTrim[1] > 0 ? (sumaTrim[1] / matTrim[1]).toFixed(2) : "";
-                const promTrim3 = matTrim[2] > 0 ? (sumaTrim[2] / matTrim[2]).toFixed(2) : "";
-                const rankTrim1 = obtenerLugarRankingTodos(0, estudiante);
-                const rankTrim2 = obtenerLugarRankingTodos(1, estudiante);
-                const rankTrim3 = obtenerLugarRankingTodos(2, estudiante);
+            const promTrim1 = matTrim[0] > 0
+    ? (sumaTrim[0] / matTrim[0]).toFixed(2)
+    : "";
+
+
+// SOLO calcular acumulado si el 2do trimestre tiene al menos una nota
+const promTrim2 = matTrim[1] > 0
+    ? (
+        (sumaTrim[0] + sumaTrim[1]) /
+        (matTrim[0] + matTrim[1])
+      ).toFixed(2)
+    : "";
+
+
+// SOLO calcular acumulado si el 3er trimestre tiene al menos una nota
+const promTrim3 = matTrim[2] > 0
+    ? (
+        (sumaTrim[0] + sumaTrim[1] + sumaTrim[2]) /
+        (matTrim[0] + matTrim[1] + matTrim[2])
+      ).toFixed(2)
+    : "";
+
+
+// RANKING
+const rankTrim1 = matTrim[0] > 0
+    ? obtenerLugarRankingTodos(0, estudiante)
+    : "";
+
+const rankTrim2 = matTrim[1] > 0
+    ? obtenerLugarRankingTodos([0, 1], estudiante)
+    : "";
+
+const rankTrim3 = matTrim[2] > 0
+    ? obtenerLugarRankingTodos([0, 1, 2], estudiante)
+    : "";
 
                 const htmlEstudiante = `
                     <div id="boletin-content-render" style="font-family: Arial, sans-serif; font-size: 10px; width: 297mm; height: 209mm; padding: 8mm 15mm 10mm 15mm; box-sizing: border-box; display: flex; flex-direction: column; background: white;">
@@ -2264,7 +2339,7 @@ doc.setFont(undefined, 'normal');
 
                 fetchProms.push(
                     fetch(
-                        `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTAS/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`
+                        `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(p.nombre)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`
                     )
                     .then(r => r.json())
                     .then(nData => {
