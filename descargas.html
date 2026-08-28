@@ -2798,34 +2798,34 @@ const rankTrim3 = matTrim[2] > 0
                     }
                 };
 
-                if (
+            if (
                     tieneNotasCompletasMateria &&
                     trimestresValidos ===
                         trimestresActivos.length
                 ) {
-
+                    
                     const notaA =
                         Math.round(
                             sumaAnualMateria /
                             trimestresValidos
                         );
 
-                    cellA.value = notaA;
+                    // Ocultamos la 'A' de la materia en el 1T y 2T, solo mostramos en 3T
+                    if (trimestreSeleccionado === "TERCERO") {
+                        cellA.value = notaA;
+                        cellA.font = { bold: true };
 
-                    cellA.font = {
-                        bold: true
-                    };
-
-                    if (notaA < 51) {
-
-                        cellA.font = {
-                            bold: true,
-                            color: {
-                                argb: 'FFFF0000'
-                            }
-                        };
+                        if (notaA < 51) {
+                            cellA.font = {
+                                bold: true,
+                                color: { argb: 'FFFF0000' }
+                            };
+                        }
+                    } else {
+                        cellA.value = "";
                     }
 
+                    // MANTENEMOS la suma interna para que el "PROM. ANUAL" general final sí se calcule
                     sumaAnualGeneral += notaA;
                     materiasValidasGeneral++;
 

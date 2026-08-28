@@ -2089,7 +2089,7 @@ async function proceedToSaveExcel() {
         });
 
         // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS
-       // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS (HOJA VERTICAL, SIN PROMEDIO)
+       // NUEVA FUNCIONALIDAD: BOTÓN DESCARGAR EN MODAL SUBIR NOTAS (HOJA VERTICAL, PROMEDIO Y TOP 3 RESALTADO)
         document.getElementById('btnDescargarNotasTutorModal').addEventListener('click', async () => {
             const trimestreSel = ui.selectTrimestreSubirNotas.value;
             const cursoTutor = tutorCursoDescarga;
@@ -2124,26 +2124,95 @@ async function proceedToSaveExcel() {
                 }
 
                 // 3. Obtener TODAS las notas del trimestre
-                const respNotas = await fetch(`${DB_URL}/NOTASTRIMESTRE.json`);
-                const notasData = await respNotas.json() || {};
+             // 3. Obtener TODAS las notas
+const respNotas = await fetch(`${DB_URL}/NOTASTRIMESTRE.json`);
+const notasData = await respNotas.json() || {};
 
-                // 4. Organizar la data para el PDF (Separando Profesor y Materia)
-                const profesoresConNotas = new Set();
-                const mapNotasEstudiante = {}; 
+// =========================================================
+// DEFINIR LAS BASES SEGÚN EL TRIMESTRE SELECCIONADO
+// =========================================================
 
-                for (const prof in notasData) {
-                    if (notasData[prof][trimestreSel] && notasData[prof][trimestreSel][cursoTutor]) {
-                        const notasCurso = notasData[prof][trimestreSel][cursoTutor];
-                        profesoresConNotas.add(prof);
+let trimestresParaPromedio = [];
 
-                        for (const estudiante in notasCurso) {
-                            if (!mapNotasEstudiante[estudiante]) {
-                                mapNotasEstudiante[estudiante] = {};
-                            }
-                            mapNotasEstudiante[estudiante][prof] = notasCurso[estudiante].NOTA_TRIMESTRAL;
-                        }
+if (trimestreSel === "PRIMERO") {
+    trimestresParaPromedio = ["PRIMERO"];
+}
+else if (trimestreSel === "SEGUNDO") {
+    trimestresParaPromedio = ["PRIMERO", "SEGUNDO"];
+}
+else if (trimestreSel === "TERCERO") {
+    trimestresParaPromedio = ["PRIMERO", "SEGUNDO", "TERCERO"];
+}
+
+// =========================================================
+// 4. ORGANIZAR LAS NOTAS ACUMULADAS
+// =========================================================
+
+const profesoresConNotas = new Set();
+
+// Notas del trimestre seleccionado para mostrar
+const mapNotasEstudiante = {};
+
+// Notas acumuladas para calcular PROMEDIO
+const mapNotasPromedio = {};
+
+for (const prof in notasData) {
+
+    for (const trim of trimestresParaPromedio) {
+
+        if (
+            notasData[prof] &&
+            notasData[prof][trim] &&
+            notasData[prof][trim][cursoTutor]
+        ) {
+
+            const notasCurso =
+                notasData[prof][trim][cursoTutor];
+
+            profesoresConNotas.add(prof);
+
+            for (const estudiante in notasCurso) {
+
+                const nota =
+                    notasCurso[estudiante]?.NOTA_TRIMESTRAL;
+
+                // ==========================================
+                // NOTA DEL TRIMESTRE SELECCIONADO
+                // ==========================================
+
+                if (trim === trimestreSel) {
+
+                    if (!mapNotasEstudiante[estudiante]) {
+                        mapNotasEstudiante[estudiante] = {};
                     }
+
+                    mapNotasEstudiante[estudiante][prof] =
+                        nota;
                 }
+
+                // ==========================================
+                // NOTAS PARA EL PROMEDIO ACUMULADO
+                // ==========================================
+
+                if (!mapNotasPromedio[estudiante]) {
+                    mapNotasPromedio[estudiante] = {};
+                }
+
+                if (!mapNotasPromedio[estudiante][prof]) {
+                    mapNotasPromedio[estudiante][prof] = [];
+                }
+
+                const notaNum = parseFloat(nota);
+
+                if (!isNaN(notaNum)) {
+                    mapNotasPromedio[estudiante][prof].push(
+                        notaNum
+                    );
+                }
+            }
+        }
+    }
+}
 
                 const profList = Array.from(profesoresConNotas);
 
@@ -2167,6 +2236,37 @@ async function proceedToSaveExcel() {
                         headerRow2.push({ content: profesMaterias[prof] || "S/M", styles: { halign: "center", valign: "middle", fillColor: [156,39,176], fontStyle: "normal" } });
                     });
 
+                    // PROMEDIO al final
+           // =========================================================
+// NOMBRE DEL PROMEDIO SEGÚN EL TRIMESTRE SELECCIONADO
+// =========================================================
+
+let nombreColumnaPromedio = "";
+
+if (trimestreSel === "PRIMERO") {
+    nombreColumnaPromedio = "PROMEDIO PRIMERO";
+}
+else if (trimestreSel === "SEGUNDO") {
+    nombreColumnaPromedio = "PROMEDIO PRIMERO Y SEGUNDO";
+}
+else if (trimestreSel === "TERCERO") {
+    nombreColumnaPromedio = "PROMEDIO PRIMERO, SEGUNDO Y TERCERO";
+}
+else {
+    nombreColumnaPromedio = "PROMEDIO";
+}
+
+// PROMEDIO al final
+headerRow1.push({
+    content: nombreColumnaPromedio,
+    rowSpan: 2,
+    styles: {
+        halign: "center",
+        valign: "middle",
+        fillColor: [25, 118, 210],
+        fontStyle: "bold"
+    }
+});
                 }
 
                 const headConfig = [headerRow1, headerRow2];
@@ -2185,6 +2285,8 @@ async function proceedToSaveExcel() {
                 // 6. Preparar los datos de los estudiantes
                 const tableData = [];
                 let contador = 1;
+                const promediosCalculados = []; // Array para guardar todos los promedios
+
                 Object.values(estudiantesData).forEach(estName => {
                     if (!estName) return; 
                     
@@ -2193,16 +2295,90 @@ async function proceedToSaveExcel() {
 
                     const row = [contador.toString(), nombre];
 
-                    profList.forEach(prof => {
-                        const notaStr = (mapNotasEstudiante[nombre] && mapNotasEstudiante[nombre][prof]) ? mapNotasEstudiante[nombre][prof] : "-";
-                        row.push(notaStr);
-                        
-                    });
+               // =========================================================
+// NOTAS DEL TRIMESTRE SELECCIONADO
+// =========================================================
 
+profList.forEach(prof => {
+
+    const notaStr =
+        (
+            mapNotasEstudiante[nombre] &&
+            mapNotasEstudiante[nombre][prof]
+        )
+            ? mapNotasEstudiante[nombre][prof]
+            : "-";
+
+    row.push(notaStr);
+});
+
+
+// =========================================================
+// CALCULAR PROMEDIO ACUMULADO
+//
+// PRIMERO  = PRIMERO
+// SEGUNDO  = PRIMERO + SEGUNDO
+// TERCERO  = PRIMERO + SEGUNDO + TERCERO
+// =========================================================
+
+let sumaNotasPromedio = 0;
+let cantidadNotasPromedio = 0;
+
+if (mapNotasPromedio[nombre]) {
+
+    for (const prof of Object.keys(mapNotasPromedio[nombre])) {
+
+        const notas =
+            mapNotasPromedio[nombre][prof];
+
+        if (Array.isArray(notas)) {
+
+            notas.forEach(nota => {
+
+                const notaNum = parseFloat(nota);
+
+                if (!isNaN(notaNum)) {
+                    sumaNotasPromedio += notaNum;
+                    cantidadNotasPromedio++;
+                }
+
+            });
+        }
+    }
+}
+
+
+// =========================================================
+// MOSTRAR PROMEDIO
+// =========================================================
+
+if (cantidadNotasPromedio > 0) {
+
+    const promedio =
+        (
+            sumaNotasPromedio /
+            cantidadNotasPromedio
+        ).toFixed(2);
+
+    row.push(promedio);
+
+    promediosCalculados.push(
+        parseFloat(promedio)
+    );
+
+} else {
+
+    row.push("-");
+
+}
 
                     tableData.push(row);
                     contador++;
                 });
+
+                // --- NUEVO: Obtener los 3 mejores promedios únicos ---
+                const promediosUnicos = [...new Set(promediosCalculados)].sort((a, b) => b - a);
+                const top3Promedios = promediosUnicos.slice(0, 3).map(p => p.toFixed(2)); // Los 3 mejores en formato texto (2 decimales)
 
                 // Estilos de columnas para que encajen en vertical
                 const colStyles = { 
@@ -2214,6 +2390,8 @@ async function proceedToSaveExcel() {
                     profList.forEach((prof, idx) => {
                         colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold' };
                     });
+                    const promedioColIndex = 2 + profList.length;
+                    colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33] };
                 }
 
                 // 7. Generar AutoTable
@@ -2246,7 +2424,9 @@ async function proceedToSaveExcel() {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            if (isProfesorHeader) {
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isPromedioHeader) {
                                 data.cell.styles.minCellHeight = 22;
                                 data.cell.customVerticalText = data.cell.text.join(" ");
                                 data.cell.text = [];
@@ -2270,6 +2450,19 @@ async function proceedToSaveExcel() {
                                 data.cell.styles.fontStyle = 'bold';
                             }
 
+                            // --- NUEVO: Resaltar en verde si es la columna PROMEDIO y está en el TOP 3 ---
+                            const isPromedioCol = data.column.index === 2 + profList.length;
+                            if (isPromedioCol && top3Promedios.includes(rawValue)) {
+                                 // Fondo dorado
+    data.cell.styles.fillColor =
+        [255, 215, 0];
+
+    // Texto oscuro para que resalte
+    data.cell.styles.textColor =
+        [120, 53, 15];
+           // Texto Verde Oscuro
+                                data.cell.styles.fontStyle = 'bold';
+                            }
                         }
                     },
 
@@ -2277,14 +2470,16 @@ async function proceedToSaveExcel() {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            if (isProfesorHeader || isMateriaHeader) {
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+
+                            if (isProfesorHeader || isMateriaHeader || isPromedioHeader) {
                                 let texto = (data.cell.customVerticalText || "").trim();
 
                                 if (isMateriaHeader && texto.length > 20) {
                                     texto = texto.substring(0, 20) + "(...)";
                                 }
                                 
-                                doc.setFontSize(isProfesorHeader ? 7 : 6);
+                                doc.setFontSize((isProfesorHeader || isPromedioHeader) ? 7 : 6);
                                 doc.setTextColor(255, 255, 255);
                                 
                                 const textHeight = doc.getTextDimensions(texto).h;
