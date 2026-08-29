@@ -1995,9 +1995,9 @@ const rankTrim3 = matTrim[2] > 0
             const trimestreSeleccionado = trimestre.value;
             const cursoSeleccionado = tutor.value;
 
-            if (!trimestreSeleccionado || !cursoSeleccionado) { 
-                alert("Seleccione un trimestre y curso."); 
-                return; 
+            if (!trimestreSeleccionado || !cursoSeleccionado) {
+                alert("Seleccione un trimestre y curso.");
+                return;
             }
 
             btnDescargar.disabled = true;
@@ -2039,12 +2039,17 @@ const rankTrim3 = matTrim[2] > 0
                 for (const nomProf in todosProfes) {
                     const profUpp = String(nomProf).toUpperCase();
                     if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+
                     const pData = todosProfes[nomProf];
                     if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
                         const materia = pData.CURSO[cursoSeleccionado];
                         const matUpp = String(materia).toUpperCase();
+
                         if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
-                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                            profesoresCurso.push({
+                                nombre: nomProf,
+                                materia: materia
+                            });
                         }
                     }
                 }
@@ -2058,7 +2063,7 @@ const rankTrim3 = matTrim[2] > 0
             }
 
             const cacheNotas = {};
-            const fetchProms = profesoresCurso.map(p => 
+            const fetchProms = profesoresCurso.map(p =>
                 fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(p.nombre)}/${encodeURIComponent(trimestreSeleccionado)}/${encodeURIComponent(cursoSeleccionado)}.json`)
                 .then(r => r.json())
                 .then(nData => { if (nData) cacheNotas[p.nombre] = nData; })
@@ -2072,8 +2077,15 @@ const rankTrim3 = matTrim[2] > 0
             ws.pageSetup.orientation = 'portrait';
             ws.pageSetup.fitToPage = true;
             ws.pageSetup.fitToWidth = 1;
-            ws.pageSetup.fitToHeight = 1; 
-            ws.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
+            ws.pageSetup.fitToHeight = 1;
+            ws.pageSetup.margins = {
+                left: 0.25,
+                right: 0.25,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.3,
+                footer: 0.3
+            };
 
             ws.getCell('C1').value = "CURSO:";
             ws.getCell('D1').value = cursoSeleccionado;
@@ -2094,28 +2106,60 @@ const rankTrim3 = matTrim[2] > 0
             cellNum.font = { bold: true };
 
             let col = 3;
+
             profesoresCurso.forEach(p => {
                 const cellProf = ws.getCell(3, col);
                 cellProf.value = p.nombre.toUpperCase();
-                cellProf.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+                cellProf.alignment = {
+                    textRotation: 90,
+                    horizontal: 'center',
+                    vertical: 'middle'
+                };
                 cellProf.font = { bold: true };
 
                 const cellMat = ws.getCell(4, col);
                 cellMat.value = p.materia.toUpperCase();
-                cellMat.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+                cellMat.alignment = {
+                    textRotation: 90,
+                    horizontal: 'center',
+                    vertical: 'middle'
+                };
                 cellMat.font = { bold: true };
 
                 ws.getColumn(col).width = 4;
                 col++;
             });
 
-            const colPromedio = col;
+            // NUEVA COLUMNA: APLAZOS
+            // Cuenta las notas menores a 50 de cada estudiante.
+            // Si no tiene ninguna nota menor a 50, se deja en blanco.
+            const colAplazos = col;
+            ws.mergeCells(3, colAplazos, 4, colAplazos);
+
+            const cellAplazosHeader = ws.getCell(3, colAplazos);
+            cellAplazosHeader.value = "APLAZOS";
+            cellAplazosHeader.alignment = {
+                textRotation: 90,
+                horizontal: 'center',
+                vertical: 'middle'
+            };
+            cellAplazosHeader.font = { bold: true };
+
+            ws.getColumn(colAplazos).width = 6;
+
+            // PROMEDIO queda después de APLAZOS
+            const colPromedio = colAplazos + 1;
             ws.mergeCells(3, colPromedio, 4, colPromedio);
+
             const cellPromHeader = ws.getCell(3, colPromedio);
             cellPromHeader.value = "PROMEDIO";
-            cellPromHeader.alignment = { textRotation: 90, horizontal: 'center', vertical: 'middle' };
+            cellPromHeader.alignment = {
+                textRotation: 90,
+                horizontal: 'center',
+                vertical: 'middle'
+            };
             cellPromHeader.font = { bold: true };
-            
+
             ws.getColumn(colPromedio).width = 6;
             ws.getRow(4).height = 120;
 
@@ -2135,25 +2179,35 @@ const rankTrim3 = matTrim[2] > 0
                 let colNotas = 3;
                 let sumaNotasEstudiante = 0;
                 let cantidadMateriasValidas = 0;
+                let cantidadAplazos = 0;
 
                 profesoresCurso.forEach((p) => {
                     let notaFinal = null;
+
                     if (cacheNotas[p.nombre]) {
                         const cursoDoc = cacheNotas[p.nombre];
                         let notaRoot = cursoDoc[nombreEstudiante];
+
                         if (!notaRoot) {
                             for (const k in cursoDoc) {
-                                if (k.trim().toUpperCase() === nombreEstudiante) { notaRoot = cursoDoc[k]; break; }
+                                if (k.trim().toUpperCase() === nombreEstudiante) {
+                                    notaRoot = cursoDoc[k];
+                                    break;
+                                }
                             }
                         }
+
                         if (notaRoot) {
                             const nt = calcPromedioInterno(notaRoot, "NOTA_TRIMESTRAL");
-                            if (nt !== null) { notaFinal = nt; }
-                            else {
+
+                            if (nt !== null) {
+                                notaFinal = nt;
+                            } else {
                                 const ser = calcPromedioInterno(notaRoot, "SER");
                                 const sab = calcPromedioInterno(notaRoot, "SABER");
                                 const hac = calcPromedioInterno(notaRoot, "HACER");
                                 const aut = calcSumaInterna(notaRoot, "AUTOEVALUACION");
+
                                 if (ser !== null && sab !== null && hac !== null && aut !== null) {
                                     const ext = calcSumaInterna(notaRoot, "NOTAS_EXTRAS") || 0;
                                     notaFinal = ser + sab + hac + aut + ext;
@@ -2165,49 +2219,122 @@ const rankTrim3 = matTrim[2] > 0
                     if (notaFinal !== null && notaFinal > 0) {
                         const valorRedondeado = Math.round(notaFinal);
                         const cellNota = ws.getCell(fila, colNotas);
+
                         cellNota.value = valorRedondeado;
                         sumaNotasEstudiante += valorRedondeado;
                         cantidadMateriasValidas++;
+
+                        // APLAZO: toda nota menor a 50
+                        if (valorRedondeado < 51) {
+                            cantidadAplazos++;
+                        }
+
                         if (valorRedondeado < 30) {
-                            cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9370DB' } };
-                            cellNota.font = { color: { argb: 'FFFFFFFF' } };
+                            cellNota.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF9370DB' }
+                            };
+                            cellNota.font = {
+                                color: { argb: 'FFFFFFFF' }
+                            };
                         } else if (valorRedondeado < 51) {
-                            cellNota.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
-                            cellNota.font = { color: { argb: 'FFFFFFFF' } };
+                            cellNota.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFF0000' }
+                            };
+                            cellNota.font = {
+                                color: { argb: 'FFFFFFFF' }
+                            };
                         }
                     }
+
                     colNotas++;
                 });
+
+                // Mostrar APLAZOS solamente si existe al menos una nota menor a 50
+                const cellAplazos = ws.getCell(fila, colAplazos);
+                if (cantidadAplazos > 0) {
+                    cellAplazos.value = cantidadAplazos;
+                    cellAplazos.font = { bold: true, color: { argb: 'FFFF0000' } };
+                    cellAplazos.alignment = {
+                        horizontal: 'center',
+                        vertical: 'middle'
+                    };
+                } else {
+                    cellAplazos.value = "";
+                }
 
                 if (cantidadMateriasValidas === profesoresCurso.length && profesoresCurso.length > 0) {
                     const promedioGral = sumaNotasEstudiante / cantidadMateriasValidas;
                     const promVal = Math.round(promedioGral * 100) / 100;
+
                     const cellProm = ws.getCell(fila, colPromedio);
                     cellProm.value = promVal;
                     cellProm.font = { bold: true };
-                    if (promVal < 51) cellProm.font = { bold: true, color: { argb: 'FFFF0000' } };
-                    listaCeldasPromedio.push({ cell: cellProm, value: promVal });
+
+                    if (promVal < 51) {
+                        cellProm.font = {
+                            bold: true,
+                            color: { argb: 'FFFF0000' }
+                        };
+                    }
+
+                    listaCeldasPromedio.push({
+                        cell: cellProm,
+                        value: promVal
+                    });
                 } else {
                     const cellNombre = ws.getCell(fila, 2);
-                    cellNombre.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; 
+                    cellNombre.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFFFF00' }
+                    };
                 }
+
                 fila++;
                 numero++;
             }
 
             listaCeldasPromedio.sort((a, b) => b.value - a.value);
             const mejores3 = listaCeldasPromedio.slice(0, 3);
+
             mejores3.forEach(item => {
-                item.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000FF' } };
-                item.cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                item.cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF0000FF' }
+                };
+                item.cell.font = {
+                    bold: true,
+                    color: { argb: 'FFFFFFFF' }
+                };
             });
 
-            const borderOpts = { style: 'thin', color: { argb: 'FF000000' } };
+            const borderOpts = {
+                style: 'thin',
+                color: { argb: 'FF000000' }
+            };
+
             for (let r = 3; r < fila; r++) {
                 for (let c = 1; c <= colPromedio; c++) {
                     const celdaFinal = ws.getCell(r, c);
-                    celdaFinal.border = { top: borderOpts, left: borderOpts, bottom: borderOpts, right: borderOpts };
-                    if (c > 2 && r > 4) celdaFinal.alignment = { horizontal: 'center', vertical: 'middle' };
+
+                    celdaFinal.border = {
+                        top: borderOpts,
+                        left: borderOpts,
+                        bottom: borderOpts,
+                        right: borderOpts
+                    };
+
+                    if (c > 2 && r > 4) {
+                        celdaFinal.alignment = {
+                            horizontal: 'center',
+                            vertical: 'middle'
+                        };
+                    }
                 }
             }
 
@@ -2216,9 +2343,10 @@ const rankTrim3 = matTrim[2] > 0
 
             const buffer = await wb.xlsx.writeBuffer();
             const nombreArchivo = `${trimestreSeleccionado}_${cursoSeleccionado}.xlsx`;
+
             saveAs(new Blob([buffer]), nombreArchivo);
-            
-            alert("Excel generado correctamente. Promedios incompletos o en cero se dejaron en blanco.");
+
+            alert("Excel generado correctamente. La columna APLAZOS cuenta las notas menores a 50 y queda en blanco si no existen aplazos.");
 
         } catch (ex) {
             console.error(ex);

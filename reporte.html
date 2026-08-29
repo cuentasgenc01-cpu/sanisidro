@@ -2238,6 +2238,23 @@ for (const prof in notasData) {
 
                     // PROMEDIO al final
            // =========================================================
+                    // =========================================================
+                    // COLUMNA APLAZOS
+                    // Cuenta las notas del trimestre seleccionado menores a 51.
+                    // Si no existe ninguna nota menor a 51, queda en blanco.
+                    // =========================================================
+                    headerRow1.push({
+                        content: "APLAZOS",
+                        rowSpan: 2,
+                        styles: {
+                            halign: "center",
+                            valign: "middle",
+                            fillColor: [255, 152, 0],
+                            textColor: [0, 0, 0],
+                            fontStyle: "bold"
+                        }
+                    });
+
 // NOMBRE DEL PROMEDIO SEGÚN EL TRIMESTRE SELECCIONADO
 // =========================================================
 
@@ -2278,9 +2295,24 @@ headerRow1.push({
                 doc.setTextColor(13, 71, 161);
                 doc.text(`Consolidado de Notas - ${trimestreSel} Trimestre`, pageWidth / 2, 12, { align: "center" });
 
+                // Tutor, curso y FECHA/HORA ACTUAL en la misma fila
                 doc.setFontSize(10);
                 doc.setTextColor(51, 51, 51);
-                doc.text(`Tutor a cargo: ${currentProfesorKey}   |   Curso: ${cursoTutor}`, 14, 20);
+
+                const ahora = new Date();
+                const fechaHoraActual =
+                    String(ahora.getDate()).padStart(2, '0') + '/' +
+                    String(ahora.getMonth() + 1).padStart(2, '0') + '/' +
+                    ahora.getFullYear() + ' ' +
+                    String(ahora.getHours()).padStart(2, '0') + ':' +
+                    String(ahora.getMinutes()).padStart(2, '0') + ':' +
+                    String(ahora.getSeconds()).padStart(2, '0');
+
+                doc.text(
+                    `Tutor a cargo: ${currentProfesorKey}   |   Curso: ${cursoTutor}   |   Fecha y hora: ${fechaHoraActual}`,
+                    14,
+                    20
+                );
 
                 // 6. Preparar los datos de los estudiantes
                 const tableData = [];
@@ -2314,6 +2346,26 @@ profList.forEach(prof => {
 
 
 // =========================================================
+                    // =========================================================
+                    // CALCULAR APLAZOS
+                    // Menores a 51; si no hay ninguno, dejar en blanco.
+                    // =========================================================
+                    let cantidadAplazos = 0;
+
+                    profList.forEach(prof => {
+                        const notaAplazo =
+                            mapNotasEstudiante[nombre] &&
+                            mapNotasEstudiante[nombre][prof];
+
+                        const notaAplazoNum = parseFloat(notaAplazo);
+
+                        if (!isNaN(notaAplazoNum) && notaAplazoNum < 51) {
+                            cantidadAplazos++;
+                        }
+                    });
+
+                    row.push(cantidadAplazos > 0 ? cantidadAplazos.toString() : "");
+
 // CALCULAR PROMEDIO ACUMULADO
 //
 // PRIMERO  = PRIMERO
@@ -2390,7 +2442,10 @@ if (cantidadNotasPromedio > 0) {
                     profList.forEach((prof, idx) => {
                         colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold' };
                     });
-                    const promedioColIndex = 2 + profList.length;
+                    const aplazosColIndex = 2 + profList.length;
+                    colStyles[aplazosColIndex] = { halign: 'center', cellWidth: 10, fontStyle: 'bold', textColor: [220, 38, 38] };
+
+                    const promedioColIndex = aplazosColIndex + 1;
                     colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33] };
                 }
 
@@ -2424,14 +2479,20 @@ if (cantidadNotasPromedio > 0) {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+                            const isAplazosHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 3 + profList.length;
 
-                            if (isProfesorHeader || isPromedioHeader) {
+                            if (isProfesorHeader || isAplazosHeader || isPromedioHeader) {
                                 data.cell.styles.minCellHeight = 22;
                                 data.cell.customVerticalText = data.cell.text.join(" ");
                                 data.cell.text = [];
+
+                                if (isAplazosHeader) {
+                                    data.cell.styles.fillColor = [255, 152, 0];
+                                    data.cell.styles.textColor = [0, 0, 0];
+                                    data.cell.styles.fontStyle = "bold";
+                                }
                             }
-                            
                             if (isMateriaHeader) {
                                 data.cell.styles.minCellHeight = 32;
                                 data.cell.customVerticalText = data.cell.text.join(" ");
@@ -2444,14 +2505,24 @@ if (cantidadNotasPromedio > 0) {
                             const rawValue = String(data.cell.raw);
                             const notaVal = parseFloat(rawValue); 
                             
-                            // Notas por debajo de 51 en rojo
+                            // NOTAS MENORES A 51: FONDO ROJO Y NÚMERO BLANCO
                             if (!isNaN(notaVal) && notaVal < 51) {
-                                data.cell.styles.textColor = [220, 38, 38]; 
+                                data.cell.styles.fillColor = [220, 38, 38];
+                                data.cell.styles.textColor = [255, 255, 255];
                                 data.cell.styles.fontStyle = 'bold';
                             }
 
                             // --- NUEVO: Resaltar en verde si es la columna PROMEDIO y está en el TOP 3 ---
-                            const isPromedioCol = data.column.index === 2 + profList.length;
+                            const isAplazosCol = data.column.index === 2 + profList.length;
+                            if (isAplazosCol) {
+                                data.cell.styles.fillColor = [255, 243, 224];
+                                if (rawValue !== "") {
+                                    data.cell.styles.textColor = [220, 38, 38];
+                                    data.cell.styles.fontStyle = 'bold';
+                                }
+                            }
+
+                            const isPromedioCol = data.column.index === 3 + profList.length;
                             if (isPromedioCol && top3Promedios.includes(rawValue)) {
                                  // Fondo dorado
     data.cell.styles.fillColor =
@@ -2470,17 +2541,24 @@ if (cantidadNotasPromedio > 0) {
                         if (data.section === "head") {
                             const isProfesorHeader = data.row.index === 0 && data.column.index >= 2 && data.column.index < 2 + profList.length;
                             const isMateriaHeader = data.row.index === 1 && data.column.index >= 2 && data.column.index < 2 + profList.length;
-                            const isPromedioHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+                            const isAplazosHeader = data.row.index === 0 && data.column.index === 2 + profList.length;
+                            const isPromedioHeader = data.row.index === 0 && data.column.index === 3 + profList.length;
 
-                            if (isProfesorHeader || isMateriaHeader || isPromedioHeader) {
+                            if (isProfesorHeader || isMateriaHeader || isAplazosHeader || isPromedioHeader) {
                                 let texto = (data.cell.customVerticalText || "").trim();
 
                                 if (isMateriaHeader && texto.length > 20) {
                                     texto = texto.substring(0, 20) + "(...)";
                                 }
                                 
-                                doc.setFontSize((isProfesorHeader || isPromedioHeader) ? 7 : 6);
-                                doc.setTextColor(255, 255, 255);
+                                doc.setFontSize((isProfesorHeader || isAplazosHeader || isPromedioHeader) ? 7 : 6);
+
+                                if (isAplazosHeader) {
+                                    doc.setTextColor(0, 0, 0);
+                                    texto = "APLAZOS";
+                                } else {
+                                    doc.setTextColor(255, 255, 255);
+                                }
                                 
                                 const textHeight = doc.getTextDimensions(texto).h;
                                 const centroX = data.cell.x + (data.cell.width / 2);
