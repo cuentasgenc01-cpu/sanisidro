@@ -631,7 +631,7 @@ tr:hover { background-color: #f8fafc; }
         <!-- Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
             <h3 class="text-lg font-bold text-[#0D47A1] flex items-center gap-2">
-                <span>⬆️</span> SUBIR NOTAS AL SISTEMA
+                <span>⬆️</span> SUBIR/MODIFICAR NOTAS
             </h3>
             <button id="btnCloseModalSubirNotas" class="text-gray-400 hover:text-red-500 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -2024,7 +2024,7 @@ async function proceedToSaveExcel() {
             if (
                 nuevaNota === "" ||
                 isNaN(notaNum) ||
-                notaNum < 31 ||
+                notaNum < 30 ||
                 notaNum > 100
             ) {
                 ui.valIcon.textContent = "❌";
@@ -2032,7 +2032,7 @@ async function proceedToSaveExcel() {
                 ui.valTitle.className = "text-xl font-bold text-red-600 text-center mb-2";
 
                 ui.valContent.textContent =
-                    "La nota ingresada debe estar entre 31 y 100. Por favor, corrija la nota antes de guardar.";
+                    "La nota ingresada debe estar entre 30 y 100. Por favor, corrija la nota antes de guardar.";
 
                 ui.valContent.className =
                     "flex-1 overflow-y-auto text-sm text-red-800 mb-6 bg-red-50 p-4 rounded-xl border border-red-200 whitespace-pre-wrap font-medium text-center";
@@ -2230,10 +2230,12 @@ for (const prof in notasData) {
 
                 const headerRow2 = [];
 
-                if (profList.length > 0) {
+             if (profList.length > 0) {
                     profList.forEach(prof => {
+                        // Se mantiene el color original (lila) para los profesores
                         headerRow1.push({ content: prof, styles: { halign: "center", valign: "middle", fillColor: [123,31,162], fontStyle: "bold" } });
-                        headerRow2.push({ content: profesMaterias[prof] || "S/M", styles: { halign: "center", valign: "middle", fillColor: [156,39,176], fontStyle: "normal" } });
+                        // Solo a la materia se le quita el color (fondo blanco), texto negro y negrita
+                        headerRow2.push({ content: profesMaterias[prof] || "S/M", styles: { halign: "center", valign: "middle", fillColor: [255,255,255], textColor: [0, 0, 0], fontStyle: "bold" } });
                     });
 
                     // PROMEDIO al final
@@ -2261,13 +2263,13 @@ for (const prof in notasData) {
 let nombreColumnaPromedio = "";
 
 if (trimestreSel === "PRIMERO") {
-    nombreColumnaPromedio = "PROMEDIO PRIMERO";
+    nombreColumnaPromedio = "PROMEDIO PRIMER TRIMESTRE";
 }
 else if (trimestreSel === "SEGUNDO") {
-    nombreColumnaPromedio = "PROMEDIO PRIMERO Y SEGUNDO";
+    nombreColumnaPromedio = "PROMEDIO 1 Y 2 TRIMESTRE";
 }
 else if (trimestreSel === "TERCERO") {
-    nombreColumnaPromedio = "PROMEDIO PRIMERO, SEGUNDO Y TERCERO";
+    nombreColumnaPromedio = "PROMEDIO 1, 2 Y 3 TRIMESTRE";
 }
 else {
     nombreColumnaPromedio = "PROMEDIO";
@@ -2433,20 +2435,26 @@ if (cantidadNotasPromedio > 0) {
                 const top3Promedios = promediosUnicos.slice(0, 3).map(p => p.toFixed(2)); // Los 3 mejores en formato texto (2 decimales)
 
                 // Estilos de columnas para que encajen en vertical
-                const colStyles = { 
-                    0: { halign: 'center', cellWidth: 8 },
-                    1: { cellWidth: 'auto' } 
+            const colStyles = { 
+                    // Se agregó fontSize: 9 para el número de lista
+                    0: { halign: 'center', cellWidth: 8, fontSize: 9 },
+                    // Se agregó fontSize: 9 para los nombres de los estudiantes
+                    1: { cellWidth: 'auto', fontSize: 8 } 
                 };
+                
                 
                 if (profList.length > 0) {
                     profList.forEach((prof, idx) => {
-                        colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold' };
+                        // Se agregó fontSize: 9 para hacer las notas más grandes
+                        colStyles[2 + idx] = { halign: 'center', cellWidth: 9, fontStyle: 'bold', fontSize: 9 };
                     });
                     const aplazosColIndex = 2 + profList.length;
-                    colStyles[aplazosColIndex] = { halign: 'center', cellWidth: 10, fontStyle: 'bold', textColor: [220, 38, 38] };
+                    // Se agregó fontSize: 9
+                    colStyles[aplazosColIndex] = { halign: 'center', cellWidth: 10, fontStyle: 'bold', textColor: [220, 38, 38], fontSize: 9 };
 
                     const promedioColIndex = aplazosColIndex + 1;
-                    colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33] };
+                    // Se agregó fontSize: 9
+                    colStyles[promedioColIndex] = { halign: 'center', cellWidth: 14, fontStyle: 'bold', textColor: [33, 33, 33], fontSize: 9 };
                 }
 
                 // 7. Generar AutoTable
@@ -2551,12 +2559,16 @@ if (cantidadNotasPromedio > 0) {
                                     texto = texto.substring(0, 20) + "(...)";
                                 }
                                 
-                                doc.setFontSize((isProfesorHeader || isAplazosHeader || isPromedioHeader) ? 7 : 6);
+                              doc.setFontSize((isProfesorHeader || isAplazosHeader || isPromedioHeader) ? 7 : 6);
 
-                                if (isAplazosHeader) {
+                                // Se aplica el texto negro solo a la cabecera de Materia y Aplazos
+                                if (isAplazosHeader || isMateriaHeader) {
                                     doc.setTextColor(0, 0, 0);
-                                    texto = "APLAZOS";
+                                    if (isAplazosHeader) {
+                                        texto = "APLAZOS";
+                                    }
                                 } else {
+                                    // Los profesores y el promedio mantendrán el texto blanco
                                     doc.setTextColor(255, 255, 255);
                                 }
                                 
