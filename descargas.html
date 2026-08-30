@@ -381,29 +381,30 @@ document.addEventListener("DOMContentLoaded", () => {
             modalAsistencia.style.display = "none";
         }
 
-        if (e.target && e.target.id === "btnBoletin") {
+     if (e.target && e.target.id === "btnBoletin") {
             modalBoletin.style.display = "flex";
             cursoBoletin.innerHTML = '<option value="">Seleccione Curso</option>';
             listaEstudiantesBoletin.innerHTML = '';
             btnDescargarTodoBoletines.style.display = "none";
             estudiantesActualesParaBoletin = [];
 
-            try {
-                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
-                const response = await fetch(url);
-                const cursos = await response.json();
+            // Lista fija de todos los cursos
+            const todosLosCursos = [
+                "PRIMEROA", "PRIMEROB", "PRIMEROC",
+                "SEGUNDOA", "SEGUNDOB", "SEGUNDOC",
+                "TERCEROA", "TERCEROB", "TERCEROC",
+                "CUARTOA", "CUARTOB", "CUARTOC",
+                "QUINTOA", "QUINTOB", "QUINTOC",
+                "SEXTOA", "SEXTOB", "SEXTOC"
+            ];
 
-                if (cursos) {
-                    Object.keys(cursos).forEach(curso => {
-                        const op = document.createElement("option");
-                        op.value = curso;
-                        op.textContent = curso;
-                        cursoBoletin.appendChild(op);
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-            }
+            // Rellenar el select con la lista fija
+            todosLosCursos.forEach(curso => {
+                const op = document.createElement("option");
+                op.value = curso;
+                op.textContent = curso;
+                cursoBoletin.appendChild(op);
+            });
         }
 
         if (e.target && e.target.id === "btnCerrarModalBoletin") {
@@ -2932,11 +2933,7 @@ const rankTrim3 = matTrim[2] > 0
                         trimestresActivos.length
                 ) {
                     
-                    const notaA =
-                        Math.round(
-                            sumaAnualMateria /
-                            trimestresValidos
-                        );
+                  const notaA = sumaAnualMateria / trimestresValidos;
 
                     // Ocultamos la 'A' de la materia en el 1T y 2T, solo mostramos en 3T
                     if (trimestreSeleccionado === "TERCERO") {
