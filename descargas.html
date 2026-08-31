@@ -41,7 +41,7 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 .contenedor{max-width:1100px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 
 /* ESTRUCTURA EN GRID */
-#contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga {
+#contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga {
     display: none; 
     align-items: center;
     gap: 15px;
@@ -54,7 +54,7 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 }
 
 /* 4 COLUMNAS PARA ASISTENCIA, BOLETIN Y REPORTE */
-#filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga {
+#filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga {
     grid-template-columns: max-content 1fr 1fr max-content;
 }
 
@@ -108,7 +108,7 @@ table tr:first-child td:nth-child(n+3) {
 .btn-pdf-est:disabled { background:#999; cursor:not-allowed; }
 
 @media (max-width: 1300px) {
-    #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga {
+    #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga {
         grid-template-columns: 1fr;
         justify-items: stretch;
     }
@@ -183,6 +183,13 @@ table tr:first-child td:nth-child(n+3) {
 <div class="fila-descarga" id="filaFichaSeguimiento" style="display:none;">
 <h1>📑 FICHA DE SEGUIMIENTO</h1>
 <button class="descarga" id="btnAbrirFicha">⬇ DESCARGAR REPORTE</button>
+</div>
+
+<!-- NUEVA FILA: SEGUIMIENTO ACADÉMICO -->
+<hr style="margin:25px 0;">
+<div class="fila-descarga" id="filaSeguimientoAcademico" style="display:none;">
+<h1>📑 SEGUIMIENTO ACADÉMICO</h1>
+<button class="descarga" id="btnAbrirSeguimientoAcademico">⬇ DESCARGAR PDF</button>
 </div>
 
 </div>
@@ -273,6 +280,46 @@ table tr:first-child td:nth-child(n+3) {
     </div>
 </div>
 
+<!-- NUEVO MODAL: SEGUIMIENTO ACADÉMICO -->
+<div id="modalSeguimientoAcademico" class="modal">
+    <div class="modal-content" style="width: 650px;">
+        <div class="titulo-modal">
+            <span>📑 SEGUIMIENTO ACADÉMICO</span>
+            <span id="btnCerrarModalSeguimientoAcademico">✖</span>
+        </div>
+
+        <div class="fila-campos">
+            <div class="campo">
+                <label>Seleccione el Curso:</label>
+                <select id="selectCursoSeguimientoAcademico">
+                    <option value="">-- Seleccione Curso --</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label>Seleccione el Trimestre:</label>
+                <select id="selectTrimestreSeguimientoAcademico">
+                    <option value="">-- Seleccione Trimestre --</option>
+                    <option value="PRIMERO">PRIMERO</option>
+                    <option value="SEGUNDO">SEGUNDO</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top:12px;font-size:12px;color:#555;">
+            El PDF se generará con todos los estudiantes del curso seleccionado.
+            En PRIMERO se mostrarán los profesores con nota menor a 51 del primer trimestre.
+            En SEGUNDO se mostrarán los profesores que tengan al menos una nota menor a 51 en PRIMERO o SEGUNDO.
+        </div>
+
+        <div class="acciones">
+            <button id="btnGenerarSeguimientoAcademico" disabled style="background:#999;cursor:not-allowed;">
+                ⬇ DESCARGAR PDF
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const profesor = localStorage.getItem("profesor");
@@ -349,6 +396,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectTrimestreFicha = document.getElementById("selectTrimestreFicha");
     const btnGenerarFicha = document.getElementById("btnGenerarFicha");
     const btnCerrarModalFicha = document.getElementById("btnCerrarModalFicha");
+
+    // Variables exclusivas de Seguimiento Académico.
+    // Se mantienen separadas de la Ficha de Seguimiento existente para no afectar sus botones.
+    const modalSeguimientoAcademico = document.getElementById("modalSeguimientoAcademico");
+    const selectCursoSeguimientoAcademico = document.getElementById("selectCursoSeguimientoAcademico");
+    const selectTrimestreSeguimientoAcademico = document.getElementById("selectTrimestreSeguimientoAcademico");
+    const btnGenerarSeguimientoAcademico = document.getElementById("btnGenerarSeguimientoAcademico");
+    const btnCerrarModalSeguimientoAcademico = document.getElementById("btnCerrarModalSeguimientoAcademico");
 
     document.addEventListener("click", async (e) => {
         if (e.target && e.target.id === "btnAsistencia") {
@@ -998,6 +1053,818 @@ doc.setFont(undefined, 'normal');
         }
     });
 
+    // ---------- LÓGICA DE DESCARGA PDF DE SEGUIMIENTO ACADÉMICO ----------
+    const TODOS_LOS_CURSOS_SEGUIMIENTO_ACADEMICO = [
+        "PRIMEROA", "PRIMEROB", "PRIMEROC",
+        "SEGUNDOA", "SEGUNDOB", "SEGUNDOC",
+        "TERCEROA", "TERCEROB", "TERCEROC",
+        "CUARTOA", "CUARTOB", "CUARTOC",
+        "QUINTOA", "QUINTOB", "QUINTOC",
+        "SEXTOA", "SEXTOB", "SEXTOC"
+    ];
+
+    const normalizarFicha = (valor) => String(valor ?? "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, " ");
+
+    const obtenerNumeroEstudianteFicha = (clave) => {
+        const m = String(clave ?? "").match(/^\s*(\d+)\s*:/);
+        return m ? Number(m[1]) : 999999;
+    };
+
+    // Convierte CURSOS/CURSO en una lista uniforme: { clave, numero, nombre }.
+    const convertirListaEstudiantesFicha = (data) => {
+        const lista = [];
+
+        if (Array.isArray(data)) {
+            data.forEach((valor, index) => {
+                if (valor === null || valor === undefined || valor === "") return;
+
+                const texto = String(valor);
+                if (texto.includes(":")) {
+                    const partes = texto.split(":");
+                    lista.push({
+                        clave: texto,
+                        numero: parseInt(partes[0], 10) || index + 1,
+                        nombre: partes.slice(1).join(":").trim()
+                    });
+                } else {
+                    lista.push({
+                        clave: `${index + 1}:${texto}`,
+                        numero: index + 1,
+                        nombre: texto.trim()
+                    });
+                }
+            });
+        } else if (data && typeof data === "object") {
+            Object.entries(data).forEach(([clave, valor], index) => {
+                if (clave.includes(":")) {
+                    const partes = clave.split(":");
+                    lista.push({
+                        clave,
+                        numero: parseInt(partes[0], 10) || index + 1,
+                        nombre: partes.slice(1).join(":").trim()
+                    });
+                    return;
+                }
+
+                if (typeof valor === "string" || typeof valor === "number") {
+                    lista.push({
+                        clave: `${clave}:${valor}`,
+                        numero: parseInt(clave, 10) || index + 1,
+                        nombre: String(valor).trim()
+                    });
+                } else if (valor && typeof valor === "object" && valor.nombre) {
+                    lista.push({
+                        clave: `${clave}:${valor.nombre}`,
+                        numero: parseInt(clave, 10) || index + 1,
+                        nombre: String(valor.nombre).trim()
+                    });
+                }
+            });
+        }
+
+        return lista
+            .filter(est => est.nombre)
+            .sort((a, b) => a.numero - b.numero || a.nombre.localeCompare(b.nombre));
+    };
+
+    // Lee NOTA_TRIMESTRAL sin importar si viene como número, texto u objeto.
+    const extraerNotaTrimestralFicha = (registro) => {
+        if (registro === null || registro === undefined) return null;
+
+        if (typeof registro === "number") {
+            return Number.isFinite(registro) ? registro : null;
+        }
+
+        if (typeof registro === "string") {
+            const n = parseFloat(registro.replace(",", "."));
+            return Number.isFinite(n) ? n : null;
+        }
+
+        if (typeof registro === "object") {
+            const posibles = [
+                registro.NOTA_TRIMESTRAL,
+                registro.nota_trimestral,
+                registro.NOTA,
+                registro.nota
+            ];
+
+            for (const valor of posibles) {
+                const n = extraerNotaTrimestralFicha(valor);
+                if (n !== null) return n;
+            }
+        }
+
+        return null;
+    };
+
+    // Convierte NOTASTRIMESTRE/{profesor}/{trimestre}/CURSOS/{curso}
+    // en un mapa por número y por nombre del estudiante.
+    const convertirNotasCursoFicha = (data) => {
+        const mapa = {
+            porNumero: new Map(),
+            porNombre: new Map()
+        };
+
+        if (!data || typeof data !== "object") return mapa;
+
+        Object.entries(data).forEach(([clave, registro], index) => {
+            let numero = null;
+            let nombre = "";
+
+            if (clave.includes(":")) {
+                const partes = clave.split(":");
+                numero = parseInt(partes[0], 10);
+                nombre = partes.slice(1).join(":").trim();
+            } else if (registro && typeof registro === "object") {
+                if (registro.numero !== undefined) {
+                    numero = parseInt(registro.numero, 10);
+                }
+                nombre = String(
+                    registro.nombre ||
+                    registro.NOMBRE ||
+                    registro.estudiante ||
+                    registro.ESTUDIANTE ||
+                    ""
+                ).trim();
+            }
+
+            const nota = extraerNotaTrimestralFicha(registro);
+            if (nota === null) return;
+
+            if (!Number.isFinite(numero)) numero = null;
+            nombre = normalizarFicha(nombre);
+
+            const item = { nota, numero, nombre, clave };
+
+            if (numero !== null) mapa.porNumero.set(numero, item);
+            if (nombre) mapa.porNombre.set(nombre, item);
+        });
+
+        return mapa;
+    };
+
+    const buscarNotaEstudianteFicha = (mapa, estudiante) => {
+        if (!mapa || !estudiante) return null;
+
+        const porNumero = mapa.porNumero.get(Number(estudiante.numero));
+        if (porNumero) return porNumero.nota;
+
+        const porNombre = mapa.porNombre.get(normalizarFicha(estudiante.nombre));
+        if (porNombre) return porNombre.nota;
+
+        // Último intento: comparación flexible por nombre.
+        const buscado = normalizarFicha(estudiante.nombre);
+        for (const [nombre, item] of mapa.porNombre.entries()) {
+            if (nombre === buscado || nombre.includes(buscado) || buscado.includes(nombre)) {
+                return item.nota;
+            }
+        }
+
+        return null;
+    };
+
+    const obtenerProfesoresCursoFicha = async (curso) => {
+        const todosProfes = await obtenerProfesoresCache();
+        const profesores = [];
+
+        if (!todosProfes) return profesores;
+
+        for (const nomProf in todosProfes) {
+            const pData = todosProfes[nomProf] || {};
+            const profUpp = normalizarFicha(nomProf);
+            const valorMateria = pData.CURSO && pData.CURSO[curso];
+
+            if (valorMateria === undefined || valorMateria === null || valorMateria === "") continue;
+
+            const materia = normalizarFicha(valorMateria);
+
+            if (
+                profUpp.includes("REGENTA") ||
+                profUpp.includes("DIRECTOR") ||
+                materia.includes("REGENTA") ||
+                materia.includes("DIRECTOR")
+            ) {
+                continue;
+            }
+
+            profesores.push({
+                profesor: String(nomProf).trim(),
+                materia
+            });
+        }
+
+        profesores.sort((a, b) =>
+            a.materia.localeCompare(b.materia, "es") ||
+            a.profesor.localeCompare(b.profesor, "es")
+        );
+
+        return profesores;
+    };
+
+    // Carga todas las notas de PRIMERO y SEGUNDO por profesor.
+    const cargarNotasFicha = async (profesores, curso) => {
+        const notas = {};
+
+        await Promise.all(profesores.map(async (p) => {
+            notas[p.profesor] = {
+                PRIMERO: new Map(),
+                SEGUNDO: new Map()
+            };
+
+            await Promise.all(["PRIMERO", "SEGUNDO"].map(async (trim) => {
+                try {
+                    const url =
+                        `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/` +
+                        `${encodeURIComponent(p.profesor)}/${trim}/CURSOS/${encodeURIComponent(curso)}.json`;
+
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    notas[p.profesor][trim] = convertirNotasCursoFicha(data);
+                } catch (error) {
+                    console.warn(`No se pudieron cargar notas de ${p.profesor} - ${trim}`, error);
+                    notas[p.profesor][trim] = convertirNotasCursoFicha(null);
+                }
+            }));
+        }));
+
+        return notas;
+    };
+
+    const textoNotaFicha = (nota) => {
+        if (nota === null || nota === undefined || Number.isNaN(Number(nota))) return "";
+        return Number(nota).toLocaleString("es-BO", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // Dibuja el acta tomando como referencia la imagen enviada por el usuario.
+    const dibujarActaSeguimientoAcademico = (doc, estudiante, curso, trimestre, filasAcademicas) => {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // Marco exterior.
+        doc.setDrawColor(70, 70, 70);
+        doc.setLineWidth(0.45);
+        doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
+        // Encabezado.
+        doc.setTextColor(13, 71, 161);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.text('UNIDAD EDUCATIVA SAN ISIDRO "C"', pageWidth / 2, 17, { align: "center" });
+
+        doc.setTextColor(45, 20, 45);
+        doc.setFontSize(14);
+        doc.text("ACTA DE COMPROMISO Y SEGUIMIENTO ACADÉMICO", pageWidth / 2, 24, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+doc.setFont("helvetica", "normal");
+doc.setFontSize(11);
+
+const textoIntroduccion =
+    "La Comisión Técnico Pedagógica presenta el siguiente informe sobre la situación académica del estudiante, tras la evaluación de los dos primeros trimestres.";
+
+const lineasIntroduccion = doc.splitTextToSize(
+    textoIntroduccion,
+    pageWidth - 28
+);
+
+doc.text(lineasIntroduccion, 14, 31);
+
+        // I. DATOS GENERALES
+        let y = 42;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.text("I. DATOS GENERALES", 14, y);
+
+       y += 6;
+doc.setFillColor(220, 242, 220);
+doc.setDrawColor(70, 70, 70);
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(8.5);
+
+const tituloPadre = "DATOS DEL PADRE, MADRE O TUTOR(A)";
+const anchoTituloPadre = doc.getTextWidth(tituloPadre) + 6;
+
+doc.rect(14, y - 4, anchoTituloPadre, 6, "F");
+doc.rect(14, y - 4, anchoTituloPadre, 6);
+
+doc.text(tituloPadre, 16, y);
+
+        y += 6;
+        doc.setFontSize(8.5);
+        doc.text("Nombre Completo del Responsable:", 16, y);
+        doc.line(72, y + 1, pageWidth - 16, y + 1);
+
+        y += 6;
+        doc.text("C.I.:", 16, y);
+        doc.line(28, y + 1, 83, y + 1);
+        doc.text("Teléfono:", 87, y);
+        doc.line(108, y + 1, pageWidth - 16, y + 1);
+
+        y += 6;
+        doc.text("Parentesco (Marque uno):", 16, y);
+        doc.rect(72, y - 3.5, 4, 4);
+        doc.text("Madre", 78, y);
+        doc.rect(99, y - 3.5, 4, 4);
+        doc.text("Padre", 105, y);
+        doc.rect(126, y - 3.5, 4, 4);
+        doc.text("Tutor(a)", 132, y);
+
+        y += 7;
+doc.setFillColor(220, 242, 220);
+doc.setDrawColor(70, 70, 70);
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(8.5);
+
+const tituloEstudiante = "DATOS DEL ESTUDIANTE";
+const anchoTituloEstudiante = doc.getTextWidth(tituloEstudiante) + 6;
+
+doc.rect(14, y - 4, anchoTituloEstudiante, 6, "F");
+doc.rect(14, y - 4, anchoTituloEstudiante, 6);
+
+doc.text(tituloEstudiante, 16, y);
+
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.text("Nombre Completo del Estudiante:", 16, y);
+        doc.setFont("helvetica", "bold");
+        doc.text(estudiante.nombre, 65, y);
+        doc.setFont("helvetica", "normal");
+        doc.text("Curso:", 129, y);
+        doc.setFont("helvetica", "bold");
+        doc.text(curso, 145, y);
+       
+        // II. SITUACIÓN ACADÉMICA
+        y += 5;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.text("II. SITUACIÓN ACADÉMICA DETALLADA", 14, y);
+
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(
+            "El/La estudiante presenta un bajo rendimiento académico en las siguientes áreas de estudio. El detalle de los",
+            16, y
+        );
+        y += 4.5;
+        doc.text(
+            trimestre === "PRIMERO"
+                ? "resultado obtenido en el 1er Trimestre se presenta a continuación:"
+                : "resultados obtenidos en el 1er y 2do Trimestre se presenta a continuación:",
+            16, y
+        );
+
+        y += 3;
+        const cuerpoAcademico = filasAcademicas.length
+            ? filasAcademicas.map((fila) => [
+                fila.materiaProfesor,
+                textoNotaFicha(fila.nota1),
+                textoNotaFicha(fila.nota2)
+            ])
+            : [["", "", ""], ["", "", ""], ["", "", ""]];
+
+        doc.autoTable({
+            startY: y,
+            margin: { left: 14, right: 14 },
+            tableWidth: pageWidth - 28,
+            head: [["Asignatura / Área y Profesor(a)", "1er. Trim.", "2do. Trim."]],
+            body: cuerpoAcademico,
+            theme: "grid",
+            styles: {
+                font: "helvetica",
+                fontSize: 8.7,
+                  textColor: [0, 0, 0],
+               cellPadding: 1.2,
+minCellHeight: 5,
+                valign: "middle",
+                lineColor: [80, 80, 80],
+                lineWidth: 0.25
+            },
+            headStyles: {
+                fillColor: [220, 242, 220],
+                textColor: [0, 0, 0],
+                fontStyle: "bold",
+                fontSize: 9,
+                halign: "center",
+                valign: "middle"
+            },
+        columnStyles: {
+    0: { cellWidth: 112 },
+    1: { cellWidth: 25, halign: "center" },
+    2: { cellWidth: 25, halign: "center" }
+},
+
+didParseCell: function(data) {
+    if (
+        data.section === "body" &&
+        (data.column.index === 1 || data.column.index === 2)
+    ) {
+        const fila = filasAcademicas[data.row.index];
+
+        if (
+            fila &&
+            typeof fila.nota1 === "number" &&
+            typeof fila.nota2 === "number" &&
+            fila.nota1 < 51 &&
+            fila.nota2 < 51
+        ) {
+            // SOLO las celdas de las notas
+            data.cell.styles.fillColor = [255, 0, 0];
+            data.cell.styles.textColor = [255, 255, 255];
+        }
+    }
+}
+        });
+
+        y = doc.lastAutoTable.finalY + 7;
+
+        // III. COMPRENSIÓN DEL RIESGO ACADÉMICO
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.text("III. COMPRENSIÓN DEL RIESGO ACADÉMICO", 14, y);
+        y += 5;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.3);
+       doc.setFont("helvetica", "normal");
+doc.setFontSize(10);
+
+const riesgo =
+    "La madre, padre o tutor(a) declara haber sido informado(a) sobre las calificaciones y dificultades mencionadas. " +
+    "Comprende plenamente que, si estas dificultades persisten y no se alcanzan los aprendizajes y criterios de promoción establecidos, " +
+    "el estudiante podría encontrarse en riesgo de no ser promovido al finalizar la gestión escolar. Esta comunicación es preventiva y no constituye una determinación anticipada de pérdida de año.";
+
+const lineasRiesgo = doc.splitTextToSize(
+    riesgo,
+    pageWidth - 32
+);
+
+// Texto justificado
+const anchoTexto = pageWidth - 32;
+
+lineasRiesgo.forEach((linea, index) => {
+    const esUltimaLinea = index === lineasRiesgo.length - 1;
+
+    if (esUltimaLinea) {
+        // La última línea queda normal, sin estirar los espacios
+        doc.text(linea, 16, y);
+    } else {
+        const palabras = linea.trim().split(/\s+/);
+
+        if (palabras.length > 1) {
+            const anchoPalabras = palabras.reduce(
+                (total, palabra) => total + doc.getTextWidth(palabra),
+                0
+            );
+
+            const espacio = (anchoTexto - anchoPalabras) / (palabras.length - 1);
+
+            let x = 16;
+
+            palabras.forEach((palabra, i) => {
+                doc.text(palabra, x, y);
+                x += doc.getTextWidth(palabra) + espacio;
+            });
+        } else {
+            doc.text(linea, 16, y);
+        }
+    }
+
+    y += 4.8;
+});
+
+        // IV. COMPROMISOS
+        y += 2;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.text("IV. COMPROMISOS FORMALES DE LA MADRE, PADRE O TUTOR", 14, y);
+        y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Como parte de mi responsabilidad en la educación de mi hijo(a), asumo el compromiso formal de:", 16, y);
+        y += 5;
+
+        const compromisos = [
+            "1. Realizar un seguimiento permanente de las actividades académicas.",
+            "2. Verificar diariamente el cumplimiento de tareas y trabajos.",
+            "3. Establecer en el hogar un horario y espacio adecuado para el estudio.",
+            "4. Mantener una comunicación fluida con los docentes.",
+            "5. Asistir puntualmente a las reuniones y citaciones de la Unidad Educativa.",
+            "6. Brindar el apoyo y acompañamiento necesarios para mejorar el rendimiento.",
+            "7. Motivar constantemente al estudiante a cumplir con sus responsabilidades escolares."
+        ];
+
+        compromisos.forEach(linea => {
+            doc.text(linea, 18, y);
+            y += 4.5;
+        });
+
+        // V. CONFORMIDAD
+        y += 2;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.text("V. CONFORMIDAD", 14, y);
+        y += 5;
+        doc.setFont("helvetica", "normal");
+doc.setFontSize(10);
+
+const textoConformidad =
+    "En virtud de lo descrito anteriormente, asumo la responsabilidad compartida en la educación de mi hijo(a) y, para constancia de mi entera conformidad, firmo el presente documento.";
+
+const lineasConformidad = doc.splitTextToSize(
+    textoConformidad,
+    pageWidth - 32
+);
+
+const anchoConformidad = pageWidth - 32;
+
+lineasConformidad.forEach((linea, index) => {
+    const esUltimaLinea = index === lineasConformidad.length - 1;
+
+    if (esUltimaLinea) {
+        // La última línea queda normal
+        doc.text(linea, 16, y);
+    } else {
+        // Justificar la línea
+        const palabras = linea.trim().split(/\s+/);
+
+        if (palabras.length > 1) {
+            const anchoPalabras = palabras.reduce(
+                (total, palabra) => total + doc.getTextWidth(palabra),
+                0
+            );
+
+            const espacio =
+                (anchoConformidad - anchoPalabras) /
+                (palabras.length - 1);
+
+            let x = 16;
+
+            palabras.forEach((palabra) => {
+                doc.text(palabra, x, y);
+                x += doc.getTextWidth(palabra) + espacio;
+            });
+        } else {
+            doc.text(linea, 16, y);
+        }
+    }
+
+    y += 4.8;
+});
+
+        // Firmas.
+        const firmaY = Math.min(Math.max(y + 22, 254), pageHeight - 25);
+        doc.setDrawColor(0, 0, 0);
+        doc.line(20, firmaY, 70, firmaY);
+        doc.line(80, firmaY, 130, firmaY);
+        doc.line(140, firmaY, 190, firmaY);
+
+        doc.setFontSize(8);
+        doc.text("Firma del PPFF/Tutor(a)", 45, firmaY + 5, { align: "center" });
+        doc.text("Firma del Profesor(a)", 105, firmaY + 5, { align: "center" });
+        doc.text("Firma de la Dirección", 165, firmaY + 5, { align: "center" });
+
+        const fechaActual = new Date();
+        const nombreMes = fechaActual.toLocaleString("es-BO", { month: "long" }).toUpperCase();
+        doc.setFont("helvetica", "bold");
+        doc.text(
+            `Santa Cruz, ........ de ${nombreMes} del ${fechaActual.getFullYear()}`,
+            pageWidth / 2,
+            firmaY + 13,
+            { align: "center" }
+        );
+
+           };
+
+    const cargarModalSeguimientoAcademico = () => {
+        selectCursoSeguimientoAcademico.innerHTML = '<option value="">-- Seleccione Curso --</option>';
+
+        TODOS_LOS_CURSOS_SEGUIMIENTO_ACADEMICO.forEach(curso => {
+            const op = document.createElement("option");
+            op.value = curso;
+            op.textContent = curso;
+            selectCursoSeguimientoAcademico.appendChild(op);
+        });
+
+        selectTrimestreSeguimientoAcademico.value = "";
+        activarBotonSeguimientoAcademico();
+    };
+
+    // Función para activar el botón solo cuando CURSO + TRIMESTRE estén seleccionados.
+    const activarBotonSeguimientoAcademico = () => {
+        const habilitar = Boolean(selectCursoSeguimientoAcademico.value && selectTrimestreSeguimientoAcademico.value);
+
+        btnGenerarSeguimientoAcademico.disabled = !habilitar;
+        btnGenerarSeguimientoAcademico.style.background = habilitar ? "#6F42C1" : "#999";
+        btnGenerarSeguimientoAcademico.style.cursor = habilitar ? "pointer" : "not-allowed";
+    };
+
+    selectCursoSeguimientoAcademico.addEventListener("change", activarBotonSeguimientoAcademico);
+    selectTrimestreSeguimientoAcademico.addEventListener("change", activarBotonSeguimientoAcademico);
+
+    // Apertura/cierre del modal.
+    btnCerrarModalSeguimientoAcademico.addEventListener("click", () => {
+        modalSeguimientoAcademico.style.display = "none";
+    });
+
+    document.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "btnAbrirSeguimientoAcademico") {
+            modalSeguimientoAcademico.style.display = "flex";
+            cargarModalSeguimientoAcademico();
+        }
+    });
+
+    // Generar UN PDF con una página diferente para cada estudiante.
+    // IMPORTANTE: las notas se cargan por profesor/trimestre/curso UNA SOLA VEZ.
+    // Así evitamos hacer una consulta por cada estudiante y el PDF se genera mucho más rápido.
+    btnGenerarSeguimientoAcademico.addEventListener("click", async () => {
+        const cursoSeleccionado = selectCursoSeguimientoAcademico.value;
+        const trimestreSeleccionado = selectTrimestreSeguimientoAcademico.value;
+
+        if (!cursoSeleccionado || !trimestreSeleccionado) return;
+
+        const textoOriginal = btnGenerarSeguimientoAcademico.innerText;
+        btnGenerarSeguimientoAcademico.innerText = "⏳ GENERANDO PDF...";
+        btnGenerarSeguimientoAcademico.disabled = true;
+
+        try {
+            // 1. Cargar estudiantes y profesores en paralelo.
+            const [resEstudiantes, profesoresCurso] = await Promise.all([
+                fetch(`https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`),
+                obtenerProfesoresCursoFicha(cursoSeleccionado)
+            ]);
+
+            if (!resEstudiantes.ok) {
+                throw new Error(`No se pudo leer el curso (${resEstudiantes.status}).`);
+            }
+
+            const estudiantesData = await resEstudiantes.json();
+            const estudiantes = convertirListaEstudiantesFicha(estudiantesData);
+
+            if (!estudiantes.length) {
+                alert("No hay estudiantes registrados en el curso seleccionado.");
+                return;
+            }
+
+            if (!profesoresCurso.length) {
+                alert("No se encontraron profesores asignados a este curso.");
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // 2. CARGAR LAS NOTAS DEL CURSO POR PROFESOR.
+            // Estructura principal de Firebase:
+            // NOTASTRIMESTRE/PROFESOR/PRIMERO/CURSO/ESTUDIANTE/NOTA_TRIMESTRAL
+            // NOTASTRIMESTRE/PROFESOR/SEGUNDO/CURSO/ESTUDIANTE/NOTA_TRIMESTRAL
+            // ------------------------------------------------------------
+            const trimestresNecesarios = trimestreSeleccionado === "PRIMERO"
+                ? ["PRIMERO"]
+                : ["PRIMERO", "SEGUNDO"];
+
+            const cacheNotas = new Map();
+
+            // Una petición por profesor y trimestre, no por estudiante.
+            await Promise.all(profesoresCurso.map(async (p) => {
+                await Promise.all(trimestresNecesarios.map(async (trim) => {
+                    const profesor = String(p.profesor).trim();
+                    // Estructura exacta de Firebase indicada por el usuario:
+                    // NOTASTRIMESTRE/PROFESOR/TRIMESTRE/CURSO/ESTUDIANTE/NOTA_TRIMESTRAL
+                    let data = null;
+                    const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/${encodeURIComponent(profesor)}/${trim}/${encodeURIComponent(cursoSeleccionado)}.json`;
+
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) data = await response.json();
+                    } catch (err) {
+                        console.warn("Error consultando notas de", profesor, trim, err);
+                    }
+
+                    const mapa = new Map();
+
+                    // data debe tener claves como JUAN, juan, MARIA, etc.
+                    if (data && typeof data === "object") {
+                        Object.entries(data).forEach(([claveEstudiante, registro]) => {
+                            const nota = extraerNotaTrimestralFicha(registro);
+                            if (nota === null) return;
+
+                            // La clave es el nombre del estudiante.
+                            mapa.set(normalizarFicha(claveEstudiante), nota);
+
+                            // Compatibilidad si el nombre viene dentro del registro.
+                            if (registro && typeof registro === "object") {
+                                const nombreRegistro = registro.nombre ?? registro.NOMBRE ?? registro.estudiante ?? registro.ESTUDIANTE;
+                                if (nombreRegistro) {
+                                    mapa.set(normalizarFicha(nombreRegistro), nota);
+                                }
+                            }
+                        });
+                    }
+
+                    cacheNotas.set(`${profesor}||${trim}`, mapa);
+                }));
+            }));
+
+            // ------------------------------------------------------------
+            // 3. PARA CADA ESTUDIANTE, SOLO SE INCLUYEN PROFESORES
+            //    QUE TENGAN NOTA MENOR A 51.
+            // ------------------------------------------------------------
+            const filasPorEstudiante = estudiantes.map(estudiante => {
+                const filasAcademicas = [];
+                const nombreBuscado = normalizarFicha(estudiante.nombre);
+
+                for (const p of profesoresCurso) {
+                    const profesor = String(p.profesor).trim();
+                    const mapaPrimero = cacheNotas.get(`${profesor}||PRIMERO`) || new Map();
+                    const nota1 = mapaPrimero.get(nombreBuscado);
+
+                    let nota2 = null;
+                    if (trimestreSeleccionado === "SEGUNDO") {
+                        const mapaSegundo = cacheNotas.get(`${profesor}||SEGUNDO`) || new Map();
+                        nota2 = mapaSegundo.get(nombreBuscado);
+                    }
+
+                    let incluir = false;
+
+                    if (trimestreSeleccionado === "PRIMERO") {
+                        // SOLO nota menor a 51 en PRIMERO.
+                        incluir = typeof nota1 === "number" && nota1 < 51;
+                    } else if (trimestreSeleccionado === "SEGUNDO") {
+                        // SOLO si PRIMERO O SEGUNDO tiene nota menor a 51.
+                        incluir =
+                            (typeof nota1 === "number" && nota1 < 51) ||
+                            (typeof nota2 === "number" && nota2 < 51);
+                    }
+
+                    if (!incluir) continue;
+
+                    filasAcademicas.push({
+                       materiaProfesor: `${filasAcademicas.length + 1}. ${p.materia} -- PROF. ${normalizarFicha(p.profesor)}`,
+   
+                        nota1: typeof nota1 === "number" ? nota1 : null,
+                        nota2: trimestreSeleccionado === "SEGUNDO" && typeof nota2 === "number" ? nota2 : null
+                    });
+                }
+
+                filasAcademicas.sort((a, b) =>
+                    a.materiaProfesor.localeCompare(b.materiaProfesor, "es")
+                );
+
+                return { estudiante, filasAcademicas };
+            });
+
+            // 4. SOLO generan hoja los estudiantes que tienen al menos un profesor
+            //    con nota menor a 51 según el trimestre seleccionado.
+            const estudiantesConBajoRendimiento = filasPorEstudiante.filter(
+                item => item.filasAcademicas.length > 0
+            );
+
+            if (estudiantesConBajoRendimiento.length === 0) {
+                alert("No hay estudiantes con notas menores a 51 en el trimestre seleccionado.");
+                return;
+            }
+
+            // 5. Generar PDF: una hoja SOLAMENTE por estudiante que sí aparece.
+            const doc = new window.jspdf.jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4"
+            });
+
+            estudiantesConBajoRendimiento.forEach((item, index) => {
+                if (index > 0) doc.addPage();
+                dibujarActaSeguimientoAcademico(
+                    doc,
+                    item.estudiante,
+                    cursoSeleccionado,
+                    trimestreSeleccionado,
+                    item.filasAcademicas
+                );
+            });
+
+            const nombreArchivo = `Acta_Seguimiento_Academico_${cursoSeleccionado}_${trimestreSeleccionado}.pdf`;
+            doc.save(nombreArchivo);
+
+            modalSeguimientoAcademico.style.display = "none";
+            alert(`PDF generado correctamente: ${estudiantesConBajoRendimiento.length} estudiante(s).`);
+        } catch (error) {
+            console.error("Error al generar Seguimiento Académico:", error);
+            alert("Error al generar el PDF de Seguimiento Académico: " + error.message);
+        } finally {
+            btnGenerarSeguimientoAcademico.innerText = textoOriginal;
+            activarBotonSeguimientoAcademico();
+        }
+    });
+
     cursoBoletin.addEventListener("change", async () => {
         const cursoSeleccionado = cursoBoletin.value;
         listaEstudiantesBoletin.innerHTML = "";
@@ -1264,6 +2131,7 @@ doc.setFont(undefined, 'normal');
     const filaAsistencia = document.getElementById("filaAsistencia");
     const filaBoletin = document.getElementById("filaBoletin"); 
     const filaFichaSeguimiento = document.getElementById("filaFichaSeguimiento");
+    const filaSeguimientoAcademico = document.getElementById("filaSeguimientoAcademico");
 
     tutor.disabled = true;
     btnDescargar.disabled = true;
@@ -1966,6 +2834,7 @@ const rankTrim3 = matTrim[2] > 0
             filaAsistencia.style.display = "grid";
             filaBoletin.style.display = "grid"; 
             filaFichaSeguimiento.style.display = "grid";
+            filaSeguimientoAcademico.style.display = "grid";
         } else {
             estado.innerHTML = "⛔ Acceso restringido";
             estado.className = "estado restringido";
