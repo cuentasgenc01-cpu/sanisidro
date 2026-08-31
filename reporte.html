@@ -821,6 +821,8 @@ tr:hover { background-color: #f8fafc; }
 <script>
     const DB_URL = 'https://sanisidro-933a9-default-rtdb.firebaseio.com';
     let currentProfesorKey = '';
+    // Profesor real con el que se inició sesión. Se restaura al salir del modo administrador.
+    let profesorOriginalKey = '';
     let selectedList = [];
     
     // MODO del sistema: "estudiante" | "padre" | "lectura"
@@ -1090,6 +1092,10 @@ async function proceedToSaveExcel() {
             window.location.href = 'index.html';
             return;
         }
+
+        // Guardar el profesor real para poder restaurarlo al salir del modo Admin
+        profesorOriginalKey = currentProfesorKey;
+
         document.getElementById('nombreProfesorSidebar').textContent = currentProfesorKey;
 
         if (currentProfesorKey.trim().toUpperCase() === 'JUAN TUPA') {
@@ -1100,10 +1106,10 @@ async function proceedToSaveExcel() {
 
         ui.btnToggleAdmin.addEventListener('click', async () => {
             if (!isAdmin) {
-                activarModoAdmin(false); 
+                await activarModoAdmin(false); 
                 showNotification("Modo Administrador Activado", false);
             } else {
-                desactivarModoAdmin();
+                await desactivarModoAdmin();
                 showNotification("Modo Administrador Desactivado", false);
             }
         });
@@ -1159,39 +1165,33 @@ async function proceedToSaveExcel() {
         document.getElementById('adminInputProfesor').addEventListener('change', async (e) => {
             const profSeleccionado = e.target.value;
             const inputCurso = document.getElementById('adminInputCurso');
-            
+
             if (!profSeleccionado) {
-                inputCurso.value = '';
+                if (inputCurso) inputCurso.value = '';
                 return;
             }
 
             try {
-                const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(profSeleccionado)}/TUTORIA.json`);
-                const tutoriaData = await resp.json();
-                
-                let cursoTutor = "";
+                await cambiarProfesorDesdeAdmin(profSeleccionado);
 
-                if (tutoriaData) {
-                    if (typeof tutoriaData === 'string') {
-                        cursoTutor = tutoriaData;
-                    } else if (typeof tutoriaData === 'object' && !Array.isArray(tutoriaData)) {
-                        const keys = Object.keys(tutoriaData);
-                        if (keys.length > 0) {
-                            cursoTutor = keys[0];
-                        }
-                    }
+                if (inputCurso) {
+                    inputCurso.value = tutorCursoDescarga || '';
                 }
 
-                if (cursoTutor) {
-                    inputCurso.value = cursoTutor;
-                    showNotification(`El curso tutor de ${profSeleccionado} es ${cursoTutor}`, false);
+                if (tutorCursoDescarga) {
+                    showNotification(
+                        `Profesor cambiado a ${profSeleccionado}. Curso tutor: ${tutorCursoDescarga}`,
+                        false
+                    );
                 } else {
-                    inputCurso.value = '';
-                    showNotification(`El profesor ${profSeleccionado} no tiene tutoría asignada`, true);
+                    showNotification(
+                        `El profesor ${profSeleccionado} no tiene tutoría asignada`,
+                        true
+                    );
                 }
             } catch (error) {
-                console.error("Error al obtener tutoría del profesor:", error);
-                inputCurso.value = '';
+                console.error("Error al cambiar el profesor en modo administrador:", error);
+                if (inputCurso) inputCurso.value = '';
                 showNotification("Error de red al verificar la tutoría.", true);
             }
         });
@@ -1592,14 +1592,7 @@ async function proceedToSaveExcel() {
         );
 
 
-    if (trimestre && tutorCursoDescarga) {
-
-        btnDescargarModal.disabled = false;
-
-    } else {
-
-        btnDescargarModal.disabled = true;
-    }
+    actualizarCursoTutorSubirNotas();
 
 
     // =========================================================
@@ -3649,15 +3642,27 @@ async function abrirModalEditarNotas(trimestre, curso) {
     await cargarProfesoresAdmin();
 }
 
-    function desactivarModoAdmin() {
+    async function desactivarModoAdmin() {
         isAdmin = false;
         document.getElementById('adminPanelDescargas').classList.add('hidden');
-        
+
         ui.btnToggleAdmin.classList.remove('bg-amber-100', 'border-amber-300', 'text-amber-600', 'text-2xl');
         ui.btnToggleAdmin.classList.add('bg-gray-100', 'border-gray-200', 'text-xl');
-        
-        if(document.getElementById('adminInputProfesor')) document.getElementById('adminInputProfesor').value = '';
-        if(document.getElementById('adminInputCurso')) document.getElementById('adminInputCurso').value = '';
+
+        // RESTAURAR EL PROFESOR ORIGINAL
+        currentProfesorKey = profesorOriginalKey || currentProfesorKey;
+        document.getElementById('nombreProfesorSidebar').textContent = currentProfesorKey;
+
+        if (document.getElementById('adminInputProfesor')) {
+            document.getElementById('adminInputProfesor').value = '';
+        }
+        if (document.getElementById('adminInputCurso')) {
+            document.getElementById('adminInputCurso').value = '';
+        }
+
+        // Restaurar también el curso tutor del profesor original
+        await cargarTutoria();
+        actualizarCursoTutorSubirNotas();
     }
 
     async function cargarProfesoresAdmin() {
@@ -3682,9 +3687,48 @@ async function abrirModalEditarNotas(trimestre, curso) {
         }
     }
 
+    // Actualiza la etiqueta y el botón de descarga del modal SUBIR NOTAS
+    // usando siempre el profesor/curso tutor actualmente seleccionado.
+    function actualizarCursoTutorSubirNotas() {
+        const lblCurso = document.getElementById('lblCursoTutorSubirNotas');
+        const btnDescargarModal = document.getElementById('btnDescargarNotasTutorModal');
+        const trimestre = document.getElementById('selectTrimestreSubirNotas')?.value || '';
+
+        if (lblCurso) {
+            lblCurso.textContent = `Curso Tutor: ${tutorCursoDescarga || 'No asignado'}`;
+        }
+
+        if (btnDescargarModal) {
+            btnDescargarModal.disabled = !(trimestre && tutorCursoDescarga);
+        }
+    }
+
+    // Cambia todo el contexto de profesor cuando el administrador selecciona otro.
+    async function cambiarProfesorDesdeAdmin(profesorSeleccionado) {
+        if (!profesorSeleccionado) return;
+
+        currentProfesorKey = profesorSeleccionado;
+
+        // Cambiar nombre visible en el sidebar
+        const nombreSidebar = document.getElementById('nombreProfesorSidebar');
+        if (nombreSidebar) {
+            nombreSidebar.textContent = currentProfesorKey;
+        }
+
+        // Obtener nuevamente la tutoría del profesor seleccionado
+        await cargarTutoria();
+
+        // Actualizar el curso mostrado en SUBIR NOTAS
+        actualizarCursoTutorSubirNotas();
+    }
+
     async function cargarTutoria() {
         const tutoriaContainer = document.getElementById('tutoriaContainer');
         const txtTutoria = document.getElementById('txtTutoria');
+
+        // Evitar conservar el curso del profesor anterior cuando se cambia de profesor.
+        tutorCursoDescarga = '';
+        actualizarCursoTutorSubirNotas();
 
         try {
             const resp = await fetch(`${DB_URL}/PROFESORES/${encodeURIComponent(currentProfesorKey)}/TUTORIA.json`);
@@ -3703,22 +3747,51 @@ async function abrirModalEditarNotas(trimestre, curso) {
                         materia = tutoriaData[curso] || materia;
                     }
                 }
-                
+
                 if (curso) {
                     txtTutoria.textContent = `${curso} : ${materia}`;
                     tutoriaContainer.classList.remove('hidden');
 
                     tutorCursoDescarga = curso;
-                    
+
                     if (isAdmin && document.getElementById('adminInputCurso')) {
                         document.getElementById('adminInputCurso').value = curso;
                     }
+
+                    // Refrescar inmediatamente la información de SUBIR NOTAS.
+                    actualizarCursoTutorSubirNotas();
+                } else {
+                    txtTutoria.textContent = 'Sin tutoría asignada';
+                    tutoriaContainer.classList.remove('hidden');
+
+                    if (isAdmin && document.getElementById('adminInputCurso')) {
+                        document.getElementById('adminInputCurso').value = '';
+                    }
+
+                    actualizarCursoTutorSubirNotas();
                 }
+            } else {
+                txtTutoria.textContent = 'Sin tutoría asignada';
+                tutoriaContainer.classList.remove('hidden');
+
+                if (isAdmin && document.getElementById('adminInputCurso')) {
+                    document.getElementById('adminInputCurso').value = '';
+                }
+
+                actualizarCursoTutorSubirNotas();
             }
         } catch (error) {
             console.error("Error obteniendo la tutoría del profesor:", error);
+            tutorCursoDescarga = '';
+
+            if (isAdmin && document.getElementById('adminInputCurso')) {
+                document.getElementById('adminInputCurso').value = '';
+            }
+
+            actualizarCursoTutorSubirNotas();
         }
     }
+
 
     async function initTrimesterSystem() {
         showLoading("Verificando estado del trimestre...");
@@ -4164,10 +4237,9 @@ async function abrirModalEditarNotas(trimestre, curso) {
     document.getElementById("containerCursosSubidos").classList.add("hidden");
     document.getElementById("listaCursosSubidos").innerHTML = "";
     
-    // MODIFICADO: Actualizar la vista del botón y etiqueta
+    // Actualizar la vista del botón y etiqueta según el profesor actual
+    actualizarCursoTutorSubirNotas();
     const btnDescargarModal = document.getElementById('btnDescargarNotasTutorModal');
-    const lblCurso = document.getElementById('lblCursoTutorSubirNotas');
-    lblCurso.textContent = `Curso Tutor: ${tutorCursoDescarga || 'No asignado'}`;
     btnDescargarModal.disabled = true;
 
     cursosYaSubidosGlobal = [];

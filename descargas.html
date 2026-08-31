@@ -14,6 +14,76 @@
 
 <!-- Nuevas Librerías para el Boletín PDF -->
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- NUEVO MODAL: ACTUALIZAR NOTAS -->
+<div id="modalActualizarNotas" class="modal">
+    <div class="modal-content">
+        <div class="titulo-modal">
+            <span>✏️ ACTUALIZAR NOTAS</span>
+            <span id="btnCerrarModalActualizarNotas" style="cursor:pointer;font-size:24px;">✖</span>
+        </div>
+
+        <div class="fila-campos">
+            <div class="campo">
+                <label for="selectTrimestreActualizarNotas">Trimestre:</label>
+                <select id="selectTrimestreActualizarNotas">
+                    <option value="">-- Seleccione Trimestre --</option>
+                    <option value="PRIMERO">PRIMERO</option>
+                    <option value="SEGUNDO">SEGUNDO</option>
+                    <option value="TERCERO">TERCERO</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="selectCursoActualizarNotas">Curso:</label>
+                <select id="selectCursoActualizarNotas">
+                    <option value="">-- Seleccione Curso --</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="selectEstudianteActualizarNotas">Estudiante:</label>
+                <select id="selectEstudianteActualizarNotas" disabled>
+                    <option value="">-- Seleccione Estudiante --</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loadingActualizarNotas">⏳ Cargando estudiantes y notas...</div>
+
+        <div id="tablaActualizarNotasWrap">
+            <table class="tabla-actualizar-notas">
+                <thead>
+                    <tr>
+                        <th style="width:28%;">PROFESOR</th>
+                        <th style="width:32%;">MATERIA</th>
+                        <th style="width:40%;">
+                            <span>NOTAS</span>
+                            <label style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:13px;cursor:pointer;">
+                                <input type="checkbox" id="checkAumentarNotas" style="width:17px;height:17px;cursor:pointer;">
+                                +5
+                            </label>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyActualizarNotas">
+                    <tr>
+                        <td colspan="3" style="text-align:center;color:#777;">
+                            Seleccione trimestre, curso y estudiante.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="acciones" style="gap:10px;">
+            <button id="btnGuardarNotasActualizadas" disabled>
+                💾 ACTUALIZAR NOTAS
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
   // Desactivamos el "preflight" de Tailwind para que no arruine tus estilos base
   tailwind.config = {
@@ -41,7 +111,7 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex}
 .contenedor{max-width:1100px;background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 
 /* ESTRUCTURA EN GRID */
-#contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga {
+#contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga, #filaActualizarNotas.fila-descarga {
     display: none; 
     align-items: center;
     gap: 15px;
@@ -81,8 +151,8 @@ button#btnDescargarAnual:not(:disabled):hover {
     background: #218838;
 }
 
-table tr:first-child th:nth-child(n+3),
-table tr:first-child td:nth-child(n+3) {
+table:not(.tabla-actualizar-notas) tr:first-child th:nth-child(n+3),
+table:not(.tabla-actualizar-notas) tr:first-child td:nth-child(n+3) {
     display: inline-block;
     white-space: nowrap;
     transform: rotate(-90deg);
@@ -100,6 +170,83 @@ table tr:first-child td:nth-child(n+3) {
 .campo input,.campo select{width:100%;height:42px;border-radius:12px;border:1px solid #ccc;padding:0 10px}
 .acciones{display:flex;justify-content:flex-end;margin-top:20px}
 #btnProcesar, #btnGenerarFicha {border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer}
+/* ===== NUEVO: ACTUALIZAR NOTAS ===== */
+#filaActualizarNotas.fila-descarga{
+    grid-template-columns: max-content 1fr 1fr max-content;
+}
+#modalActualizarNotas .modal-content{
+    width: 900px;
+    max-width: 95vw;
+}
+#tablaActualizarNotasWrap{
+    flex:1;
+    overflow:auto;
+    max-height:52vh;
+    margin-top:15px;
+}
+.tabla-actualizar-notas{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+}
+.tabla-actualizar-notas th,
+.tabla-actualizar-notas td{
+    border:1px solid #d6d6d6;
+    padding:9px 10px;
+    text-align:left;
+}
+.tabla-actualizar-notas th{
+    background:#0D47A1;
+    color:#fff;
+    position:sticky;
+    top:0;
+    z-index:1;
+}
+.tabla-actualizar-notas td:first-child{
+    font-weight:bold;
+    color:#0D47A1;
+}
+.nota-actualizar-input{
+    width:100% !important;
+    min-width:90px !important;
+    max-width:140px !important;
+    height:40px !important;
+    padding:0 10px !important;
+    border:1px solid #bbb !important;
+    border-radius:9px !important;
+    text-align:center;
+    font-weight:bold;
+}
+.tabla-actualizar-notas th:nth-child(1){width:28%;}
+.tabla-actualizar-notas th:nth-child(2){width:42%;}
+.tabla-actualizar-notas th:nth-child(3){width:30%;}
+.tabla-actualizar-notas td:nth-child(3){text-align:center;}
+.nota-actualizar-input:focus{
+    outline:2px solid #0D47A1;
+    border-color:#0D47A1 !important;
+}
+#btnGuardarNotasActualizadas{
+    border:none;
+    background:#28a745;
+    color:#fff;
+    padding:13px 25px;
+    border-radius:25px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+#btnGuardarNotasActualizadas:disabled{
+    background:#999;
+    cursor:not-allowed;
+}
+#loadingActualizarNotas{
+    display:none;
+    text-align:center;
+    color:#0D47A1;
+    font-weight:bold;
+    margin:10px 0;
+}
+
 
 .lista-est { list-style:none; padding:0; margin:0; }
 .lista-est li { display:flex; justify-content:space-between; align-items:center; padding:12px 10px; border-bottom:1px solid #dcdcdc; background: white; border-radius: 8px; margin-bottom: 8px; }
@@ -108,7 +255,7 @@ table tr:first-child td:nth-child(n+3) {
 .btn-pdf-est:disabled { background:#999; cursor:not-allowed; }
 
 @media (max-width: 1300px) {
-    #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga {
+    #contenido.fila-descarga, #filaAsistencia.fila-descarga, #filaBoletin.fila-descarga, #filaFichaSeguimiento.fila-descarga, #filaSeguimientoAcademico.fila-descarga, #filaActualizarNotas.fila-descarga {
         grid-template-columns: 1fr;
         justify-items: stretch;
     }
@@ -190,6 +337,15 @@ table tr:first-child td:nth-child(n+3) {
 <div class="fila-descarga" id="filaSeguimientoAcademico" style="display:none;">
 <h1>📑 SEGUIMIENTO ACADÉMICO</h1>
 <button class="descarga" id="btnAbrirSeguimientoAcademico">⬇ DESCARGAR PDF</button>
+</div>
+
+<!-- NUEVA FILA: ACTUALIZAR NOTAS -->
+<hr style="margin:25px 0;">
+<div class="fila-descarga" id="filaActualizarNotas" style="display:none;">
+<h1>✏️ ACTUALIZAR NOTAS</h1>
+<div></div>
+<div></div>
+<button class="descarga" id="btnAbrirActualizarNotas">✏️ ACTUALIZAR</button>
 </div>
 
 </div>
@@ -404,6 +560,643 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectTrimestreSeguimientoAcademico = document.getElementById("selectTrimestreSeguimientoAcademico");
     const btnGenerarSeguimientoAcademico = document.getElementById("btnGenerarSeguimientoAcademico");
     const btnCerrarModalSeguimientoAcademico = document.getElementById("btnCerrarModalSeguimientoAcademico");
+
+
+    // =========================================================
+    // NUEVO: ACTUALIZAR NOTAS
+    // Todo este bloque es independiente de los botones existentes.
+    // =========================================================
+    const btnAbrirActualizarNotas = document.getElementById("btnAbrirActualizarNotas");
+    const modalActualizarNotas = document.getElementById("modalActualizarNotas");
+    const btnCerrarModalActualizarNotas = document.getElementById("btnCerrarModalActualizarNotas");
+    const selectTrimestreActualizarNotas = document.getElementById("selectTrimestreActualizarNotas");
+    const selectCursoActualizarNotas = document.getElementById("selectCursoActualizarNotas");
+    const selectEstudianteActualizarNotas = document.getElementById("selectEstudianteActualizarNotas");
+    const tbodyActualizarNotas = document.getElementById("tbodyActualizarNotas");
+    const loadingActualizarNotas = document.getElementById("loadingActualizarNotas");
+    const btnGuardarNotasActualizadas = document.getElementById("btnGuardarNotasActualizadas");
+    const checkAumentarNotas = document.getElementById("checkAumentarNotas");
+
+    const CURSOS_ACTUALIZAR_NOTAS = [
+        "PRIMEROA","PRIMEROB","PRIMEROC",
+        "SEGUNDOA","SEGUNDOB","SEGUNDOC",
+        "TERCEROA","TERCEROB","TERCEROC",
+        "CUARTOA","CUARTOB","CUARTOC",
+        "QUINTOA","QUINTOB","QUINTOC",
+        "SEXTOA","SEXTOB","SEXTOC"
+    ];
+
+    let datosActualizarNotas = {
+        trimestre: "",
+        curso: "",
+        estudiante: "",
+        profesores: []
+    };
+
+    const normalizarActualizarNotas = (valor) =>
+        String(valor ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+
+    const extraerNotaActualizarNotas = (registro) => {
+        if (registro === null || registro === undefined) return null;
+
+        if (typeof registro === "number") {
+            return Number.isFinite(registro) ? registro : null;
+        }
+
+        if (typeof registro === "string") {
+            const n = parseFloat(registro.replace(",", "."));
+            return Number.isFinite(n) ? n : null;
+        }
+
+        if (typeof registro === "object") {
+            const posibles = [
+                registro.NOTA_TRIMESTRAL,
+                registro.nota_trimestral,
+                registro.NOTA,
+                registro.nota
+            ];
+
+            for (const valor of posibles) {
+                const n = extraerNotaActualizarNotas(valor);
+                if (n !== null) return n;
+            }
+        }
+
+        return null;
+    };
+
+    const convertirEstudiantesActualizarNotas = (data) => {
+        const lista = [];
+
+        if (Array.isArray(data)) {
+            data.forEach((valor, index) => {
+                if (valor === null || valor === undefined || valor === "") return;
+
+                const texto = String(valor);
+                if (texto.includes(":")) {
+                    const partes = texto.split(":");
+                    lista.push({
+                        numero: parseInt(partes[0], 10) || index + 1,
+                        nombre: partes.slice(1).join(":").trim()
+                    });
+                } else {
+                    lista.push({
+                        numero: index + 1,
+                        nombre: texto.trim()
+                    });
+                }
+            });
+        } else if (data && typeof data === "object") {
+            Object.entries(data).forEach(([clave, valor], index) => {
+                if (clave.includes(":")) {
+                    const partes = clave.split(":");
+                    lista.push({
+                        numero: parseInt(partes[0], 10) || index + 1,
+                        nombre: partes.slice(1).join(":").trim()
+                    });
+                    return;
+                }
+
+                if (typeof valor === "string" || typeof valor === "number") {
+                    lista.push({
+                        numero: parseInt(clave, 10) || index + 1,
+                        nombre: String(valor).trim()
+                    });
+                } else if (valor && typeof valor === "object" && valor.nombre) {
+                    lista.push({
+                        numero: parseInt(clave, 10) || index + 1,
+                        nombre: String(valor.nombre).trim()
+                    });
+                }
+            });
+        }
+
+        return lista
+            .filter(e => e.nombre)
+            .sort((a, b) => a.numero - b.numero || a.nombre.localeCompare(b.nombre, "es"));
+    };
+
+    const activarBotonActualizarNotas = () => {
+        const habilitar = Boolean(
+            selectTrimestreActualizarNotas.value &&
+            selectCursoActualizarNotas.value &&
+            selectEstudianteActualizarNotas.value &&
+            datosActualizarNotas.profesores.length > 0
+        );
+
+        btnGuardarNotasActualizadas.disabled = !habilitar;
+        btnGuardarNotasActualizadas.style.background = habilitar ? "#28a745" : "#999";
+        btnGuardarNotasActualizadas.style.cursor = habilitar ? "pointer" : "not-allowed";
+    };
+
+    const limpiarTablaActualizarNotas = (mensaje = "Seleccione trimestre, curso y estudiante.") => {
+        tbodyActualizarNotas.innerHTML = `
+            <tr>
+                <td colspan="3" style="text-align:center;color:#777;">${mensaje}</td>
+            </tr>
+        `;
+        datosActualizarNotas.profesores = [];
+        activarBotonActualizarNotas();
+    };
+
+    const cargarCursosActualizarNotas = () => {
+        selectCursoActualizarNotas.innerHTML =
+            '<option value="">-- Seleccione Curso --</option>';
+
+        CURSOS_ACTUALIZAR_NOTAS.forEach(curso => {
+            const op = document.createElement("option");
+            op.value = curso;
+            op.textContent = curso;
+            selectCursoActualizarNotas.appendChild(op);
+        });
+    };
+
+    const cargarEstudiantesActualizarNotas = async () => {
+        const curso = selectCursoActualizarNotas.value;
+
+        selectEstudianteActualizarNotas.innerHTML =
+            '<option value="">-- Cargando estudiantes... --</option>';
+        selectEstudianteActualizarNotas.disabled = true;
+        limpiarTablaActualizarNotas();
+
+        if (!curso) {
+            selectEstudianteActualizarNotas.innerHTML =
+                '<option value="">-- Seleccione Estudiante --</option>';
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(curso)}.json`
+            );
+
+            if (!response.ok) {
+                throw new Error(`No se pudo leer el curso (${response.status}).`);
+            }
+
+            const data = await response.json();
+            const estudiantes = convertirEstudiantesActualizarNotas(data);
+
+            selectEstudianteActualizarNotas.innerHTML =
+                '<option value="">-- Seleccione Estudiante --</option>';
+
+            estudiantes.forEach(est => {
+                const op = document.createElement("option");
+                op.value = est.nombre;
+                op.textContent = `${est.numero}. ${est.nombre}`;
+                selectEstudianteActualizarNotas.appendChild(op);
+            });
+
+            selectEstudianteActualizarNotas.disabled = estudiantes.length === 0;
+
+            if (!estudiantes.length) {
+                selectEstudianteActualizarNotas.innerHTML =
+                    '<option value="">-- No hay estudiantes --</option>';
+                limpiarTablaActualizarNotas("No hay estudiantes registrados en este curso.");
+            }
+        } catch (error) {
+            console.error("Error cargando estudiantes para actualizar notas:", error);
+            selectEstudianteActualizarNotas.innerHTML =
+                '<option value="">-- Error al cargar --</option>';
+            limpiarTablaActualizarNotas("Error al cargar estudiantes.");
+        }
+    };
+
+    const obtenerProfesoresMateriaActualizarNotas = async (curso) => {
+        const todosProfes = await obtenerProfesoresCache();
+        const profesores = [];
+
+        if (!todosProfes) return profesores;
+
+        for (const nomProf in todosProfes) {
+            const pData = todosProfes[nomProf] || {};
+            const valorMateria = pData.CURSO && pData.CURSO[curso];
+
+            if (valorMateria === undefined || valorMateria === null || valorMateria === "") {
+                continue;
+            }
+
+            const profesorTexto = String(nomProf).trim();
+            const materiaTexto = String(valorMateria).trim();
+
+            // Mantener la misma exclusión administrativa que ya utiliza el archivo.
+            const profUpp = normalizarActualizarNotas(profesorTexto);
+            const matUpp = normalizarActualizarNotas(materiaTexto);
+
+            if (
+                profUpp.includes("REGENTA") ||
+                profUpp.includes("DIRECTOR") ||
+                matUpp.includes("REGENTA") ||
+                matUpp.includes("DIRECTOR")
+            ) {
+                continue;
+            }
+
+            profesores.push({
+                profesor: profesorTexto,
+                materia: materiaTexto
+            });
+        }
+
+        profesores.sort((a, b) =>
+            normalizarActualizarNotas(a.materia).localeCompare(
+                normalizarActualizarNotas(b.materia), "es"
+            ) ||
+            normalizarActualizarNotas(a.profesor).localeCompare(
+                normalizarActualizarNotas(b.profesor), "es"
+            )
+        );
+
+        return profesores;
+    };
+
+    // Guarda la nota original de Firebase y muestra la nota con/sin el +5.
+    // El +5 nunca supera 100.
+    const calcularNotaMostrarActualizarNotas = (notaOriginal) => {
+        if (notaOriginal === null || notaOriginal === undefined || notaOriginal === "") {
+            return "";
+        }
+
+        const numero = Number(notaOriginal);
+        if (!Number.isFinite(numero)) return "";
+
+        if (checkAumentarNotas.checked) {
+            return String(Math.min(100, Math.trunc(numero) + 5));
+        }
+
+        return String(Math.trunc(numero));
+    };
+
+    const refrescarNotasConAumento = () => {
+        document.querySelectorAll(".nota-actualizar-input").forEach((input) => {
+            const index = Number(input.dataset.index);
+            const fila = datosActualizarNotas.profesores[index];
+            if (!fila) return;
+
+            // La notaOriginal permanece intacta; solamente cambia el valor visible.
+            input.value = calcularNotaMostrarActualizarNotas(fila.notaOriginal);
+
+            datosActualizarNotas.profesores[index].nota =
+                input.value === "" ? null : Number(input.value);
+        });
+    };
+
+    const actualizarNotasDesdeInputs = () => {
+        document.querySelectorAll(".nota-actualizar-input").forEach((input) => {
+            const index = Number(input.dataset.index);
+            if (!datosActualizarNotas.profesores[index]) return;
+
+            datosActualizarNotas.profesores[index].nota =
+                input.value === "" ? null : Number(input.value);
+        });
+    };
+
+    const cargarNotasEstudianteActualizarNotas = async () => {
+        const trimestre = selectTrimestreActualizarNotas.value;
+        const curso = selectCursoActualizarNotas.value;
+        const estudiante = selectEstudianteActualizarNotas.value;
+
+        limpiarTablaActualizarNotas();
+
+        if (!trimestre || !curso || !estudiante) return;
+
+        loadingActualizarNotas.style.display = "block";
+        btnGuardarNotasActualizadas.disabled = true;
+
+        try {
+            const profesores = await obtenerProfesoresMateriaActualizarNotas(curso);
+
+            if (!profesores.length) {
+                limpiarTablaActualizarNotas("No se encontraron profesores/materias asignados a este curso.");
+                return;
+            }
+
+            // Una consulta por profesor: NOTASTRIMESTRE/PROFESOR/TRIMESTRE/CURSO
+            // y después se busca al estudiante dentro del resultado.
+            const filas = await Promise.all(
+                profesores.map(async (p) => {
+                    let nota = null;
+
+                    try {
+                        const url =
+                            `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/` +
+                            `${encodeURIComponent(p.profesor)}/` +
+                            `${encodeURIComponent(trimestre)}/` +
+                            `${encodeURIComponent(curso)}.json`;
+
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            if (data && typeof data === "object") {
+                                const nombreBuscado = normalizarActualizarNotas(estudiante);
+
+                                for (const [clave, registro] of Object.entries(data)) {
+                                    const claveNormalizada = normalizarActualizarNotas(clave);
+
+                                    if (claveNormalizada === nombreBuscado) {
+                                        nota = extraerNotaActualizarNotas(registro);
+                                        break;
+                                    }
+
+                                    if (registro && typeof registro === "object") {
+                                        const nombreRegistro = normalizarActualizarNotas(
+                                            registro.nombre ??
+                                            registro.NOMBRE ??
+                                            registro.estudiante ??
+                                            registro.ESTUDIANTE ??
+                                            ""
+                                        );
+
+                                        if (nombreRegistro === nombreBuscado) {
+                                            nota = extraerNotaActualizarNotas(registro);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(
+                            `No se pudo cargar la nota de ${p.profesor}:`,
+                            error
+                        );
+                    }
+
+                    return {
+                        profesor: p.profesor,
+                        materia: p.materia,
+                        nota,
+                        notaOriginal: nota
+                    };
+                })
+            );
+
+            datosActualizarNotas = {
+                trimestre,
+                curso,
+                estudiante,
+                profesores: filas
+            };
+
+            tbodyActualizarNotas.innerHTML = "";
+
+            filas.forEach((fila, index) => {
+                const tr = document.createElement("tr");
+
+                const tdProfesor = document.createElement("td");
+                tdProfesor.textContent = fila.profesor;
+                tdProfesor.title = "Profesor bloqueado";
+                tdProfesor.style.background = "#f1f1f1";
+
+                const tdMateria = document.createElement("td");
+                tdMateria.textContent = fila.materia;
+                tdMateria.title = "Materia bloqueada";
+                tdMateria.style.background = "#f1f1f1";
+
+                const tdNota = document.createElement("td");
+                const input = document.createElement("input");
+
+                input.type = "text";
+                input.inputMode = "numeric";
+                input.autocomplete = "off";
+                input.maxLength = 3;
+                input.className = "nota-actualizar-input";
+                input.dataset.index = String(index);
+                input.value = calcularNotaMostrarActualizarNotas(fila.notaOriginal);
+
+                input.title = "Solo números enteros. Si +5 está activado, la nota mostrada aumenta 5 sin superar 100.";
+
+                input.addEventListener("input", () => {
+                    // Campo de TEXTO: únicamente dígitos enteros.
+                    // No permite letras, espacios, comas, puntos ni otros caracteres.
+                    let valor = String(input.value || "").replace(/\D/g, "").slice(0, 3);
+
+                    // Si se intenta escribir una nota mayor a 100 (ej. 101),
+                    // se borra completa para que pueda corregirse.
+                    if (valor !== "" && Number(valor) > 100) {
+                        input.value = "";
+                        datosActualizarNotas.profesores[index].nota = null;
+                        return;
+                    }
+
+                    input.value = valor;
+                    datosActualizarNotas.profesores[index].nota =
+                        valor === "" ? null : Number(valor);
+                });
+
+                input.addEventListener("keydown", (e) => {
+                    // Bloquear teclas usadas para introducir decimales.
+                    if ([".", ",", "e", "E", "+", "-"].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                input.addEventListener("paste", (e) => {
+                    e.preventDefault();
+                    const texto = (e.clipboardData || window.clipboardData).getData("text");
+                    let valor = String(texto || "").replace(/\D/g, "").slice(0, 3);
+                    if (valor !== "" && Number(valor) > 100) valor = "100";
+                    input.value = valor;
+                    datosActualizarNotas.profesores[index].nota =
+                        valor === "" ? null : Number(valor);
+                });
+
+                tdNota.appendChild(input);
+
+                tr.appendChild(tdProfesor);
+                tr.appendChild(tdMateria);
+                tr.appendChild(tdNota);
+                tbodyActualizarNotas.appendChild(tr);
+            });
+
+            activarBotonActualizarNotas();
+        } catch (error) {
+            console.error("Error cargando notas para actualizar:", error);
+            limpiarTablaActualizarNotas("Error al buscar profesores, materias y notas.");
+        } finally {
+            loadingActualizarNotas.style.display = "none";
+            activarBotonActualizarNotas();
+        }
+    };
+
+    const abrirModalActualizarNotas = () => {
+        modalActualizarNotas.style.display = "flex";
+
+        selectTrimestreActualizarNotas.value = "";
+        checkAumentarNotas.checked = false;
+        cargarCursosActualizarNotas();
+        selectCursoActualizarNotas.value = "";
+        selectEstudianteActualizarNotas.innerHTML =
+            '<option value="">-- Seleccione Estudiante --</option>';
+        selectEstudianteActualizarNotas.disabled = true;
+
+        datosActualizarNotas = {
+            trimestre: "",
+            curso: "",
+            estudiante: "",
+            profesores: []
+        };
+
+        checkAumentarNotas.checked = false;
+        limpiarTablaActualizarNotas();
+        loadingActualizarNotas.style.display = "none";
+        activarBotonActualizarNotas();
+    };
+
+    const cerrarModalActualizarNotas = () => {
+        modalActualizarNotas.style.display = "none";
+    };
+
+    btnAbrirActualizarNotas.addEventListener("click", abrirModalActualizarNotas);
+    btnCerrarModalActualizarNotas.addEventListener("click", cerrarModalActualizarNotas);
+
+    selectCursoActualizarNotas.addEventListener(
+        "change",
+        cargarEstudiantesActualizarNotas
+    );
+
+    selectTrimestreActualizarNotas.addEventListener(
+        "change",
+        cargarNotasEstudianteActualizarNotas
+    );
+
+    selectEstudianteActualizarNotas.addEventListener(
+        "change",
+        async () => {
+            // Cada vez que cambia de estudiante, el check vuelve a FALSE
+            // y se muestran las notas originales del nuevo estudiante.
+            checkAumentarNotas.checked = false;
+            await cargarNotasEstudianteActualizarNotas();
+        }
+    );
+
+    // CHECK +5:
+    // TRUE  -> todas las notas visibles aumentan 5, máximo 100.
+    // FALSE -> todas las notas vuelven exactamente a la nota original.
+    checkAumentarNotas.addEventListener("change", () => {
+        refrescarNotasConAumento();
+    });
+
+    btnGuardarNotasActualizadas.addEventListener("click", async () => {
+        const trimestre = selectTrimestreActualizarNotas.value;
+        const curso = selectCursoActualizarNotas.value;
+        const estudiante = selectEstudianteActualizarNotas.value;
+
+        if (!trimestre || !curso || !estudiante) {
+            alert("Seleccione trimestre, curso y estudiante.");
+            return;
+        }
+
+        if (!datosActualizarNotas.profesores.length) {
+            alert("No hay notas para actualizar.");
+            return;
+        }
+
+        // Validar antes de escribir para evitar datos fuera de rango.
+        for (const p of datosActualizarNotas.profesores) {
+            if (p.nota === null || p.nota === undefined || p.nota === "") {
+                continue;
+            }
+
+            const n = Number(p.nota);
+
+            if (!Number.isFinite(n) || n < 0 || n > 100) {
+                alert(`La nota de ${p.profesor} debe estar entre 0 y 100.`);
+                return;
+            }
+        }
+
+        const textoOriginal = btnGuardarNotasActualizadas.innerText;
+        btnGuardarNotasActualizadas.innerText = "⏳ ACTUALIZANDO...";
+        btnGuardarNotasActualizadas.disabled = true;
+
+        try {
+            // Tomar los valores visibles actuales antes de guardar.
+            actualizarNotasDesdeInputs();
+
+            // IMPORTANTE:
+            // Solo se modifica NOTA_TRIMESTRAL del profesor/curso/estudiante.
+            // Profesor y materia nunca se escriben ni se modifican desde este modal.
+            const resultados = await Promise.all(
+                datosActualizarNotas.profesores.map(async (p) => {
+                    if (
+                        p.nota === null ||
+                        p.nota === undefined ||
+                        p.nota === ""
+                    ) {
+                        return { ok: true, omitido: true };
+                    }
+
+                    const url =
+                        `https://sanisidro-933a9-default-rtdb.firebaseio.com/NOTASTRIMESTRE/` +
+                        `${encodeURIComponent(p.profesor)}/` +
+                        `${encodeURIComponent(trimestre)}/` +
+                        `${encodeURIComponent(curso)}/` +
+                        `${encodeURIComponent(estudiante)}/NOTA_TRIMESTRAL.json`;
+
+                    const response = await fetch(url, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(Number(p.nota))
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `No se pudo actualizar la nota de ${p.profesor} (${response.status}).`
+                        );
+                    }
+
+                    return { ok: true, omitido: false };
+                })
+            );
+
+            const actualizadas = resultados.filter(r => r.ok && !r.omitido).length;
+
+            alert(
+                `Notas actualizadas correctamente.\n` +
+                `Estudiante: ${estudiante}\n` +
+                `Curso: ${curso}\n` +
+                `Trimestre: ${trimestre}\n` +
+                `Notas modificadas: ${actualizadas}`
+            );
+
+            // Después de actualizar:
+            // - Mantener Trimestre.
+            // - Mantener Curso.
+            // - Reiniciar solamente Estudiante.
+            // - El CHECK +5 vuelve a FALSE.
+            checkAumentarNotas.checked = false;
+
+            // Con Trimestre y Curso todavía seleccionados, volver a cargar
+            // la lista de estudiantes del mismo curso y dejar el selector
+            // HABILITADO para escoger inmediatamente otro estudiante.
+            datosActualizarNotas = {
+                trimestre: trimestre,
+                curso: curso,
+                estudiante: "",
+                profesores: []
+            };
+
+            await cargarEstudiantesActualizarNotas();
+
+            // cargarEstudiantesActualizarNotas habilita el selector si
+            // existen estudiantes. Lo reforzamos aquí para garantizarlo.
+            if (selectCursoActualizarNotas.value && selectTrimestreActualizarNotas.value) {
+                selectEstudianteActualizarNotas.disabled = false;
+            }
+
+            activarBotonActualizarNotas();
+        } catch (error) {
+            console.error("Error actualizando notas:", error);
+            alert("Error al actualizar las notas: " + error.message);
+        } finally {
+            btnGuardarNotasActualizadas.innerText = textoOriginal;
+            activarBotonActualizarNotas();
+        }
+    });
 
     document.addEventListener("click", async (e) => {
         if (e.target && e.target.id === "btnAsistencia") {
@@ -2132,6 +2925,7 @@ lineasConformidad.forEach((linea, index) => {
     const filaBoletin = document.getElementById("filaBoletin"); 
     const filaFichaSeguimiento = document.getElementById("filaFichaSeguimiento");
     const filaSeguimientoAcademico = document.getElementById("filaSeguimientoAcademico");
+    const filaActualizarNotas = document.getElementById("filaActualizarNotas");
 
     tutor.disabled = true;
     btnDescargar.disabled = true;
@@ -2835,6 +3629,7 @@ const rankTrim3 = matTrim[2] > 0
             filaBoletin.style.display = "grid"; 
             filaFichaSeguimiento.style.display = "grid";
             filaSeguimientoAcademico.style.display = "grid";
+            filaActualizarNotas.style.display = "grid";
         } else {
             estado.innerHTML = "⛔ Acceso restringido";
             estado.className = "estado restringido";
