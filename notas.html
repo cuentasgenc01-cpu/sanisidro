@@ -3269,16 +3269,28 @@ async function exportarPDF() {
 
                 // 2. Formato vertical para cabeceras
                 // Serán verticales: toda la SubRow (> 1) y las de la TopRow correspondientes a AUTO, EXTRAS, FINAL
-                if ((isSubRow && col > 1) || (isTopRow && col >= idxAuto)) {
-                    data.cell.styles.halign = 'center';
-                    data.cell.styles.valign = 'middle';
-                    
-                    data.cell.styles.minCellHeight = 85; // Aumentar altura para que entre texto vertical
-                    data.cell.minWidth = 20; 
-                    
-                    data.cell.rawOriginal = data.cell.raw; // Guardamos el valor
-                    data.cell.text = ['']; // Vaciamos para dibujarlo manualmente después rotado
-                } 
+            if ((isSubRow && col > 1) || (isTopRow && col >= idxAuto)) {
+    data.cell.styles.halign = 'center';
+    data.cell.styles.valign = 'middle';
+
+    if (isSubRow && col > 1) {
+        // ACTIVIDADES: no permitir que el texto invada otra dimensión
+        data.cell.styles.minCellHeight = 35;
+        data.cell.styles.cellWidth = 20;
+        data.cell.styles.overflow = 'ellipsize';
+        
+        data.cell.rawOriginal = data.cell.raw;
+        data.cell.text = [''];
+    } else {
+        // AUTOEVAL., NOTAS EXT. Y FINAL
+        data.cell.styles.minCellHeight = 35;
+        
+        data.cell.rawOriginal = data.cell.raw;
+        data.cell.text = [''];
+    }
+
+    data.cell.minWidth = 20;
+}
                 // Las celdas agrupadoras (SER, SABER, HACER) en la fila 0 mantendrán su texto horizontal
                 else if (isTopRow && col > 1 && col < idxAuto) {
                     data.cell.styles.halign = 'center';
