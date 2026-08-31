@@ -3171,7 +3171,7 @@ lineasConformidad.forEach((linea, index) => {
                         </div>
                     </div>
                     <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">Evaluación (Ser, Saber, Hacer)</div>
-                    <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:11px; margin-bottom:0.25rem; border:1px solid #374151;">
+                <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:14px; font-family:Tahoma, sans-serif; margin-bottom:0.25rem; border:1px solid #374151;">
                         <thead>
                             <tr>
                                 <th rowspan="2" class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700" style="width:30%; text-align:left; padding-left:0.5rem; background-color:#f9fafb; border:1px solid #374151;">Áreas Curriculares</th>
@@ -3453,7 +3453,7 @@ lineasConformidad.forEach((linea, index) => {
                         }
                         const valorTexto = notaFinalEstudiante !== "" ? notaFinalEstudiante : "";
                         const estiloRojo = (notaFinalEstudiante !== "" && parseInt(notaFinalEstudiante) < 51) ? "color: #dc2626; font-weight: bold;" : "";
-                        htmlRow += `<td style="text-align:center; ${estiloRojo}">${valorTexto}</td>`;
+                     htmlRow += `<td style="text-align:center; font-family:Tahoma, sans-serif; font-size:12px; ${estiloRojo}">${valorTexto}</td>`;
                     }
                     let promedioAnualMat = "";
                     if (trimestresValidos === 3) promedioAnualMat = Math.round(sumaAnualMateria / 3);
@@ -3549,7 +3549,7 @@ const rankTrim3 = matTrim[2] > 0
                             </div>
                         </div>
                         <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">Evaluación (Ser, Saber, Hacer)</div>
-                        <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:11px; margin-bottom:0.25rem; border:1px solid #374151;">
+                        <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:12px; margin-bottom:0.25rem; border:1px solid #374151;">
                             <thead>
                                 <tr>
                                     <th rowspan="2" class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700" style="width:30%; text-align:left; padding-left:0.5rem; background-color:#f9fafb; border:1px solid #374151;">Áreas Curriculares</th>
@@ -3564,7 +3564,7 @@ const rankTrim3 = matTrim[2] > 0
                                     <th class="text-[8px] bg-gray-50 border border-gray-700" style="font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Literal ANUAL</th>
                                 </tr>
                             </thead>
-                            <tbody>${filasHTML}</tbody>
+                           <tbody style="font-family: Tahoma, sans-serif;">${filasHTML}</tbody>
                         </table>
                         <div class="flex gap-4 my-2 items-stretch" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem; align-items: stretch;">
                             <div class="w-1/2" style="width: 50%;">
@@ -3577,9 +3577,9 @@ const rankTrim3 = matTrim[2] > 0
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td></tr>
-                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td></tr>
-                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td></tr>
+                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td></tr>
+                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td></tr>
+                                        <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
