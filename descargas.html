@@ -2591,12 +2591,20 @@ lineasConformidad.forEach((linea, index) => {
                     if (trimestreSeleccionado === "PRIMERO") {
                         // SOLO nota menor a 51 en PRIMERO.
                         incluir = typeof nota1 === "number" && nota1 < 51;
-                    } else if (trimestreSeleccionado === "SEGUNDO") {
-                        // SOLO si PRIMERO O SEGUNDO tiene nota menor a 51.
-                        incluir =
-                            (typeof nota1 === "number" && nota1 < 51) ||
-                            (typeof nota2 === "number" && nota2 < 51);
-                    }
+                   } else if (trimestreSeleccionado === "SEGUNDO") {
+    // Incluir si:
+    // 1. PRIMERO es menor a 51, O
+    // 2. SEGUNDO es menor a 51, O
+    // 3. La suma de PRIMERO + SEGUNDO es menor a 111.
+    incluir =
+        (typeof nota1 === "number" && nota1 < 51) ||
+        (typeof nota2 === "number" && nota2 < 51) ||
+        (
+            typeof nota1 === "number" &&
+            typeof nota2 === "number" &&
+            (nota1 + nota2) < 111
+        );
+}
 
                     if (!incluir) continue;
 
