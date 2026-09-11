@@ -3707,18 +3707,18 @@ const rankTrim3 = matTrim[2] > 0
                 return numA - numB;
             });
 
-            const profesoresCurso = [];
+          const profesoresCurso = [];
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
                     const profUpp = String(nomProf).toUpperCase();
-                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR") || profUpp.includes("SECRETARIA")) continue;
 
                     const pData = todosProfes[nomProf];
                     if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
                         const materia = pData.CURSO[cursoSeleccionado];
                         const matUpp = String(materia).toUpperCase();
 
-                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
+                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR") && !matUpp.includes("SECRETARIA")) {
                             profesoresCurso.push({
                                 nombre: nomProf,
                                 materia: materia
