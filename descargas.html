@@ -3766,8 +3766,8 @@ const rankTrim3 = matTrim[2] > 0
             ws.getCell('J1').value = trimestreSeleccionado;
             ws.getRow(1).font = { bold: true };
 
-            ws.mergeCells('B3:B4');
-            const cellNombres = ws.getCell('B3');
+          
+            const cellNombres = ws.getCell('B4');
             cellNombres.value = "APELLIDO Y NOMBRE";
             cellNombres.alignment = { horizontal: 'center', vertical: 'middle' };
             cellNombres.font = { bold: true, size: 12 };
