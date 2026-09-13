@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lector y Comparador de Boletín Centralizador</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .editable-cell:hover {
+            background-color: #f3f4f6;
+            cursor: text;
+        }
+        .editable-cell:focus {
+            background-color: #e0f2fe;
+            outline: 2px solid #3b82f6;
+            border-radius: 2px;
+        }
+        .table-container::-webkit-scrollbar {
+            height: 12px;
+            width: 12px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 8px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 8px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .table-container {
+            overscroll-behavior-x: contain;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+    <div class="w-full px-4 py-4 max-w-[1600px] mx-auto">
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-900 flex items-center gap-3">
+                    <i class="fa-solid fa-file-shield text-indigo-600"></i>
+                    Comparador de Boletines
+                </h1>
+                <p class="text-slate-500 mt-2 text-sm max-w-2xl">
+                    Selecciona el curso, sube el PDF del boletín y luego tu Excel para comparar inconsistencias.
+                </p>
+            </div>
+            
+            <div id="action-buttons" class="hidden flex gap-3 flex-wrap justify-end">
+                <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+                <button onclick="openExcelSheetModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm font-medium focus:ring-4 focus:ring-indigo-100">
+                    <i class="fa-solid fa-file-excel"></i> Comparar con Excel
+                </button>
+                <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm font-medium focus:ring-4 focus:ring-emerald-100">
+                    <i class="fa-solid fa-file-csv"></i> Exportar a CSV
+                </button>
+                <button onclick="resetApp()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm font-medium">
+                    <i class="fa-solid fa-rotate-left"></i> Reiniciar
+                </button>
+            </div>
+        </header>
+    <!-- Modal para seleccionar la hoja de Excel -->
+    <div id="excel-sheet-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Hoja del Excel a comparar</h3>
+                    <p class="text-sm text-slate-500">Escribe el nombre exacto de la hoja.</p>
+                </div>
+            </div>
+            <label for="excel-sheet-name" class="block text-sm font-semibold text-slate-700 mb-2">Nombre de la hoja</label>
+            <input id="excel-sheet-name" type="text" value="CENTRALIZADOR" class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500" onkeydown="if(event.key === 'Enter') confirmExcelSheetSelection()">
+            <p class="text-xs text-slate-500 mt-2">Por defecto: <b>CENTRALIZADOR</b>. Puedes modificarlo antes de seleccionar el archivo.</p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeExcelSheetModal()" class="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700">Cancelar</button>
+                <button type="button" onclick="confirmExcelSheetSelection()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Seleccionar Excel</button>
+            </div>
+        </div>
+    </div>
+
+
+        <div id="grade-selector-container" class="mb-8 p-6 bg-white border border-indigo-100 rounded-2xl shadow-sm text-center max-w-2xl mx-auto transition-all duration-300">
+            <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-layer-group text-indigo-500"></i>
+                Paso 1: Selecciona el curso a procesar
+            </h3>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <label class="cursor-pointer relative w-full sm:w-auto">
+                    <input type="radio" name="grade" value="1" class="peer sr-only" checked>
+                    <div class="px-4 py-3 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-slate-50 transition-all font-medium text-slate-700 peer-checked:text-indigo-800">
+                        1ro de Secundaria
+                    </div>
+                </label>
+                <label class="cursor-pointer relative w-full sm:w-auto">
+                    <input type="radio" name="grade" value="2" class="peer sr-only">
+                    <div class="px-4 py-3 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-slate-50 transition-all font-medium text-slate-700 peer-checked:text-indigo-800">
+                        2do de Secundaria
+                    </div>
+                </label>
+                <label class="cursor-pointer relative w-full sm:w-auto">
+                    <input type="radio" name="grade" value="3" class="peer sr-only">
+                    <div class="px-4 py-3 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-slate-50 transition-all font-medium text-slate-700 peer-checked:text-indigo-800">
+                        3ro de Secundaria
+                    </div>
+                </label>
+            </div>
+            <p class="text-sm text-slate-500 mt-4" id="grade-hint"><span class="text-slate-600 font-medium">Formato de 11 materias</span> (Incluye Técnica Tecnológica General)</p>
+        </div>
+
+        <div id="trimester-selector-container" class="mb-8 p-6 bg-white border border-emerald-100 rounded-2xl shadow-sm text-center max-w-2xl mx-auto transition-all duration-300">
+            <h3 class="text-lg font-bold text-emerald-900 mb-4 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-calendar-days text-emerald-500"></i>
+                Paso 2: Selecciona el trimestre
+            </h3>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <label class="cursor-pointer relative w-full sm:w-auto">
+                    <input type="radio" name="trimester" value="1" class="peer sr-only" checked>
+                    <div class="px-5 py-3 rounded-xl border-2 border-slate-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-slate-50 transition-all font-medium text-slate-700 peer-checked:text-emerald-800">
+                        PRIMERO (T1)
+                    </div>
+                </label>
+                <label class="cursor-pointer relative w-full sm:w-auto">
+                    <input type="radio" name="trimester" value="2" class="peer sr-only">
+                    <div class="px-5 py-3 rounded-xl border-2 border-slate-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-slate-50 transition-all font-medium text-slate-700 peer-checked:text-emerald-800">
+                        SEGUNDO (T2)
+                    </div>
+                </label>
+            </div>
+            <p class="text-sm text-slate-500 mt-4" id="trimester-hint">Se extraerán únicamente las notas del <span class="font-semibold text-emerald-700">Primer Trimestre (T1)</span>.</p>
+        </div>
+
+        <div id="upload-section" class="w-full max-w-2xl mx-auto transition-all duration-500">
+            <div class="border-2 border-dashed border-indigo-300 bg-indigo-50/50 rounded-2xl p-16 text-center transition-all hover:bg-indigo-100/50 relative group cursor-pointer shadow-sm">
+                <input type="file" id="pdf-upload" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleFileUpload(event)">
+                <i class="fa-solid fa-cloud-arrow-up text-6xl text-indigo-500 mb-4 group-hover:scale-110 transition-transform duration-300"></i>
+                <h2 class="text-2xl font-bold text-indigo-900 mb-2">Paso 3: Sube tu PDF Centralizador</h2>
+                <p class="text-indigo-600/80 text-sm">Haz clic o arrastra aquí tu archivo .pdf</p>
+            </div>
+        </div>
+
+        <div id="loading-section" class="hidden w-full text-center mt-20 transition-all duration-500">
+            <i class="fa-solid fa-circle-notch fa-spin text-5xl text-indigo-600 mb-4"></i>
+            <h2 id="loading-title" class="text-xl font-semibold text-slate-700">Procesando el documento...</h2>
+            <p class="text-slate-500 text-sm mt-2" id="loading-subtitle">Extrayendo datos y alineando columnas.</p>
+        </div>
+
+        <div id="message-box" class="fixed top-5 right-5 transform translate-x-[120%] transition-transform duration-300 z-50">
+            <div id="message-content" class="bg-white border-l-4 border-red-500 shadow-2xl rounded-lg p-4 flex items-start gap-3 w-80">
+                <i id="message-icon" class="fa-solid fa-circle-exclamation text-red-500 mt-1 text-lg"></i>
+                <div>
+                    <h4 id="message-title" class="font-bold text-slate-800 text-sm">Error</h4>
+                    <p id="message-text" class="text-xs text-slate-600 mt-1">Ha ocurrido un error.</p>
+                </div>
+                <button onclick="closeMessage()" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="results-section" class="hidden mt-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h3 class="font-semibold text-slate-800 text-base flex items-center">
+                            <i class="fa-solid fa-users text-indigo-500 mr-2"></i> Datos Extraídos
+                            <span id="student-count" class="ml-3 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-bold">0</span>
+                        </h3>
+                        <p id="comparison-status" class="text-xs text-slate-500 mt-1">Sube un Excel para iniciar la comparación automática.</p>
+                    </div>
+                    
+                    <div id="legend-box" class="hidden flex gap-4 items-center bg-white px-3 py-2 border border-slate-200 rounded-lg shadow-sm">
+                        <span class="text-xs flex items-center gap-1.5 font-medium text-slate-700"><span class="w-3.5 h-3.5 bg-green-100 border border-green-500 inline-block rounded"></span> Iguales</span>
+                        <span class="text-xs flex items-center gap-1.5 font-medium text-slate-700"><span class="w-3.5 h-3.5 bg-red-100 border border-red-500 inline-block rounded"></span> Diferentes</span>
+                    </div>
+                </div>
+                
+                <div class="table-container overflow-x-auto w-full max-h-[70vh]">
+                    <table class="w-full text-xs text-left whitespace-nowrap min-w-max">
+                        <thead class="text-[11px] text-slate-700 uppercase bg-slate-100 sticky top-0 z-10 shadow-sm">
+                            <tr id="table-header-row">
+                                <!-- Las cabeceras se inyectan mediante JS dependiendo del curso seleccionado -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-200 bg-white">
+                            <!-- Filas inyectadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        let parsedData = [];
+        let excelDataMap = {};
+        let isExcelLoaded = false;
+        let uiTimeout;
+
+        // Actualizar el texto descriptivo del curso seleccionado
+        document.querySelectorAll('input[name="grade"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const hint = document.getElementById('grade-hint');
+                if (e.target.value === '3') {
+                    hint.innerHTML = '<span class="text-indigo-600 font-medium">Formato de 12 materias</span> (Se agrega Física y Química, se remueve T. General)';
+                } else {
+                    hint.innerHTML = '<span class="text-slate-600 font-medium">Formato de 11 materias</span> (Incluye Técnica Tecnológica General)';
+                }
+            });
+        });
+
+        // Obtener el curso seleccionado
+        function getSelectedGrade() {
+            const radios = document.getElementsByName('grade');
+            for (let r of radios) {
+                if (r.checked) return r.value;
+            }
+            return '1';
+        }
+
+        // Actualizar el texto del trimestre seleccionado
+        document.querySelectorAll('input[name="trimester"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const hint = document.getElementById('trimester-hint');
+                if (e.target.value === '2') {
+                    hint.innerHTML = 'Se extraerán únicamente las notas del <span class="font-semibold text-emerald-700">Segundo Trimestre (T2)</span>.';
+                } else {
+                    hint.innerHTML = 'Se extraerán únicamente las notas del <span class="font-semibold text-emerald-700">Primer Trimestre (T1)</span>.';
+                }
+            });
+        });
+
+        // Obtener el trimestre seleccionado
+        function getSelectedTrimester() {
+            const radios = document.getElementsByName('trimester');
+            for (let r of radios) {
+                if (r.checked) return r.value;
+            }
+            return '1';
+        }
+
+        // Retorna cuántas materias tiene el curso
+        function getNumSubjects() {
+            return getSelectedGrade() === '3' ? 12 : 11;
+        }
+
+        function showMessage(title, text, type = 'error') {
+            const box = document.getElementById('message-box');
+            const content = document.getElementById('message-content');
+            const icon = document.getElementById('message-icon');
+            
+            document.getElementById('message-title').textContent = title;
+            document.getElementById('message-text').textContent = text;
+
+            if (type === 'error') {
+                content.className = 'bg-white border-l-4 border-red-500 shadow-2xl rounded-lg p-4 flex items-start gap-3 w-80';
+                icon.className = 'fa-solid fa-circle-exclamation text-red-500 mt-1 text-lg';
+            } else if (type === 'success') {
+                content.className = 'bg-white border-l-4 border-emerald-500 shadow-2xl rounded-lg p-4 flex items-start gap-3 w-80';
+                icon.className = 'fa-solid fa-circle-check text-emerald-500 mt-1 text-lg';
+            } else if (type === 'info') {
+                content.className = 'bg-white border-l-4 border-indigo-500 shadow-2xl rounded-lg p-4 flex items-start gap-3 w-80';
+                icon.className = 'fa-solid fa-circle-info text-indigo-500 mt-1 text-lg';
+            } else if (type === 'warning') {
+                content.className = 'bg-white border-l-4 border-amber-500 shadow-2xl rounded-lg p-4 flex items-start gap-3 w-80';
+                icon.className = 'fa-solid fa-triangle-exclamation text-amber-500 mt-1 text-lg';
+            }
+
+            box.classList.remove('translate-x-[120%]');
+            clearTimeout(uiTimeout);
+            uiTimeout = setTimeout(() => { closeMessage(); }, 6000);
+        }
+
+        function closeMessage() {
+            document.getElementById('message-box').classList.add('translate-x-[120%]');
+        }
+
+        function normalizeName(name) {
+            if (!name) return "";
+            return String(name)
+                .toUpperCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[,.]/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function resetApp() {
+            parsedData = [];
+            excelDataMap = {};
+            isExcelLoaded = false;
+            
+            document.getElementById('pdf-upload').value = '';
+            document.getElementById('excel-upload').value = '';
+            
+            // Volver a mostrar los selectores al reiniciar
+            document.getElementById('grade-selector-container').classList.remove('hidden');
+            document.getElementById('trimester-selector-container').classList.remove('hidden');
+
+            document.getElementById('upload-section').classList.remove('hidden');
+            document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('action-buttons').classList.add('hidden');
+            document.getElementById('action-buttons').classList.remove('flex');
+            document.getElementById('legend-box').classList.add('hidden');
+            document.getElementById('table-body').innerHTML = '';
+
+            // Habilitar selección de curso y trimestre nuevamente
+            document.querySelectorAll('input[name="grade"]').forEach(r => r.disabled = false);
+            document.querySelectorAll('input[name="trimester"]').forEach(r => r.disabled = false);
+            document.getElementById('grade-selector-container').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('trimester-selector-container').classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/pdf') {
+                showMessage('Archivo Inválido', 'Por favor, selecciona un archivo PDF válido.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            // Guardar la selección bloqueándola y ocultar los cuadros después de elegir el PDF
+            document.querySelectorAll('input[name="grade"]').forEach(r => r.disabled = true);
+            document.querySelectorAll('input[name="trimester"]').forEach(r => r.disabled = true);
+
+            document.getElementById('grade-selector-container').classList.add('hidden');
+            document.getElementById('trimester-selector-container').classList.add('hidden');
+
+            document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('loading-section').classList.remove('hidden');
+            document.getElementById('loading-title').textContent = `Analizando PDF del ${getSelectedTrimester() === '2' ? 'Segundo (T2)' : 'Primer (T1)'} Trimestre...`;
+            document.getElementById('loading-subtitle').textContent = "Extrayendo únicamente las notas del trimestre seleccionado y ajustando columnas según el curso.";
+
+            try {
+                const numSubjects = getNumSubjects();
+                const trimester = getSelectedTrimester();
+                const arrayBuffer = await file.arrayBuffer();
+                const students = await extractDataFromPDF(arrayBuffer, numSubjects, trimester);
+                
+                if (students.length === 0) {
+                    showMessage('Sin resultados', 'No se encontraron datos. Verifica que el boletín sea correcto.', 'warning');
+                    resetApp();
+                    return;
+                }
+
+                parsedData = students;
+                document.getElementById('student-count').textContent = students.length;
+                document.getElementById('comparison-status').textContent = `Notas extraídas del ${getSelectedTrimester() === '2' ? 'Segundo Trimestre (T2)' : 'Primer Trimestre (T1)'}. Sube un Excel para comparar las calificaciones celda por celda.`;
+                
+                renderTable(students);
+                
+                showMessage('¡Extracción Exitosa!', `Se procesaron ${students.length} estudiantes correctamente. Trimestre: ${getSelectedTrimester() === '2' ? 'SEGUNDO (T2)' : 'PRIMERO (T1)'}.`, 'success');
+
+                document.getElementById('loading-section').classList.add('hidden');
+                document.getElementById('results-section').classList.remove('hidden');
+                document.getElementById('action-buttons').classList.remove('hidden');
+                document.getElementById('action-buttons').classList.add('flex');
+
+            } catch (error) {
+                console.error("Error al procesar PDF: ", error);
+                showMessage('Error de Procesamiento', 'Ocurrió un error al leer el PDF. Asegúrate de que corresponda al curso seleccionado.', 'error');
+                resetApp();
+            }
+        }
+
+        async function extractDataFromPDF(arrayBuffer, numSubjects, trimester = '1') {
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let allRowsData = [];
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const items = textContent.items;
+
+                let yGroups = {};
+                items.forEach(item => {
+                    let y = Math.round(item.transform[5]);
+                    let foundY = Object.keys(yGroups).find(ky => Math.abs(Number(ky) - y) < 8); 
+                    if (foundY) {
+                        yGroups[foundY].push(item);
+                    } else {
+                        yGroups[y] = [item];
+                    }
+                });
+
+                let sortedYs = Object.keys(yGroups).map(Number).sort((a, b) => b - a);
+                sortedYs.forEach(y => {
+                    let rowItems = yGroups[y].sort((a, b) => {
+                        if (Math.abs(a.transform[4] - b.transform[4]) > 5) {
+                            return a.transform[4] - b.transform[4];
+                        }
+                        return b.transform[5] - a.transform[5];
+                    });
+                    allRowsData.push(rowItems);
+                });
+            }
+
+            let rawStudents = [];
+            let allNotesXs = [];
+
+            allRowsData.forEach(rowItems => {
+                let rudeItemIdx = rowItems.findIndex(i => /^\d{12,18}[A-Za-z]?$/.test(i.str.trim()));
+                if (rudeItemIdx === -1) return;
+                
+                let rude = rowItems[rudeItemIdx].str.trim();
+                let nameItems = rowItems.slice(0, rudeItemIdx);
+                let groupedNameItems = [];
+                
+                nameItems.forEach(item => {
+                    let lastGroup = groupedNameItems[groupedNameItems.length - 1];
+                    if (lastGroup && Math.abs(lastGroup[0].transform[4] - item.transform[4]) < 10) {
+                        lastGroup.push(item);
+                    } else {
+                        groupedNameItems.push([item]);
+                    }
+                });
+
+                let namesStr = groupedNameItems.map(group => 
+                    group.sort((a, b) => b.transform[5] - a.transform[5])
+                         .map(i => i.str.trim()).join(" ")
+                ).join(" ").trim();
+
+                let nameTokens = namesStr.split(/\s+/);
+                let nro = nameTokens.shift() || ""; 
+                let nombreCompleto = nameTokens.join(" "); 
+                
+                let estadoIdx = -1;
+                for(let i = rowItems.length - 1; i > rudeItemIdx; i--) {
+                    let s = rowItems[i].str.toUpperCase();
+                    if (s.match(/(EFECTIVO|RETIRAD|TRASLAD|ABANDON|PROMOVID|RETENID|INCORPORAD)/)) {
+                        estadoIdx = i;
+                        break; 
+                    }
+                }
+                
+                let noteItems = [];
+                if (estadoIdx !== -1) {
+                    noteItems = rowItems.slice(estadoIdx + 1).filter(i => {
+                        let text = i.str.trim();
+                        let val = parseInt(text, 10);
+                        return !isNaN(val) && val >= 0 && val <= 100 && text.length <= 3;
+                    });
+                } else {
+                    for(let i = rowItems.length - 1; i > rudeItemIdx; i--) {
+                        let text = rowItems[i].str.trim();
+                        if (text === "") continue;
+                        let val = parseInt(text, 10);
+                        if (!isNaN(val) && val >= 0 && val <= 100 && text.length <= 3) {
+                            noteItems.unshift(rowItems[i]);
+                        } else {
+                            break; 
+                        }
+                    }
+                }
+                
+                noteItems.forEach(ni => allNotesXs.push(ni.transform[4]));
+                rawStudents.push({ nro, nombreCompleto, rude, noteItems });
+            });
+
+            // Agrupar las posiciones X para identificar exactamente las columnas
+            allNotesXs.sort((a, b) => a - b);
+            let columnsX = [];
+            
+            allNotesXs.forEach(x => {
+                if (columnsX.length === 0) {
+                    columnsX.push([x]);
+                } else {
+                    let lastGroup = columnsX[columnsX.length - 1];
+                    let avg = lastGroup.reduce((a, b) => a + b, 0) / lastGroup.length;
+                    if (x - avg < 18) { 
+                        lastGroup.push(x);
+                    } else {
+                        columnsX.push([x]);
+                    }
+                }
+            });
+
+            let detectedColumnsX = columnsX.map(g => g.reduce((a, b) => a + b, 0) / g.length);
+
+            /*
+             * Si el PDF contiene T1 y T2, las columnas vienen por parejas:
+             * T1 T2 | T1 T2 | ...
+             * Seleccionamos solamente la columna del trimestre elegido.
+             */
+            let finalColumnsX = [];
+
+            if (detectedColumnsX.length >= numSubjects * 2) {
+                const trimesterColumns = detectedColumnsX.slice(-numSubjects * 2);
+                const trimesterOffset = trimester === '2' ? 1 : 0;
+
+                for (let i = trimesterOffset; i < trimesterColumns.length; i += 2) {
+                    finalColumnsX.push(trimesterColumns[i]);
+                }
+            } else if (detectedColumnsX.length >= numSubjects) {
+                // PDF con un solo trimestre.
+                if (trimester === '2') {
+                    const labels = allRowsData
+                        .flatMap(row => row.map(item => String(item.str || '').trim().toUpperCase()))
+                        .filter(text => text === 'T1' || text === 'T2');
+
+                    const hasT2 = labels.includes('T2');
+                    const hasT1 = labels.includes('T1');
+
+                    if (hasT1 && !hasT2) {
+                        throw new Error('El PDF seleccionado solo contiene notas T1. Para SEGUNDO debes subir un boletín que tenga columnas T2.');
+                    }
+                }
+
+                finalColumnsX = detectedColumnsX.slice(-numSubjects);
+            } else {
+                throw new Error('No se pudieron identificar todas las columnas de materias del boletín.');
+            }
+
+            if (finalColumnsX.length !== numSubjects) {
+                throw new Error('No se pudo identificar correctamente una nota por cada materia del trimestre seleccionado.');
+            }
+
+            let finalStudents = rawStudents.map(student => {
+                let notesArray = new Array(numSubjects).fill(0);
+                
+                student.noteItems.forEach(item => {
+                    let x = item.transform[4];
+                    let val = parseInt(item.str.trim(), 10);
+                    
+                    let minDiff = Infinity;
+                    let bestColIdx = -1;
+                    
+                    finalColumnsX.forEach((colX, idx) => {
+                        let diff = Math.abs(colX - x);
+                        if (diff < minDiff && idx < numSubjects) {
+                            minDiff = diff;
+                            bestColIdx = idx;
+                        }
+                    });
+                    
+                    if (bestColIdx !== -1 && minDiff < 20) {
+                        notesArray[bestColIdx] = val;
+                    }
+                });
+                
+                return {
+                    nro: student.nro,
+                    nombreCompleto: student.nombreCompleto,
+                    rude: student.rude,
+                    notes: notesArray
+                };
+            });
+
+            return finalStudents;
+        }
+
+        let selectedExcelSheetName = 'CENTRALIZADOR';
+
+        function openExcelSheetModal() {
+            document.getElementById('excel-sheet-name').value = selectedExcelSheetName || 'CENTRALIZADOR';
+            document.getElementById('excel-sheet-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('excel-sheet-name').focus(), 50);
+        }
+
+        function closeExcelSheetModal() {
+            document.getElementById('excel-sheet-modal').classList.add('hidden');
+        }
+
+        function confirmExcelSheetSelection() {
+            const sheetName = document.getElementById('excel-sheet-name').value.trim();
+            if (!sheetName) {
+                showMessage('Nombre de hoja requerido', 'Escribe el nombre de la hoja del Excel que deseas comparar.', 'error');
+                return;
+            }
+            selectedExcelSheetName = sheetName;
+            closeExcelSheetModal();
+            document.getElementById('excel-upload').click();
+        }
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('loading-section').classList.remove('hidden');
+            document.getElementById('loading-title').textContent = "Comparando con Excel...";
+            document.getElementById('loading-subtitle').textContent = "Emparejando estudiantes por RUDE o Nombre Completo...";
+            document.getElementById('results-section').classList.add('opacity-50');
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array', raw: false});
+                    const worksheet = workbook.Sheets[selectedExcelSheetName];
+                    if (!worksheet) {
+                        const availableSheets = workbook.SheetNames.join(', ');
+                        throw new Error(`No existe la hoja \"${selectedExcelSheetName}\". Hojas disponibles: ${availableSheets}`);
+                    }
+                    
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                        header: 1,
+                        raw: true,
+                        defval: null,
+                        blankrows: true
+                    });
+                    parseExcelData(jsonData);
+                    
+                } catch (err) {
+                    console.error(err);
+                    const detail = err && err.message ? err.message : 'El archivo Excel está corrupto o no se puede leer.';
+                    showMessage("Error al leer Excel", detail, "error");
+                    document.getElementById('loading-section').classList.add('hidden');
+                    document.getElementById('results-section').classList.remove('opacity-50');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // Definiciones únicas de materias. La comparación se hace por CLAVE,
+        // no por la posición de la columna en el Excel.
+        function getExcelSubjectDefinitions() {
+            const base = [
+                { key: 'COM_LENGUAJE', aliases: ['LENGUASCASTELLANAYORIGINARIA', 'LENGCASTELLANAYORIGINARIA', 'COMLENGUAJE', 'COMUNICACIONYLENGUAJE', 'LENGUACASTELLANA'] },
+                { key: 'L_EXTRANJ', aliases: ['LENGUAEXTRANJERA', 'LEXTRANJ', 'LENGEXTRANJ'] },
+                { key: 'CS_SOCIALES', aliases: [
+                    'CIENCIASSOCIALES',
+                    'CIENCIASSOCIALES',
+                    'CIENCIASSOCIAL',
+                    'CSSOCIALES',
+                    'CSSOCIAL',
+                    'CIENCIAS',
+                    'SOCIALES'
+                ] },
+                { key: 'EDU_MUSICAL', aliases: ['EDUCACIONMUSICAL', 'EDUMUSICAL'] },
+                { key: 'ART_PLASTICA', aliases: ['ARTESPLASTICAS', 'ARTESPLASTICASYVISUALES', 'ARTPLASTICV', 'ARTPLASTICA'] },
+                { key: 'EFISICA', aliases: ['EDUCACIONFISICAYDEPORTES', 'EDUCACIONFISICA', 'EFISICAD', 'EFISICA'] },
+                { key: 'MATEMATICA', aliases: ['MATEMATICAS', 'MATEMATICA'] }
+            ];
+
+            if (getNumSubjects() === 12) {
+                return base.concat([
+                    { key: 'FISICA', aliases: ['FISICA'] },
+                    { key: 'QUIMICA', aliases: ['QUIMICA'] },
+                    { key: 'BIO_GEO', aliases: ['BIOLOGIAYGEOGRAFIA', 'BIOLOGIAGEOGRAFIA', 'BIOYGEO'] },
+                    { key: 'COS_FIL_SIC', aliases: ['COSMOVISIONFILOSOFIAYSICOLOGIA', 'COSFILYSIC', 'COSMOVISIONFILOSOFIA'] },
+                    { key: 'VAL_ESP_REL', aliases: ['VALORESESPIRITUALIDADYRELIGIONES', 'VALESPREL', 'VALORESESPIRITUALIDAD'] }
+                ]);
+            }
+
+            return base.concat([
+                { key: 'T_GENERAL', aliases: ['TECNICATECNOLOGICAGENERAL', 'TGENERAL', 'TECNICATECNOLOGICA'] },
+                { key: 'BIO_GEO', aliases: ['BIOLOGIAYGEOGRAFIA', 'BIOLOGIAGEOGRAFIA', 'BIOYGEO'] },
+                { key: 'COS_FIL_SIC', aliases: ['COSMOVISIONFILOSOFIAYSICOLOGIA', 'COSFILYSIC', 'COSMOVISIONFILOSOFIA'] },
+                { key: 'VAL_ESP_REL', aliases: ['VALORESESPIRITUALIDADYRELIGIONES', 'VALESPREL', 'VALORESESPIRITUALIDAD'] }
+            ]);
+        }
+
+        function normalizeExcelHeader(value) {
+            return String(value || '')
+                .toUpperCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^A-Z0-9]/g, '');
+        }
+
+        function getHeaderMatchScore(cell, aliases) {
+            if (!cell) return 0;
+            for (const alias of aliases) {
+                const a = normalizeExcelHeader(alias);
+                if (cell === a) return 10000 + a.length;
+            }
+            let best = 0;
+            aliases.forEach(alias => {
+                const a = normalizeExcelHeader(alias);
+                if (a.length >= 6 && (cell.includes(a) || a.includes(cell))) {
+                    best = Math.max(best, 1000 + Math.min(a.length, cell.length));
+                }
+            });
+            return best;
+        }
+
+        function normalizeNumericValue(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const text = String(value).trim().replace(',', '.');
+            const match = text.match(/-?\d+(?:\.\d+)?/);
+            if (!match) return null;
+            const num = Number(match[0]);
+            return Number.isFinite(num) ? Math.round(num) : null;
+        }
+
+        function parseExcelData(rows) {
+            excelDataMap = {};
+            const subjectDefs = getExcelSubjectDefinitions();
+
+            let headerRowIdx = -1;
+            let bestColumns = {};
+            let bestHeaderLabels = {};
+            let bestRudeCol = -1;
+            let bestNameCol = -1;
+            let bestScore = -1;
+
+            // Buscar la fila de encabezados. Para evitar errores como el de
+            // Cs.Sociales, primero se cuenta cuántas coincidencias EXACTAS
+            // existen y luego se usan coincidencias parciales solo de respaldo.
+            for (let r = 0; r < rows.length; r++) {
+                const row = rows[r] || [];
+                const exactColumns = {};
+                const partialColumns = {};
+                const labels = {};
+                let rudeCol = -1;
+                let nameCol = -1;
+
+                for (let c = 0; c < row.length; c++) {
+                    const raw = row[c];
+                    const cell = normalizeExcelHeader(raw);
+                    if (!cell) continue;
+
+                    if (cell.includes('RUDE') || cell === 'CODIGORUDE') rudeCol = c;
+                    if (cell.includes('APELLIDO') || cell.includes('NOMBRE') || cell.includes('ESTUDIANTE')) nameCol = c;
+
+                    for (const def of subjectDefs) {
+                        const aliases = def.aliases.map(normalizeExcelHeader);
+
+                        // Coincidencia exacta.
+                        if (aliases.includes(cell)) {
+                            exactColumns[def.key] = c;
+                            labels[def.key] = String(raw || '').trim();
+                            break;
+                        }
+
+                        // Respaldo parcial, sin sobrescribir una coincidencia exacta.
+                        if (!partialColumns[def.key]) {
+                            const partial = aliases.some(alias =>
+                                alias.length >= 6 && (cell.includes(alias) || alias.includes(cell))
+                            );
+                            if (partial) {
+                                partialColumns[def.key] = c;
+                                if (!labels[def.key]) labels[def.key] = String(raw || '').trim();
+                            }
+                        }
+                    }
+                }
+
+                const columns = {};
+                subjectDefs.forEach(def => {
+                    if (exactColumns[def.key] !== undefined) {
+                        columns[def.key] = exactColumns[def.key];
+                    } else if (partialColumns[def.key] !== undefined) {
+                        columns[def.key] = partialColumns[def.key];
+                    }
+                });
+
+                // No aceptar dos materias en la misma columna.
+                const used = new Set();
+                Object.keys(columns).forEach(key => {
+                    if (used.has(columns[key])) {
+                        delete columns[key];
+                    } else {
+                        used.add(columns[key]);
+                    }
+                });
+
+                const found = Object.keys(columns).length;
+                const score = found * 1000 + (nameCol !== -1 ? 100 : 0) + (rudeCol !== -1 ? 100 : 0);
+
+                if (found >= 5 && score > bestScore) {
+                    bestScore = score;
+                    headerRowIdx = r;
+                    bestColumns = columns;
+                    bestHeaderLabels = labels;
+                    bestRudeCol = rudeCol;
+                    bestNameCol = nameCol;
+                }
+            }
+
+            if (headerRowIdx === -1) {
+                throw new Error('No se pudo identificar correctamente la fila de encabezados de las materias.');
+            }
+
+            const foundSubjects = Object.keys(bestColumns).length;
+
+            rows.slice(headerRowIdx + 1).forEach(row => {
+                if (!row || row.length === 0) return;
+
+                let rude = null;
+                let name = null;
+
+                if (bestRudeCol !== -1 && row[bestRudeCol] !== null && row[bestRudeCol] !== undefined && row[bestRudeCol] !== '') {
+                    rude = String(row[bestRudeCol]).trim();
+                }
+
+                if (bestNameCol !== -1 && row[bestNameCol] !== null && row[bestNameCol] !== undefined && row[bestNameCol] !== '') {
+                    name = normalizeName(row[bestNameCol]);
+                }
+
+                // Respaldo para hojas sin columna RUDE.
+                if (!rude || !name) {
+                    for (let c = 0; c < row.length; c++) {
+                        const val = String(row[c] ?? '').trim();
+
+                        if (!rude && /^\d{12,18}[A-Za-z]?$/.test(val)) {
+                            rude = val;
+                        }
+
+                        if (!name && isNaN(val) && val.length > 5 && !/EFECTIVO|RETIRO|PROMEDIO/i.test(val)) {
+                            name = normalizeName(val);
+                        }
+                    }
+                }
+
+                if (!rude && !name) return;
+
+                const notesBySubject = {};
+                const sourceValues = {};
+                const subjectColumns = {};
+
+                subjectDefs.forEach(def => {
+                    const col = bestColumns[def.key];
+
+                    if (col === undefined) {
+                        notesBySubject[def.key] = null;
+                        sourceValues[def.key] = null;
+                        return;
+                    }
+
+                    const value = row[col];
+                    subjectColumns[def.key] = col;
+                    sourceValues[def.key] = value;
+                    notesBySubject[def.key] = normalizeNumericValue(value);
+                });
+
+                const record = {
+                    notesBySubject,
+                    sourceValues,
+                    headerLabels: bestHeaderLabels,
+                    headerRowIdx,
+                    subjectColumns
+                };
+
+                if (rude) excelDataMap[rude] = record;
+                if (name) excelDataMap[name] = record;
+            });
+
+            isExcelLoaded = true;
+            renderTable(parsedData);
+
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('results-section').classList.remove('opacity-50');
+            document.getElementById('legend-box').classList.remove('hidden');
+            document.getElementById('legend-box').classList.add('flex');
+            document.getElementById('comparison-status').innerHTML =
+                '<span class="text-emerald-600 font-medium"><i class="fa-solid fa-check-double mr-1"></i> Comparación activa.</span> Celda roja = diferencia, Celda verde = coincidencia.';
+
+            showMessage(
+                'Comparación Completada',
+                `Se identificaron ${foundSubjects} materias en la hoja Excel y cada materia se compara por su columna específica.`,
+                'success'
+            );
+        }
+
+        function renderTable(students) {
+            const numSubjects = getNumSubjects();
+            const subjectDefs = getExcelSubjectDefinitions();
+            const theadRow = document.getElementById('table-header-row');
+            
+            // Renderizar encabezados de la tabla dinámicamente
+            let theadHtml = `
+                <th class="px-3 py-3 border-b border-r border-slate-300 text-center font-bold">Nro</th>
+                <th class="px-3 py-3 border-b border-r border-slate-300 font-bold">Apellidos y Nombres</th>
+                <th class="px-3 py-3 border-b border-r border-slate-300 font-bold bg-slate-50">Código RUDE</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Lenguas Castellana y Originaria">Com.Lenguaje</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Lengua Extranjera">L.Extranj.</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Ciencia Sociales">Cs.Sociales</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Educación Musical">Edu.Musical</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Artes Plásticas y Visuales">Art.Plástic.V.</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Educación Física y Deportes">E.Física.D.</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Matemáticas">Matemática</th>
+            `;
+            
+            if (numSubjects === 12) {
+                theadHtml += `
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14 bg-indigo-50/50" title="Física">Física</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14 bg-indigo-50/50" title="Química">Química</th>
+                `;
+            } else {
+                theadHtml += `
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Técnica Tecnológica General">T.General</th>
+                `;
+            }
+            
+            theadHtml += `
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Biología y Geografía">Bio y Geo.</th>
+                <th class="px-2 py-3 border-b border-r border-slate-300 text-center w-14" title="Cosmovisión Filosofía y Sicología">Cos.Fil y Sic</th>
+                <th class="px-2 py-3 border-b border-slate-300 text-center w-14" title="Valores Espiritualidad y Religiones">Val.Esp.Rel</th>
+            `;
+            theadRow.innerHTML = theadHtml;
+
+            // Renderizar cuerpo de la tabla
+            const tbody = document.getElementById('table-body');
+            let html = '';
+            let totalMismatches = 0;
+
+            students.forEach((student) => {
+                let normalizedPdfName = normalizeName(student.nombreCompleto);
+                let excelRecord = excelDataMap[student.rude] || excelDataMap[normalizedPdfName];
+                
+                html += `<tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-3 py-2 border-b border-r border-slate-200 text-center text-slate-500">${student.nro}</td>
+                    <td class="px-3 py-2 border-b border-r border-slate-200 font-medium">${student.nombreCompleto}</td>
+                    <td class="px-3 py-2 border-b border-r border-slate-200 text-slate-500 bg-slate-50/50">${student.rude}</td>
+                `;
+                
+                for(let j = 0; j < numSubjects; j++) {
+                    let pdfVal = parseInt(student.notes[j]) || 0;
+                    
+                    let bgColorClass = 'bg-transparent text-slate-700';
+                    let tooltipAttr = '';
+                    
+                    if (isExcelLoaded) {
+                        if (excelRecord) {
+                            const subjectKey = subjectDefs[j].key;
+                            const excelVal = excelRecord.notesBySubject
+                                ? excelRecord.notesBySubject[subjectKey]
+                                : null;
+                            const isMatch = excelVal !== null && pdfVal === excelVal;
+
+                            if (isMatch) {
+                                // Si la nota es exactamente 50 en PDF y Excel → CELESTE
+                                if (pdfVal === 50 && excelVal === 50) {
+                                    bgColorClass = 'bg-cyan-300 text-cyan-950 font-extrabold border-2 border-cyan-700 shadow-md';
+                                } else {
+                                    // Cualquier otra nota igual → VERDE
+                                    bgColorClass = 'bg-green-50 text-green-700 font-medium';
+                                }
+                            } else {
+                                bgColorClass = 'bg-red-300 text-red-950 font-extrabold border-2 border-red-700 shadow-md';
+                                const detectedHeader = excelRecord.headerLabels[subjectKey] || subjectKey;
+                                const columnIndex = excelRecord.subjectColumns &&
+                                    excelRecord.subjectColumns[subjectKey] !== undefined
+                                    ? excelRecord.subjectColumns[subjectKey] + 1
+                                    : '?';
+
+                                tooltipAttr = `title="En PDF: ${pdfVal} | En Excel: ${excelVal === null ? 'VACÍO/NO NUMÉRICO' : excelVal} | Columna Excel: ${detectedHeader} (columna ${columnIndex})"`;
+                                totalMismatches++;
+                            }
+                        } else {
+                            bgColorClass = 'bg-amber-100 text-amber-800';
+                            tooltipAttr = `title="Estudiante no encontrado en Excel"`;
+                        }
+                    }
+                    
+                    html += `<td class="px-2 py-2 border-b border-r border-slate-200 text-center editable-cell ${bgColorClass}" 
+                                 ${tooltipAttr} 
+                                 contenteditable="true"
+                                 onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                 onblur="updateNote('${student.rude}', ${j}, this.innerText)">
+                                ${pdfVal === 0 ? '' : pdfVal}
+                             </td>`;
+                }
+                html += `</tr>`;
+            });
+            
+            tbody.innerHTML = html;
+
+            if (isExcelLoaded && totalMismatches > 0) {
+                showMessage("Diferencias Encontradas", `Se han detectado ${totalMismatches} calificaciones que no coinciden.`, "warning");
+            } else if (isExcelLoaded && totalMismatches === 0) {
+                showMessage("Todo Correcto", "El 100% de las calificaciones coinciden perfectamente.", "success");
+            }
+        }
+
+        function updateNote(rude, colIndex, newValue) {
+            let val = parseInt(newValue.trim(), 10) || 0;
+            let student = parsedData.find(s => s.rude === rude);
+            if (student) {
+                student.notes[colIndex] = val;
+                if (isExcelLoaded) {
+                    renderTable(parsedData); 
+                }
+            }
+        }
+
+        function exportToCSV() {
+            if (!parsedData || parsedData.length === 0) {
+                showMessage("Nada que exportar", "Primero debes subir y procesar un archivo PDF.", "info");
+                return;
+            }
+            
+            const numSubjects = getNumSubjects();
+            const trimesterLabel = getSelectedTrimester() === '2' ? 'T2' : 'T1';
+            let csv = "";
+            
+            if (numSubjects === 12) {
+                csv = `Nro,Apellidos y Nombres,Rude,Com.Lenguaje ${trimesterLabel},L.Extranj. ${trimesterLabel},Cs.Sociales ${trimesterLabel},Edu.Musical ${trimesterLabel},Art.Plástic.V. ${trimesterLabel},E.Física.D. ${trimesterLabel},Matemática ${trimesterLabel},Física ${trimesterLabel},Química ${trimesterLabel},Bio y Geo. ${trimesterLabel},Cos.Fil y Sic ${trimesterLabel},Val.Esp.Rel ${trimesterLabel}\n`;
+            } else {
+                csv = `Nro,Apellidos y Nombres,Rude,Com.Lenguaje ${trimesterLabel},L.Extranj. ${trimesterLabel},Cs.Sociales ${trimesterLabel},Edu.Musical ${trimesterLabel},Art.Plástic.V. ${trimesterLabel},E.Física.D. ${trimesterLabel},Matemática ${trimesterLabel},T.General ${trimesterLabel},Bio y Geo. ${trimesterLabel},Cos.Fil y Sic ${trimesterLabel},Val.Esp.Rel ${trimesterLabel}\n`;
+            }
+            
+            parsedData.forEach(s => {
+                let row = [
+                    s.nro, 
+                    s.nombreCompleto, 
+                    s.rude,
+                    ...s.notes
+                ];
+                let safeRow = row.map(cell => {
+                    let str = String(cell);
+                    if (str.includes(',') || str.includes(' ')) {
+                        return `"${str}"`;
+                    }
+                    return str;
+                });
+                csv += safeRow.join(",") + "\n";
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            
+            let filename = numSubjects === 12 ? `boletin_extraido_3ro_sec_${trimesterLabel}.csv` : `boletin_extraido_1ro_2do_sec_${trimesterLabel}.csv`;
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage("Exportación Exitosa", "El archivo CSV ha sido descargado con las cabeceras correctas.", "success");
+        }
+    </script>
+</body>
+</html>
