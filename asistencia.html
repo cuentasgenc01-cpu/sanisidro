@@ -531,7 +531,26 @@
             margin-top: 20px;
             font-size: 18px;
         }
+    
+        /* btnAsistencia y descarga de asistencia */
+        #btnAsistencia{background:#6F42C1;color:white;}
+        #modalAsistencia{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);justify-content:center;align-items:center;z-index:9999;}
+        #modalAsistencia .modal-content{width:560px;background:#ECE7F1;border-radius:30px;padding:25px;max-height:90vh;display:flex;flex-direction:column;}
+        #modalAsistencia .titulo-modal{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:bold;color:#0D47A1;margin-bottom:20px;}
+        #modalAsistencia #btnCerrarModal{cursor:pointer;font-size:24px;}
+        #modalAsistencia .fila-campos{display:flex;gap:15px;align-items:end;}
+        #modalAsistencia .campo{flex:1;}
+        #modalAsistencia .campo label{display:block;margin-bottom:5px;}
+        #modalAsistencia .campo input,#modalAsistencia .campo select{width:100%;height:42px;border-radius:12px;border:1px solid #ccc;padding:0 10px;}
+        #modalAsistencia .acciones{display:flex;justify-content:flex-end;margin-top:20px;}
+        #modalAsistencia #btnProcesar{border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer;}
+
     </style>
+
+    <!-- Librerías añadidas para btnAsistencia -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 <body>
 
@@ -610,6 +629,7 @@
             <!--<button class="btn-guardar" id="btnGuardar" onclick="guardarAsistencia()" disabled style="display: none;">GUARDAR</button>-->
         <button class="btn-actualizar" id="btnActualizar" onclick="abrirModalActualizar()" disabled>ACTUALIZAR</button>
             <button class="btn-historial" id="btnHistorial" onclick="verHistorial()" disabled>HISTORIAL</button>
+            <button id="btnAsistencia" type="button">⬇ DESCARGAR</button>
         </div>
     </div>
 
@@ -1478,7 +1498,268 @@ let wppEstado =
 
     // INICIALIZAR
     cargarCursos();
+
+    // btnAsistencia: mismo comportamiento del botón original de DESCARGAS
+    const modalAsistencia = document.getElementById("modalAsistencia");
+    const cursoAsistencia = document.getElementById("cursoAsistencia");
+    const fechaDesde = document.getElementById("fechaDesde");
+    const fechaHasta = document.getElementById("fechaHasta");
+    const btnProcesar = document.getElementById("btnProcesar");
+
+    document.addEventListener("click", async (e) => {
+if (e.target && e.target.id === "btnAsistencia") {
+            const hoy = new Date().toISOString().split("T")[0];
+            fechaDesde.value = hoy;
+            fechaHasta.value = hoy;
+
+            modalAsistencia.style.display = "flex";
+            cursoAsistencia.innerHTML = '<option value="">Seleccione Curso</option>';
+
+            try {
+                const url = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`;
+                const response = await fetch(url);
+                const cursos = await response.json();
+
+                if (cursos) {
+                    Object.keys(cursos).forEach(curso => {
+                        const op = document.createElement("option");
+                        op.value = curso;
+                        op.textContent = curso;
+                        cursoAsistencia.appendChild(op);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+if (e.target && e.target.id === "btnCerrarModal") {
+            modalAsistencia.style.display = "none";
+        }
+    });
+
+    // Convierte fecha DD-MM-YYYY a YYYY-MM-DD para filtrar la asistencia
+    function convertirFecha(fechaBoliviana) {
+        if (!fechaBoliviana) return "";
+        const partes = String(fechaBoliviana).split("-");
+        if (partes.length !== 3) return "";
+
+        // Si ya viene en formato YYYY-MM-DD, se mantiene igual.
+        if (partes[0].length === 4) {
+            return `${partes[0]}-${partes[1].padStart(2, "0")}-${partes[2].padStart(2, "0")}`;
+        }
+
+        const dia = partes[0].padStart(2, "0");
+        const mes = partes[1].padStart(2, "0");
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    btnProcesar.addEventListener("click", async () => {
+        try {
+            const cursoSeleccionado = cursoAsistencia.value;
+            const desde = fechaDesde.value;
+            const hasta = fechaHasta.value;
+
+            if (!cursoSeleccionado) {
+                alert("Seleccione un curso");
+                return;
+            }
+            if (!desde || !hasta) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+
+            const estudiantesUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/CURSOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const historialUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/HISTORIAL_CAMBIOS/${encodeURIComponent(cursoSeleccionado)}.json`;
+            const materiaUrl = `https://sanisidro-933a9-default-rtdb.firebaseio.com/PROFESORES/${encodeURIComponent(profesor)}/CURSO/${encodeURIComponent(cursoSeleccionado)}.json`;
+
+            const [estudiantes, historial, materiaResult] = await Promise.all([
+                fetch(estudiantesUrl).then(r => r.json()),
+                fetch(historialUrl).then(r => r.json()),
+                fetch(materiaUrl).then(r => r.json()).catch(() => "")
+            ]);
+
+            if (!estudiantes || Object.keys(estudiantes).length === 0) {
+                alert("No hay estudiantes en este curso");
+                return;
+            }
+
+            const fechasSet = new Set();
+            for (const idRegistro in historial) {
+                const registro = historial[idRegistro];
+                const profesorRegistro = String(registro.profesor || "").trim();
+                if (profesorRegistro !== profesor) continue;
+                const fechaRegistro = convertirFecha(registro.fecha_asis || "");
+                if (fechaRegistro >= desde && fechaRegistro <= hasta) {
+                    fechasSet.add(fechaRegistro);
+                }
+            }
+
+            const fechas = [...fechasSet].sort();
+            const datos = [];
+            datos.push(["N°", "ESTUDIANTE", ...fechas]);
+
+            let contador = 1;
+            const estudiantesOrdenados = Object.keys(estudiantes).sort((a, b) => Number(a) - Number(b));
+
+            for (const idEstudiante of estudiantesOrdenados) {
+                const nombreEstudiante = (estudiantes[idEstudiante] || "").trim();
+                if (!nombreEstudiante) continue;
+                const fila = [contador, nombreEstudiante];
+
+                for (const fecha of fechas) {
+                    let estado = "A";
+                    for (const idRegistro in historial) {
+                        const registro = historial[idRegistro];
+                        const profesorRegistro = String(registro.profesor || "").trim();
+                        if (profesorRegistro !== profesor) continue;
+                        const fechaRegistro = convertirFecha(registro.fecha_asis || "");
+                        if (fechaRegistro !== fecha) continue;
+
+                        const cambios = registro.cambios || {};
+                        if (Object.prototype.hasOwnProperty.call(cambios, nombreEstudiante)) {
+                            const valorOriginal = String(cambios[nombreEstudiante] || "").trim().toUpperCase();
+                            let estadoFinal = valorOriginal;
+                            if (valorOriginal.includes(" A ")) {
+                                estadoFinal = valorOriginal.split(" A ").pop().trim();
+                            }
+                            if (["A", "F", "FA", "L"].includes(estadoFinal)) {
+                                estado = estadoFinal;
+                            }
+                            break;
+                        }
+                    }
+                    fila.push(estado);
+                }
+                datos.push(fila);
+                contador++;
+            }
+
+            const columnas = [
+                { header: "N°", dataKey: "numero" },
+                { header: "ESTUDIANTE", dataKey: "estudiante" },
+                ...fechas.map((fecha, index) => ({
+                    header: fecha.split("-").reverse().slice(0,2).join("/"),
+                    dataKey: `d${index}`
+                })),
+                { header: "TOTAL F", dataKey: "totalF" }
+            ];
+
+            const filasPdf = datos.slice(1).map((fila) => {
+                const filaObjeto = { numero: fila[0], estudiante: fila[1] };
+                let totalF = 0;
+                for (let i = 0; i < fechas.length; i++) {
+                    const valor = fila[2 + i];
+                    filaObjeto[`d${i}`] = valor;
+                    if (valor === "F") totalF++;
+                }
+                filaObjeto.totalF = totalF;
+                return filaObjeto;
+            });
+
+            const materia = typeof materiaResult === "string" ? materiaResult : "";
+
+            const doc = new window.jspdf.jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4"
+            });
+
+            doc.setFontSize(12);
+            const anchoPagina = doc.internal.pageSize.getWidth();
+
+            doc.autoTable({
+                startY: 22,
+                margin: { left: 8, right: 8, top: 26, bottom: 8 },
+                head: [ columnas.map(col => col.header) ],
+                body: filasPdf.map(row => columnas.map(col => row[col.dataKey] || "")),
+                styles: { fontSize: 7, cellPadding: 1, minCellHeight: 5, halign: "center", valign: "middle" },
+                headStyles: { fillColor: [13, 71, 161], textColor: 255, halign: "center", valign: "middle", minCellHeight: 14 },
+                columnStyles: { 0: {cellWidth: 8}, 1: { cellWidth: 45, overflow: "ellipsize" } },
+                didParseCell: function(data) {
+                    if (data.section === "head" && data.column.index >= 2) {
+                        data.cell.styles.minCellHeight = 14;
+                        data.cell.text = [];
+                    }
+                    if (data.section !== "body") return;
+                    const valor = String(data.cell.raw || "").trim().toUpperCase();
+                    if (valor === "F") {
+                        data.cell.styles.fillColor = [255,199,206];
+                        data.cell.styles.textColor = [156,0,6];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                    if (valor === "FA") {
+                        data.cell.styles.fillColor = [189,215,238];
+                        data.cell.styles.textColor = [0,70,140];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                    if (valor === "L") {
+                        data.cell.styles.fillColor = [198,239,206];
+                        data.cell.styles.textColor = [0,97,0];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                },
+                didDrawCell: function(data) {
+                    if (data.section === "head" && data.column.index >= 2) {
+                        const texto = String(data.cell.raw);
+                        doc.saveGraphicsState();
+                        doc.text( texto, data.cell.x + (data.cell.width / 2), data.cell.y + data.cell.height - 1, { angle: 90 });
+                        doc.restoreGraphicsState();
+                    }
+                },
+                didDrawPage: function() {
+                    const ancho = doc.internal.pageSize.getWidth();
+                    doc.setFontSize(12);
+                    doc.setFont(undefined,"bold");
+                    doc.text(`Asistencia - ${cursoSeleccionado}`, 14, 16);
+                    doc.text(`MATERIA: ${materia || "--"}`, ancho / 2, 16, {align:"center"});
+                    doc.text(`PROFESOR: ${profesor}`, ancho - 14, 16, {align:"right"});
+                },
+                horizontalPageBreak: true,
+                horizontalPageBreakRepeat: [0,1],
+                showHead: "everyPage",
+                theme: "grid"
+            });
+
+            doc.save(`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`);
+            alert("PDF descargado correctamente");
+            modalAsistencia.style.display = "none";
+        } catch (ex) {
+            console.error(ex);
+            alert("Error al descargar: " + ex.message);
+        }
+    });
 </script>
+
+<!-- Modal de descarga de asistencia -->
+<div id="modalAsistencia" class="modal">
+<div class="modal-content">
+<div class="titulo-modal">
+<span>📋 DESCARGA DE ASISTENCIA</span>
+<span id="btnCerrarModal">✖</span>
+</div>
+<div class="fila-campos">
+<div class="campo">
+<label>Desde:</label>
+<input type="date" id="fechaDesde">
+</div>
+<div class="campo">
+<label>Hasta:</label>
+<input type="date" id="fechaHasta">
+</div>
+<div class="campo">
+<label>Curso</label>
+<select id="cursoAsistencia">
+<option value="">Seleccione Curso</option>
+</select>
+</div>
+</div>
+<div class="acciones">
+<button id="btnProcesar">DESCARGA</button>
+</div>
+</div>
+</div>
 
 </body>
 </html>
