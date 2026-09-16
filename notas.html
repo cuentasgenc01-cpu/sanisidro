@@ -789,6 +789,93 @@
             line-height: 1.2;
             text-align: center;
         }
+    
+/* ================================
+   COMBOBOX AUTOCOMPLETABLE ESTUDIANTE
+   ================================ */
+.autocomplete-container {
+    position: relative;
+    width: 100%;
+}
+
+#estudiante {
+    width: 100%;
+    height: 48px;
+    padding: 12px;
+    border: 2px solid #e8edf7 !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    background: #fafcff !important;
+    box-sizing: border-box;
+}
+
+#estudiante:focus {
+    outline: none;
+    border-color: #1976D2 !important;
+    box-shadow: 0 0 8px rgba(25,118,210,.25);
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dbe4f5;
+    border-radius: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,.15);
+    z-index: 9999;
+    display: none;
+}
+
+.autocomplete-list.show {
+    display: block;
+}
+
+.autocomplete-item.nota-pendiente {
+    color: #D32F2F !important;
+    font-weight: 900 !important;
+}
+.autocomplete-item.nota-pendiente .autocomplete-numero {
+    color: #D32F2F !important;
+    font-weight: 900 !important;
+}
+
+.autocomplete-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    transition: .15s;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #E3F2FD;
+    color: #0D47A1;
+    font-weight: bold;
+}
+
+.autocomplete-numero {
+    display: inline-block;
+    width: 35px;
+    color: #777;
+    font-weight: bold;
+}
+
+.autocomplete-sin-resultados {
+    padding: 15px;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+}
+
     </style>
 
 <style>
@@ -1148,9 +1235,18 @@ padding:10px;
                 </div>
                 <div class="form-group" id="studentRowContainer" style="display: none;">
                     <label for="estudiante">ESTUDIANTE</label>
-                    <select id="estudiante" onchange="onEstudianteChange()" disabled>
-                        <option value="">Seleccionar Estudiante</option>
-                    </select>
+                    <div class="autocomplete-container">
+                        <input
+                            type="text"
+                            id="estudiante"
+                            placeholder="Escribe el nombre del estudiante..."
+                            autocomplete="off"
+                            disabled
+                            oninput="filtrarEstudiantes()"
+
+                        >
+                        <div id="listaEstudiantes" class="autocomplete-list"></div>
+                    </div>
                 </div>
                <div class="form-group" id="checkboxContainer"
 style="
@@ -1455,6 +1551,7 @@ style="
         let trimestres = [];
         let cursos = [];
         let estudiantes = [];
+        let estudiantesConNotaPendiente = new Set();
 
         let notasData = {};
         let deleteTarget = null;
@@ -1633,7 +1730,10 @@ document.getElementById('saveBtn').disabled = true;
             });
         }
 
+      let cambioCursoId = 0;
+
       async function onCursoChange() {
+    const miCambioCurso = ++cambioCursoId;
 
     const curso =
         document.getElementById('curso').value;
@@ -1651,7 +1751,9 @@ document.getElementById('saveBtn').disabled = true;
 
             // LIMPIAR PANTALLA AL CAMBIAR CURSO
             document.getElementById('dimensionsSection').style.display = 'none';
-            document.getElementById('estudiante').innerHTML = '<option value="">Seleccionar Estudiante</option>';
+            document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').innerHTML = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
             document.getElementById('estudiante').disabled = true;
             document.getElementById('totalValue').textContent = '-';
             document.getElementById('saveBtn').disabled = true;
@@ -1667,10 +1769,14 @@ document.getElementById('saveBtn').disabled = true;
             };
           if (!curso) {
 
+    // Invalidar cualquier carga anterior de estudiantes.
+    cambioCursoId++;
+
     document.getElementById('estudiante').disabled = true;
 
-    document.getElementById('estudiante').innerHTML =
-        '<option value="">Seleccionar Estudiante</option>';
+    document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').innerHTML = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
 
     document.getElementById('studentRowContainer').style.display = 'none';
 
@@ -1698,12 +1804,27 @@ document.getElementById('saveBtn').disabled = true;
                     }
                 }
                 estudiantes.sort();
-              actualizarSelectEstudiante();
-document.getElementById('estudiante').disabled = false;
-document.getElementById('studentRowContainer').style.display = 'grid';
-document.getElementById('checkboxContainer').style.display = 'flex';
-setTimeout(marcarEstudiantesConCeros,300);
-document.getElementById('soloAsistentes').checked = false;
+
+                // Si el usuario cambió nuevamente de curso mientras Firebase
+                // estaba cargando, ignorar esta respuesta antigua.
+                if (miCambioCurso !== cambioCursoId) return;
+
+                // Cargar la lista NUEVA del curso seleccionado.
+                actualizarSelectEstudiante();
+
+                const inputEstudiante = document.getElementById('estudiante');
+                const listaEstudiantes = document.getElementById('listaEstudiantes');
+
+                inputEstudiante.disabled = false;
+                document.getElementById('studentRowContainer').style.display = 'grid';
+                document.getElementById('checkboxContainer').style.display = 'flex';
+                document.getElementById('soloAsistentes').checked = false;
+
+                // Mostrar inmediatamente los estudiantes del nuevo curso.
+                listaEstudiantes.innerHTML = '';
+                mostrarListaEstudiantes();
+
+                setTimeout(marcarEstudiantesConCeros, 300);
             } catch (error) {
                 console.error('Error cargando estudiantes:', error);
                  estudiantes = [];
@@ -1713,15 +1834,176 @@ document.getElementById('soloAsistentes').checked = false;
         }
 
         function actualizarSelectEstudiante() {
-            const select = document.getElementById('estudiante');
-            select.innerHTML = '<option value="">Seleccionar Estudiante</option>';
-            estudiantes.forEach((e, i) => {
-                const option = document.createElement('option');
-                option.value = e;
-                option.textContent = `${i + 1}. ${e}`;
-                select.appendChild(option);
+            const input = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
+
+            if (!input || !lista) return;
+
+            input.value = '';
+            lista.innerHTML = '';
+
+            estudiantes.forEach((estudiante, i) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.dataset.estudiante = estudiante;
+
+                if (estudiantesConNotaPendiente.has(estudiante)) {
+                    item.classList.add('nota-pendiente');
+                }
+
+                item.innerHTML = `
+                    <span class="autocomplete-numero">${i + 1}.</span>
+                    ${estudiantesConNotaPendiente.has(estudiante) ? '🔴 ' : ''}${estudiante}
+                `;
+
+                item.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    seleccionarEstudiante(estudiante);
+                });
+
+                lista.appendChild(item);
             });
         }
+
+        function filtrarEstudiantes() {
+            const input = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
+
+            if (!input || !lista) return;
+
+            const texto = input.value.trim().toLowerCase();
+            lista.innerHTML = '';
+
+            const resultados = texto
+                ? estudiantes.filter(estudiante =>
+                    estudiante.toLowerCase().startsWith(texto)
+                  )
+                : estudiantes;
+
+            if (resultados.length === 0) {
+                lista.innerHTML = `
+                    <div class="autocomplete-sin-resultados">
+                        ❌ No se encontró ningún estudiante
+                    </div>
+                `;
+            } else {
+                resultados.forEach((estudiante) => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.dataset.estudiante = estudiante;
+
+                    const numeroOriginal = estudiantes.indexOf(estudiante) + 1;
+                    const pendiente = estudiantesConNotaPendiente.has(estudiante);
+
+                    if (pendiente) {
+                        item.classList.add('nota-pendiente');
+                    }
+
+                    item.innerHTML = `
+                        <span class="autocomplete-numero">${numeroOriginal}.</span>
+                        ${pendiente ? '🔴 ' : ''}${estudiante}
+                    `;
+
+                    item.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        seleccionarEstudiante(estudiante);
+                    });
+
+                    lista.appendChild(item);
+                });
+            }
+
+            lista.classList.add('show');
+        }
+
+        function mostrarListaEstudiantes() {
+            const input = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
+
+            if (!input || !lista || input.disabled) return;
+
+            filtrarEstudiantes();
+        }
+
+        function seleccionarEstudiante(nombre) {
+            const input = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
+
+            input.value = nombre;
+            lista.classList.remove('show');
+
+            onEstudianteChange();
+        }
+
+        // Si se borra el nombre del estudiante, volver al estado de
+        // "elegir estudiante": ocultar dimensiones y limpiar controles.
+        function manejarCambioTextoEstudiante() {
+            const input = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
+
+            if (!input) return;
+
+            if (input.value.trim() === '') {
+                if (lista) {
+                    lista.innerHTML = '';
+                    lista.classList.remove('show');
+                }
+
+                document.getElementById('dimensionsSection').style.display = 'none';
+                document.getElementById('checkboxContainer').style.display = 'flex';
+                document.getElementById('saveBtn').disabled = true;
+                document.getElementById('totalValue').textContent = '-';
+
+                notasData = {
+                    ser: {},
+                    saber: {},
+                    hacer: {},
+                    autoevaluacion: '',
+                    notasExtras: '',
+                    esNotaTrimestral: false,
+                    notaTrimestralAnterior: 0
+                };
+
+                // Mostrar nuevamente la lista completa para elegir otro estudiante.
+                setTimeout(() => {
+                    if (input.value.trim() === '' && !input.disabled) {
+                        mostrarListaEstudiantes();
+                    }
+                }, 0);
+            } else {
+                // Mientras escribe, las dimensiones permanecen ocultas hasta
+                // seleccionar un estudiante de la lista.
+                document.getElementById('dimensionsSection').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const contenedor = document.querySelector('.autocomplete-container');
+            const lista = document.getElementById('listaEstudiantes');
+
+            if (contenedor && lista && !contenedor.contains(e.target)) {
+                lista.classList.remove('show');
+            }
+        });
+
+        // Hacer accesibles estas funciones desde los atributos HTML oninput/onfocus.
+        window.filtrarEstudiantes = filtrarEstudiantes;
+        window.mostrarListaEstudiantes = mostrarListaEstudiantes;
+        window.seleccionarEstudiante = seleccionarEstudiante;
+        window.manejarCambioTextoEstudiante = manejarCambioTextoEstudiante;
+
+
+        // Eventos directos del ComboBox autocompletable
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputEstudiante = document.getElementById('estudiante');
+
+            if (inputEstudiante) {
+                inputEstudiante.addEventListener('input', function() {
+                    manejarCambioTextoEstudiante();
+                    filtrarEstudiantes();
+                });
+            }
+        });
 
         async function onEstudianteChange() {
             const estudiante = document.getElementById('estudiante').value;
@@ -2315,7 +2597,8 @@ setTimeout(async () => {
 alert('✅ NOTA TRIMESTRAL GUARDADA');
 
 // VOLVER A LA SELECCIÓN DE ESTUDIANTE
-document.getElementById('estudiante').selectedIndex = 0;
+document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
 
 document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2393,7 +2676,8 @@ if (esTrimestral) {
 
     // REINICIAR COMO EN EL MODO NORMAL
 
-    document.getElementById('estudiante').selectedIndex = 0;
+    document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
 
     document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2540,7 +2824,8 @@ await update(ref(db), updates);
 
         alert('✅ Guardado correctamente');
 
-        document.getElementById('estudiante').selectedIndex = 0;
+        document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
         document.getElementById('dimensionsSection').style.display = 'none';
         document.getElementById('totalValue').textContent = '-';
         document.getElementById('saveBtn').disabled = true;
@@ -2616,7 +2901,8 @@ function toggleNotaTrimestral() {
 
     // REINICIAR HASTA LA SELECCIÓN DE ESTUDIANTE
 
-    document.getElementById('estudiante').selectedIndex = 0;
+    document.getElementById('estudiante').value = '';
+document.getElementById('listaEstudiantes').classList.remove('show');
 
     document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2638,8 +2924,9 @@ function toggleNotaTrimestral() {
     const select =
         document.getElementById('estudiante');
 
-    select.innerHTML =
-        '<option value="">Seleccionar Estudiante</option>';
+    select.value = '';
+    document.getElementById('listaEstudiantes').innerHTML = '';
+    document.getElementById('listaEstudiantes').classList.remove('show');
 
     try {
 
@@ -3091,7 +3378,7 @@ async function exportarPDF() {
         doc.setFontSize(10);
         doc.setTextColor(51, 51, 51);
         const textoFila = `PROFESOR: ${profesor.toUpperCase()}          CURSO: ${curso.toUpperCase()}          TRIMESTRE: ${trimestre.toUpperCase()}`;
-        doc.text(textoFila, 40, 70);
+        doc.text(textoFila, 40, 60);
 
         // 3. Extraer nombres de actividades únicos
         let actSer = new Set();
@@ -3130,15 +3417,21 @@ async function exportarPDF() {
         topHeadRow.push({ content: 'NOTAS EXT.', rowSpan: 2 });
         topHeadRow.push({ content: 'FINAL', rowSpan: 2 });
 
-        const subHeadRow = [];
-        actSer.forEach(act => subHeadRow.push(act));
-        subHeadRow.push('PROM. SER');
+      const subHeadRow = [];
+actSer.forEach(act => subHeadRow.push(
+    act.length > 35 ? act.substring(0, 33) + '...' : act
+));
+subHeadRow.push('PROM. SER');
 
-        actSaber.forEach(act => subHeadRow.push(act));
-        subHeadRow.push('PROM. SABER');
+actSaber.forEach(act => subHeadRow.push(
+    act.length > 35 ? act.substring(0, 33) + '...' : act
+));
+subHeadRow.push('PROM. SABER');
 
-        actHacer.forEach(act => subHeadRow.push(act));
-        subHeadRow.push('PROM. HACER');
+actHacer.forEach(act => subHeadRow.push(
+    act.length > 35 ? act.substring(0, 33) + '...' : act
+));
+subHeadRow.push('PROM. HACER');
 
 
         // 5. Preparamos los datos del Body (Filas de la Tabla)
@@ -3180,11 +3473,10 @@ async function exportarPDF() {
                 const auto = Number(datosEstudiante.AUTOEVALUACION || 0);
                 const extras = Number(datosEstudiante.NOTAS_EXTRAS || 0);
 
-                const roundProm = (p) => p !== null ? Math.round(p) : 0;
-                let final = '';
-                if (serData.prom !== null && saberData.prom !== null && hacerData.prom !== null && auto > 0) {
-                    final = roundProm(serData.prom) + roundProm(saberData.prom) + roundProm(hacerData.prom) + auto + extras;
-                }
+               let final = '';
+if (serData.prom !== null && saberData.prom !== null && hacerData.prom !== null && auto > 0) {
+    final = Math.round(serData.prom + saberData.prom + hacerData.prom + auto + extras);
+}
 
                 row.push(...serData.vals);
                 row.push(serData.prom !== null ? serData.prom.toFixed(2) : '');
@@ -3217,7 +3509,7 @@ async function exportarPDF() {
 
         // Configuración y generación de la tabla PDF usando AutoTable
         doc.autoTable({
-            startY: 90,
+            startY: 70,
             head: [topHeadRow, subHeadRow], // Pasamos nuestro arreglo doble para encabezados agrupados
             body: bodyData,
             theme: 'grid',
@@ -3237,7 +3529,12 @@ async function exportarPDF() {
             },
             columnStyles: {
                 0: { halign: 'center', cellWidth: 20 }, // N
-                1: { halign: 'left', cellWidth: 100 }   // APELLIDOS
+                1: { halign: 'left', cellWidth: 100 },  // APELLIDOS
+
+                // Columnas finales más angostas.
+                [idxAuto]: { halign: 'center', cellWidth: 12 },
+                [idxExtras]: { halign: 'center', cellWidth: 12 },
+                [idxFinal]: { halign: 'center', cellWidth: 16 }
             },
             didParseCell: function(data) {
                 let col = data.column.index;
@@ -3247,11 +3544,34 @@ async function exportarPDF() {
 
                 // 1. APLICAR COLORES A LAS DIMENSIONES
                 if (col >= idxSerStart && col <= idxSerEnd) {
-                    data.cell.styles.fillColor = isHead ? [123, 31, 162] : [243, 229, 245]; // Morado (SER)
+                    // Las columnas PROM. usan el mismo color oscuro del encabezado
+                    // de su dimensión; las actividades mantienen el relleno claro.
+                    data.cell.styles.fillColor =
+                        col === idxSerEnd
+                            ? [123, 31, 162]
+                            : (isHead ? [123, 31, 162] : [243, 229, 245]);
+                    if (!isHead && col === idxSerEnd) {
+                        data.cell.styles.textColor = [255, 255, 255];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
                 } else if (col >= idxSaberStart && col <= idxSaberEnd) {
-                    data.cell.styles.fillColor = isHead ? [230, 81, 0] : [255, 243, 224]; // Naranja (SABER)
+                    data.cell.styles.fillColor =
+                        col === idxSaberEnd
+                            ? [230, 81, 0]
+                            : (isHead ? [230, 81, 0] : [255, 243, 224]);
+                    if (!isHead && col === idxSaberEnd) {
+                        data.cell.styles.textColor = [255, 255, 255];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
                 } else if (col >= idxHacerStart && col <= idxHacerEnd) {
-                    data.cell.styles.fillColor = isHead ? [27, 94, 32] : [232, 245, 233]; // Verde (HACER)
+                    data.cell.styles.fillColor =
+                        col === idxHacerEnd
+                            ? [27, 94, 32]
+                            : (isHead ? [27, 94, 32] : [232, 245, 233]);
+                    if (!isHead && col === idxHacerEnd) {
+                        data.cell.styles.textColor = [255, 255, 255];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
                 } else if (col === idxAuto) {
                     data.cell.styles.fillColor = isHead ? [21, 101, 192] : [227, 242, 253]; // Azul Claro (AUTO)
                 } else if (col === idxExtras) {
@@ -3263,8 +3583,28 @@ async function exportarPDF() {
                 // Ajuste de color de fuente
                 if(isHead && col > 1) {
                     data.cell.styles.textColor = [255, 255, 255]; 
-                } else if (!isHead && col !== idxFinal) {
+                } else if (
+                    !isHead &&
+                    col !== idxFinal &&
+                    col !== idxSerEnd &&
+                    col !== idxSaberEnd &&
+                    col !== idxHacerEnd
+                ) {
                     data.cell.styles.textColor = [51, 51, 51]; 
+                }
+
+                // PROM. SER / PROM. SABER / PROM. HACER:
+                // forzar al final la letra blanca para que ninguna regla posterior
+                // vuelva a colocarla en negro/gris.
+                if (!isHead && (col === idxSerEnd || col === idxSaberEnd || col === idxHacerEnd)) {
+                    data.cell.styles.textColor = [255, 255, 255];
+                    data.cell.styles.fontStyle = 'bold';
+
+                    // Los promedios necesitan un poco más de ancho para mostrar
+                    // valores como 10.00 completos. No usar ellipsize aquí.
+                    data.cell.styles.cellWidth = 24;
+                    data.cell.styles.overflow = 'visible';
+                    data.cell.styles.halign = 'center';
                 }
 
                 // 2. Formato vertical para cabeceras
@@ -3275,7 +3615,7 @@ async function exportarPDF() {
 
     if (isSubRow && col > 1) {
         // ACTIVIDADES: no permitir que el texto invada otra dimensión
-        data.cell.styles.minCellHeight = 35;
+        data.cell.styles.minCellHeight = 150;
         data.cell.styles.cellWidth = 20;
         data.cell.styles.overflow = 'ellipsize';
         
@@ -3289,7 +3629,10 @@ async function exportarPDF() {
         data.cell.text = [''];
     }
 
-    data.cell.minWidth = 20;
+    data.cell.minWidth =
+        col === idxAuto ? 12 :
+        col === idxExtras ? 12 :
+        col === idxFinal ? 16 : 20;
 }
                 // Las celdas agrupadoras (SER, SABER, HACER) en la fila 0 mantendrán su texto horizontal
                 else if (isTopRow && col > 1 && col < idxAuto) {
@@ -3368,14 +3711,14 @@ function calcularFilaExportacion(datos) {
     const extras = Number(datos?.NOTAS_EXTRAS || 0);
 
     // Redondeo de las notas individuales tal como antes
-    const ser = pSer !== null ? Math.round(pSer) : 0;
-    const saber = pSaber !== null ? Math.round(pSaber) : 0;
-    const hacer = pHacer !== null ? Math.round(pHacer) : 0;
+    const ser = pSer !== null ? pSer : 0;
+const saber = pSaber !== null ? pSaber : 0;
+const hacer = pHacer !== null ? pHacer : 0;
 
     // Solo se calcula el PROMEDIO FINAL si no falta ninguna de las cuatro dimensiones principales (SER, SABER, HACER y AUTOEVALUACION > 0)
     let final = '';
     if (pSer !== null && pSaber !== null && pHacer !== null && auto > 0) {
-        final = ser + saber + hacer + auto + extras;
+       final = Math.round(ser + saber + hacer + auto + extras);
     }
 
     // Retorna espacios vacíos si la nota es 0 para una vista más limpia
@@ -3428,62 +3771,68 @@ function bloquearDimensiones(esBloqueado){
             const trimestre = document.getElementById('trimestre').value;
             const curso = document.getElementById('curso').value;
 
-            if(!trimestre || !curso) return;
+            if (!trimestre || !curso) return;
 
-            try{
-
+            try {
                 const notasRef = ref(db, `NOTAS/${profesor}/${trimestre}/${curso}`);
                 const snapshot = await get(notasRef);
 
-                if(!snapshot.exists()) return;
+                estudiantesConNotaPendiente.clear();
 
-                const notasCurso = snapshot.val();
-                const opciones = document.querySelectorAll('#estudiante option');
+                const notasCurso = snapshot.exists() ? snapshot.val() : {};
 
-                opciones.forEach(op=>{
+                estudiantes.forEach((nombre) => {
+                    const datos = notasCurso[nombre];
+                    let tieneActividadCeroOBlanca = false;
 
-                    if(!op.value) return;
+                    // SOLO se marca en rojo si UNA ACTIVIDAD de SER, SABER
+                    // o HACER tiene nota 0 o está en blanco.
+                    ['SER', 'SABER', 'HACER'].forEach((dim) => {
+                        if (tieneActividadCeroOBlanca) return;
 
-                    const datos = notasCurso[op.value];
-                    let tieneCero = false;
+                        const actividades = datos && datos[dim];
 
-                    if(datos){
+                        if (!actividades || typeof actividades !== 'object') return;
 
-                        ['SER','SABER','HACER'].forEach(dim=>{
-
-                            if(datos[dim]){
-
-                                Object.values(datos[dim]).forEach(v=>{
-                                    if(Number(v) === 0){
-                                        tieneCero = true;
-                                    }
-                                });
-
+                        Object.values(actividades).forEach((valor) => {
+                            if (
+                                valor === null ||
+                                valor === undefined ||
+                                String(valor).trim() === '' ||
+                                Number(valor) === 0
+                            ) {
+                                tieneActividadCeroOBlanca = true;
                             }
-
                         });
+                    });
 
+                    if (tieneActividadCeroOBlanca) {
+                        estudiantesConNotaPendiente.add(nombre);
                     }
-
-                    const textoOriginal = op.textContent.replace('🔴 ','').trim();
-
-                        if(tieneCero){
-
-                         op.style.color = 'red';
-                         op.style.fontWeight = 'bold';
-                           op.textContent = '🔴 ' + textoOriginal;
-
-                        }else{
-
-                           op.style.color = '';
-                           op.style.fontWeight = '';
-                           op.textContent = textoOriginal;
-
-                        }
                 });
 
-            }catch(err){
-                console.error(err);
+                // Actualizar inmediatamente los elementos visibles de la lista.
+                document.querySelectorAll('#listaEstudiantes .autocomplete-item')
+                    .forEach(item => {
+                        const nombre = item.dataset.estudiante;
+                        if (!nombre) return;
+
+                        const pendiente = estudiantesConNotaPendiente.has(nombre);
+                        item.classList.toggle('nota-pendiente', pendiente);
+
+                        const numero = item.querySelector('.autocomplete-numero');
+
+                        if (numero) {
+                            item.innerHTML =
+                                `<span class="autocomplete-numero">${numero.textContent}</span>` +
+                                `${pendiente ? '🔴 ' : ''}${nombre}`;
+                        } else {
+                            item.textContent = pendiente ? '🔴 ' + nombre : nombre;
+                        }
+                    });
+
+            } catch (err) {
+                console.error('Error marcando estudiantes con actividades 0/blancas:', err);
             }
         }
 
@@ -3540,6 +3889,12 @@ window.addEventListener('load',()=>{
    l.classList.remove('show');
  }
 });
+
+        // Puente para los atributos onclick/onchange del HTML cuando se usa <script type="module>.
+        window.onEstudianteChange = onEstudianteChange;
+        window.onCursoChange = onCursoChange;
+        window.onTrimestreChange = onTrimestreChange;
+
 </script>
 
 </body>
