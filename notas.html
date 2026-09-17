@@ -1753,7 +1753,8 @@ document.getElementById('saveBtn').disabled = true;
             document.getElementById('dimensionsSection').style.display = 'none';
             document.getElementById('estudiante').value = '';
 document.getElementById('listaEstudiantes').innerHTML = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
             document.getElementById('estudiante').disabled = true;
             document.getElementById('totalValue').textContent = '-';
             document.getElementById('saveBtn').disabled = true;
@@ -1776,7 +1777,8 @@ document.getElementById('listaEstudiantes').classList.remove('show');
 
     document.getElementById('estudiante').value = '';
 document.getElementById('listaEstudiantes').innerHTML = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
 
     document.getElementById('studentRowContainer').style.display = 'none';
 
@@ -2598,7 +2600,8 @@ alert('✅ NOTA TRIMESTRAL GUARDADA');
 
 // VOLVER A LA SELECCIÓN DE ESTUDIANTE
 document.getElementById('estudiante').value = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
 
 document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2677,7 +2680,8 @@ if (esTrimestral) {
     // REINICIAR COMO EN EL MODO NORMAL
 
     document.getElementById('estudiante').value = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
 
     document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2825,7 +2829,8 @@ await update(ref(db), updates);
         alert('✅ Guardado correctamente');
 
         document.getElementById('estudiante').value = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
         document.getElementById('dimensionsSection').style.display = 'none';
         document.getElementById('totalValue').textContent = '-';
         document.getElementById('saveBtn').disabled = true;
@@ -2902,7 +2907,8 @@ function toggleNotaTrimestral() {
     // REINICIAR HASTA LA SELECCIÓN DE ESTUDIANTE
 
     document.getElementById('estudiante').value = '';
-document.getElementById('listaEstudiantes').classList.remove('show');
+document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
 
     document.getElementById('dimensionsSection').style.display = 'none';
 
@@ -2926,7 +2932,8 @@ document.getElementById('listaEstudiantes').classList.remove('show');
 
     select.value = '';
     document.getElementById('listaEstudiantes').innerHTML = '';
-    document.getElementById('listaEstudiantes').classList.remove('show');
+    document.getElementById('listaEstudiantes').innerHTML = '';
+filtrarEstudiantes();
 
     try {
 
