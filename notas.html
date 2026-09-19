@@ -1825,6 +1825,7 @@ filtrarEstudiantes();
                 // Mostrar inmediatamente los estudiantes del nuevo curso.
                 listaEstudiantes.innerHTML = '';
                 mostrarListaEstudiantes();
+ inputEstudiante.focus();
 
                 setTimeout(marcarEstudiantesConCeros, 300);
             } catch (error) {
@@ -2947,7 +2948,7 @@ filtrarEstudiantes();
     setTimeout(() => {
         marcarEstudiantesConCeros();
     }, 100);
-
+document.getElementById('estudiante').focus();
     return;
 
 }
@@ -3016,7 +3017,7 @@ filtrarEstudiantes();
 setTimeout(() => {
     marcarEstudiantesConCeros();
 }, 100);
-
+document.getElementById('estudiante').focus();
     } catch (error) {
 
         console.error(
