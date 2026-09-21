@@ -2986,17 +2986,31 @@ lineasConformidad.forEach((linea, index) => {
             const profesoresCurso = [];
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
-                    const profUpp = String(nomProf).toUpperCase();
-                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
+                   const profUpp = String(nomProf).toUpperCase();
 
-                    const pData = todosProfes[nomProf];
-                    if (pData.CURSO && pData.CURSO[curso]) {
-                        const materia = pData.CURSO[curso];
-                        const matUpp = String(materia).toUpperCase();
-                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
-                            profesoresCurso.push({ nombre: nomProf, materia: materia });
-                        }
-                    }
+if (
+    profUpp.includes("REGENTA") ||
+    profUpp.includes("DIRECTOR") ||
+    profUpp.includes("SECRETARIA")
+) continue;
+
+const pData = todosProfes[nomProf];
+
+if (pData.CURSO && pData.CURSO[curso]) {
+    const materia = pData.CURSO[curso];
+    const matUpp = String(materia).toUpperCase();
+
+    if (
+        !matUpp.includes("REGENTA") &&
+        !matUpp.includes("DIRECTOR") &&
+        !matUpp.includes("SECRETARIA")
+    ) {
+        profesoresCurso.push({
+            nombre: nomProf,
+            materia: materia
+        });
+    }
+}
                 }
             }
 
@@ -3257,15 +3271,30 @@ lineasConformidad.forEach((linea, index) => {
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
                     const profUpp = String(nomProf).toUpperCase();
-                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR")) continue;
-                    const pData = todosProfes[nomProf];
-                    if (pData.CURSO && pData.CURSO[curso]) {
-                        const materia = pData.CURSO[curso];
-                        const matUpp = String(materia).toUpperCase();
-                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR")) {
-                            profesoresCurso.push({ nombre: nomProf, materia: materia });
-                        }
-                    }
+
+if (
+    profUpp.includes("REGENTA") ||
+    profUpp.includes("DIRECTOR") ||
+    profUpp.includes("SECRETARIA")
+) continue;
+
+const pData = todosProfes[nomProf];
+
+if (pData.CURSO && pData.CURSO[curso]) {
+    const materia = pData.CURSO[curso];
+    const matUpp = String(materia).toUpperCase();
+
+    if (
+        !matUpp.includes("REGENTA") &&
+        !matUpp.includes("DIRECTOR") &&
+        !matUpp.includes("SECRETARIA")
+    ) {
+        profesoresCurso.push({
+            nombre: nomProf,
+            materia: materia
+        });
+    }
+}
                 }
             }
 
@@ -4095,7 +4124,8 @@ const rankTrim3 = matTrim[2] > 0
 
                 if (
                     profUpp.includes("REGENTA") ||
-                    profUpp.includes("DIRECTOR")
+    profUpp.includes("DIRECTOR") ||
+    profUpp.includes("SECRETARIA")
                 ) {
                     continue;
                 }
@@ -4108,8 +4138,9 @@ const rankTrim3 = matTrim[2] > 0
                     const matUpp = String(materia).toUpperCase();
 
                     if (
-                        !matUpp.includes("REGENTA") &&
-                        !matUpp.includes("DIRECTOR")
+                         !matUpp.includes("REGENTA") &&
+    !matUpp.includes("DIRECTOR") &&
+    !matUpp.includes("SECRETARIA")
                     ) {
                         profesoresCurso.push({
                             nombre: nomProf,
