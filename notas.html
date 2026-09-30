@@ -1236,15 +1236,15 @@ padding:10px;
                 <div class="form-group" id="studentRowContainer" style="display: none;">
                     <label for="estudiante">ESTUDIANTE</label>
                     <div class="autocomplete-container">
-                        <input
-                            type="text"
-                            id="estudiante"
-                            placeholder="Escribe el nombre del estudiante..."
-                            autocomplete="off"
-                            disabled
-                            oninput="filtrarEstudiantes()"
-
-                        >
+                       <input
+    type="text"
+    id="estudiante"
+    placeholder="Escribe el nombre del estudiante..."
+    autocomplete="off"
+    disabled
+    oninput="filtrarEstudiantes()"
+    onclick="mostrarListaEstudiantes()"
+>
                         <div id="listaEstudiantes" class="autocomplete-list"></div>
                     </div>
                 </div>
@@ -1824,7 +1824,7 @@ filtrarEstudiantes();
 
                 // Mostrar inmediatamente los estudiantes del nuevo curso.
                 listaEstudiantes.innerHTML = '';
-                mostrarListaEstudiantes();
+                //mostrarListaEstudiantes();
  inputEstudiante.focus();
 
                 setTimeout(marcarEstudiantesConCeros, 300);
@@ -1996,17 +1996,58 @@ filtrarEstudiantes();
         window.manejarCambioTextoEstudiante = manejarCambioTextoEstudiante;
 
 
+       let focusIndex = -1; // Guarda la posición elegida con el teclado
+
         // Eventos directos del ComboBox autocompletable
         document.addEventListener('DOMContentLoaded', function() {
             const inputEstudiante = document.getElementById('estudiante');
+            const lista = document.getElementById('listaEstudiantes');
 
             if (inputEstudiante) {
                 inputEstudiante.addEventListener('input', function() {
+                    focusIndex = -1; // Reiniciar selección al escribir
                     manejarCambioTextoEstudiante();
                     filtrarEstudiantes();
                 });
+
+                // Navegación con flechas, Enter y Escape
+                inputEstudiante.addEventListener('keydown', function(e) {
+                    const items = lista.querySelectorAll('.autocomplete-item');
+                    if (!items.length || !lista.classList.contains('show')) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        focusIndex++;
+                        if (focusIndex >= items.length) focusIndex = 0;
+                        actualizarSeleccionTeclado(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        focusIndex--;
+                        if (focusIndex < 0) focusIndex = items.length - 1;
+                        actualizarSeleccionTeclado(items);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (focusIndex >= 0 && focusIndex < items.length) {
+                            items[focusIndex].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        lista.classList.remove('show');
+                        focusIndex = -1;
+                    }
+                });
             }
         });
+
+        function actualizarSeleccionTeclado(items) {
+            items.forEach((item, index) => {
+                if (index === focusIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
 
         async function onEstudianteChange() {
             const estudiante = document.getElementById('estudiante').value;
