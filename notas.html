@@ -1551,6 +1551,7 @@ style="
         let trimestres = [];
         let cursos = [];
         let estudiantes = [];
+        let estudiantesCursoCompleto = [];
         let estudiantesConNotaPendiente = new Set();
 
         let notasData = {};
@@ -1810,7 +1811,8 @@ filtrarEstudiantes();
                 // Si el usuario cambió nuevamente de curso mientras Firebase
                 // estaba cargando, ignorar esta respuesta antigua.
                 if (miCambioCurso !== cambioCursoId) return;
-
+// Conservar la lista completa del curso.
+estudiantesCursoCompleto = [...estudiantes];
                 // Cargar la lista NUEVA del curso seleccionado.
                 actualizarSelectEstudiante();
 
@@ -2025,15 +2027,23 @@ filtrarEstudiantes();
                         focusIndex--;
                         if (focusIndex < 0) focusIndex = items.length - 1;
                         actualizarSeleccionTeclado(items);
-                    } else if (e.key === 'Enter') {
-                        e.preventDefault();
-                        if (focusIndex >= 0 && focusIndex < items.length) {
-                            items[focusIndex].click();
-                        }
-                    } else if (e.key === 'Escape') {
-                        lista.classList.remove('show');
-                        focusIndex = -1;
-                    }
+                   } else if (e.key === 'Enter') {
+    e.preventDefault();
+
+    if (focusIndex >= 0 && focusIndex < items.length) {
+
+        const estudianteSeleccionado =
+            items[focusIndex].dataset.estudiante;
+
+        seleccionarEstudiante(estudianteSeleccionado);
+
+        focusIndex = -1;
+    }
+
+} else if (e.key === 'Escape') {
+    lista.classList.remove('show');
+    focusIndex = -1;
+}
                 });
             }
         });
@@ -2873,6 +2883,8 @@ await update(ref(db), updates);
         document.getElementById('estudiante').value = '';
 document.getElementById('listaEstudiantes').innerHTML = '';
 filtrarEstudiantes();
+document.getElementById('estudiante').focus();
+
         document.getElementById('dimensionsSection').style.display = 'none';
         document.getElementById('totalValue').textContent = '-';
         document.getElementById('saveBtn').disabled = true;
@@ -2935,27 +2947,22 @@ function toggleNotaTrimestral() {
     calcularTotal();
 }
 
-  async function toggleSoloAsistentes() {
+ async function toggleSoloAsistentes() {
 
-    const soloAsistentes =
-        document.getElementById('soloAsistentes').checked;
+    const checkbox = document.getElementById('soloAsistentes');
+    const curso = document.getElementById('curso').value;
 
-    const curso =
-        document.getElementById('curso').value;
+    const input = document.getElementById('estudiante');
+    const lista = document.getElementById('listaEstudiantes');
 
     if (!curso) return;
 
-
-    // REINICIAR HASTA LA SELECCIÓN DE ESTUDIANTE
-
-    document.getElementById('estudiante').value = '';
-document.getElementById('listaEstudiantes').innerHTML = '';
-filtrarEstudiantes();
+    // Limpiar selección anterior.
+    input.value = '';
+    lista.innerHTML = '';
 
     document.getElementById('dimensionsSection').style.display = 'none';
-
     document.getElementById('totalValue').textContent = '-';
-
     document.getElementById('saveBtn').disabled = true;
 
     notasData = {
@@ -2968,106 +2975,98 @@ filtrarEstudiantes();
         notaTrimestralAnterior: 0
     };
 
+    // CHECK DESMARCADO: MOSTRAR TODOS.
+    if (!checkbox.checked) {
 
-    const select =
-        document.getElementById('estudiante');
+        estudiantes = [...estudiantesCursoCompleto];
 
-    select.value = '';
-    document.getElementById('listaEstudiantes').innerHTML = '';
-    document.getElementById('listaEstudiantes').innerHTML = '';
-filtrarEstudiantes();
+        actualizarSelectEstudiante();
+
+        setTimeout(() => {
+            marcarEstudiantesConCeros();
+        }, 100);
+
+        input.focus();
+        return;
+    }
 
     try {
 
-        // CHECKBOX DESMARCADO
-        // MOSTRAR TODOS LOS ESTUDIANTES
-
-       if (!soloAsistentes) {
-
-    actualizarSelectEstudiante();
-
-    setTimeout(() => {
-        marcarEstudiantesConCeros();
-    }, 100);
-document.getElementById('estudiante').focus();
-    return;
-
-}
-
-        // CHECKBOX MARCADO
-        // MOSTRAR SOLO ASISTENTES DE HOY
-
+        // Fecha actual.
         const hoy = new Date();
 
         const fechaActual =
-            hoy.getDate() +
-            '-' +
-            (hoy.getMonth() + 1) +
-            '-' +
+            hoy.getDate() + '-' +
+            (hoy.getMonth() + 1) + '-' +
             hoy.getFullYear();
 
-        const asistenciaRef =
-            ref(
-                db,
-                `asistencia/${fechaActual}/${curso}`
-            );
+        // Consultar asistencia del curso.
+        const asistenciaRef = ref(
+            db,
+            `asistencia/${fechaActual}/${curso}`
+        );
 
-        const asistenciaSnap =
-            await get(asistenciaRef);
+        const asistenciaSnap = await get(asistenciaRef);
 
         if (!asistenciaSnap.exists()) {
 
-            alert(
-                'No existe asistencia registrada para hoy'
-            );
+            estudiantes = [];
+
+            actualizarSelectEstudiante();
+
+            alert('No existe asistencia registrada para hoy.');
 
             return;
-
         }
 
-        const asistencia =
-            asistenciaSnap.val();
+        const asistencia = asistenciaSnap.val();
 
-        let contador = 1;
+        // Identificar estudiantes con A o FA.
+        const asistentes = new Set();
 
-       Object.entries(asistencia)
-.forEach(([nombre, estado]) => {
+        Object.entries(asistencia).forEach(([nombre, estado]) => {
 
-    if (
-        estado === 'A' ||
-        estado === 'FA'
-    ) {
+            const estadoNormalizado = String(estado)
+                .trim()
+                .toUpperCase();
 
-        const option =
-            document.createElement('option');
+            if (
+                estadoNormalizado === 'A' ||
+                estadoNormalizado === 'FA'
+            ) {
+                asistentes.add(nombre.trim().toUpperCase());
+            }
 
-        option.value = nombre;
+        });
 
-        option.textContent =
-            `${contador}. ${nombre}`;
-
-        select.appendChild(option);
-
-        contador++;
-
-    }
-
-});
-
-// VOLVER A PINTAR LOS ROJOS
-setTimeout(() => {
-    marcarEstudiantesConCeros();
-}, 100);
-document.getElementById('estudiante').focus();
-    } catch (error) {
-
-        console.error(
-            'Error cargando asistencia:',
-            error
+        // Filtrar estudiantes del curso.
+        estudiantes = estudiantesCursoCompleto.filter(nombre =>
+            asistentes.has(nombre.trim().toUpperCase())
         );
 
-    }
+        // Actualizar lista.
+        actualizarSelectEstudiante();
 
+        if (estudiantes.length === 0) {
+            alert('No se encontraron estudiantes con asistencia o atraso hoy.');
+        }
+
+        setTimeout(() => {
+            marcarEstudiantesConCeros();
+        }, 100);
+
+        input.focus();
+
+    } catch (error) {
+
+        console.error('Error cargando asistencia:', error);
+
+        alert('Error al consultar la asistencia: ' + error.message);
+
+        estudiantes = [...estudiantesCursoCompleto];
+
+        actualizarSelectEstudiante();
+    }
 }
 
         function closeModal(modalId) {
