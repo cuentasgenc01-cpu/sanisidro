@@ -1724,7 +1724,7 @@ if (e.target && e.target.id === "btnCerrarModal") {
 
             doc.save(`${cursoSeleccionado}_Asistencia_${desde}_${hasta}.pdf`);
             alert("PDF descargado correctamente");
-            modalAsistencia.style.display = "none";
+            //modalAsistencia.style.display = "none";
         } catch (ex) {
             console.error(ex);
             alert("Error al descargar: " + ex.message);
