@@ -545,7 +545,380 @@
         #modalAsistencia .acciones{display:flex;justify-content:flex-end;margin-top:20px;}
         #modalAsistencia #btnProcesar{border:none;background:#6F42C1;color:white;padding:14px 35px;border-radius:30px;font-size:20px;font-weight:bold;cursor:pointer;}
 
-    </style>
+    
+
+/* =========================================================
+   DISEÑO RESPONSIVE PARA CELULARES - ASISTENCIA
+   Se conservan las funciones y la lógica original.
+   ========================================================= */
+@media screen and (max-width: 600px) {
+    html, body {
+        width: 100% !important;
+        min-width: 320px !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    body {
+        display: block !important;
+        min-height: 100dvh;
+    }
+
+    /* Menú horizontal superior */
+    body > .sidebar {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 58px !important;
+        padding: 7px 9px !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 7px !important;
+        z-index: 1500 !important;
+    }
+
+    .sidebar .profile { display: none !important; }
+
+    .sidebar .menu {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        gap: 4px !important;
+        scrollbar-width: none !important;
+    }
+
+    .sidebar .menu::-webkit-scrollbar { display: none !important; }
+
+    .sidebar .menu a {
+        display: flex !important;
+        flex: 0 0 42px !important;
+        width: 42px !important;
+        height: 42px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 18px !important;
+        border-radius: 10px !important;
+        transform: none !important;
+    }
+
+    .sidebar .menu a span { display: none !important; }
+
+    .sidebar #btnCerrarSesion {
+        flex: 0 0 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0 !important;
+        border-radius: 10px !important;
+    }
+
+    .sidebar #btnCerrarSesion::before {
+        content: "🚪";
+        font-size: 18px;
+    }
+
+    /* Contenido principal */
+    body > .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    body > .container > h1 {
+        font-size: 21px !important;
+        margin-bottom: 13px !important;
+    }
+
+    /* Selectores de curso y fecha */
+    .controls {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 9px !important;
+        margin-bottom: 14px !important;
+        align-items: stretch !important;
+    }
+
+    .controls select,
+    .controls input[type="date"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 43px !important;
+        padding: 9px 7px !important;
+        font-size: 13px !important;
+    }
+
+    #curso { grid-column: 1 / -1 !important; }
+
+    .controls .buttons {
+        grid-column: 1 / -1 !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+        width: 100% !important;
+    }
+
+    .buttons button {
+        min-width: 0 !important;
+        min-height: 42px !important;
+        padding: 8px 5px !important;
+        font-size: 11px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    /* Botón guardar flotante: centrado en el celular */
+    #btnGuardar {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: max(16px, env(safe-area-inset-bottom)) !important;
+        transform: translateX(-50%) !important;
+        width: 70px !important;
+        height: 70px !important;
+        z-index: 1200 !important;
+    }
+
+    #btnGuardar:hover:not(:disabled) {
+        transform: translateX(-50%) !important;
+    }
+
+    #btnGuardar span:first-child { font-size: 18px !important; }
+    #btnGuardar span:last-child { font-size: 9px !important; }
+
+    /* Estadísticas */
+    .stats {
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .stat-card {
+        min-width: 0 !important;
+        padding: 12px 7px !important;
+    }
+
+    .stat-card h3 { font-size: 11px !important; }
+    .stat-card .number { font-size: 24px !important; }
+
+    /* Lista de estudiantes */
+    .list-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 95px !important;
+        border-radius: 10px !important;
+    }
+
+    .list-item {
+        min-width: 0 !important;
+        gap: 7px !important;
+        padding: 12px 9px !important;
+    }
+
+    .item-number {
+        flex: 0 0 23px !important;
+        width: 23px !important;
+        font-size: 12px !important;
+    }
+
+    .item-name {
+        min-width: 0 !important;
+        font-size: 13px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .item-status {
+        flex: 0 0 auto !important;
+        min-width: 75px !important;
+        max-width: 105px !important;
+        padding: 7px 8px !important;
+        font-size: 10px !important;
+        white-space: normal !important;
+    }
+
+    /* Modales generales */
+    .modal {
+        padding: 8px !important;
+        align-items: center !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: calc(100dvh - 16px) !important;
+        padding: 17px !important;
+        border-radius: 14px !important;
+        overflow-y: auto !important;
+    }
+
+    .modal-content h2 {
+        font-size: 17px !important;
+        margin-bottom: 14px !important;
+        padding-right: 22px !important;
+    }
+
+    .modal-content button {
+        min-height: 42px !important;
+        padding: 10px 12px !important;
+        font-size: 12px !important;
+    }
+
+    /* Historial general */
+    #historialContenido {
+        max-height: 45dvh !important;
+        overflow-y: auto !important;
+    }
+
+    #historialModal .modal-content > div[style*="justify-content: space-between"] {
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    #historialModal .modal-content > div[style*="justify-content: space-between"] button {
+        flex: 1 1 42% !important;
+        justify-content: center !important;
+    }
+
+    /* Historial individual: fechas en dos columnas y filtros */
+    #modalHistorialAlumno .modal-content > div[style*="justify-content: space-between"] {
+        gap: 7px !important;
+    }
+
+    #modalHistorialAlumno .modal-content > div[style*="justify-content: space-between"] input {
+        width: 100% !important;
+        min-width: 0 !important;
+        font-size: 12px !important;
+    }
+
+    #modalHistorialAlumno .filter-chip {
+        min-width: 0 !important;
+        padding: 8px 4px !important;
+    }
+
+    #modalHistorialAlumno .modal-content > div[style*="background:#eee"] {
+        gap: 4px !important;
+        overflow: hidden !important;
+    }
+
+    #filtroProfeHist {
+        flex: 1 !important;
+        min-width: 0 !important;
+        width: auto !important;
+        margin: 0 3px !important;
+        font-size: 9px !important;
+    }
+
+    #historialAlumnoContenido {
+        max-height: 42dvh !important;
+        overflow-y: auto !important;
+    }
+
+    /* Modal de actualización */
+    #modalConfirmarActualizar .modal-content {
+        max-width: 100% !important;
+        padding: 20px 14px !important;
+    }
+
+    #modalConfirmarActualizar .modal-content > div:last-child {
+        flex-wrap: wrap !important;
+    }
+
+    #modalConfirmarActualizar .modal-content > div:last-child button {
+        flex: 1 1 40% !important;
+        padding: 10px 6px !important;
+    }
+
+    /* Modal de descarga de asistencia */
+    #modalAsistencia .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    #modalAsistencia .titulo-modal {
+        font-size: 15px !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+
+    #modalAsistencia .fila-campos {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 11px !important;
+        width: 100% !important;
+    }
+
+    #modalAsistencia .campo {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    #modalAsistencia .campo label {
+        font-size: 13px !important;
+    }
+
+    #modalAsistencia .campo input,
+    #modalAsistencia .campo select {
+        width: 100% !important;
+        height: 43px !important;
+        font-size: 14px !important;
+    }
+
+    #modalAsistencia .acciones {
+        width: 100% !important;
+        margin-top: 14px !important;
+    }
+
+    #modalAsistencia #btnProcesar {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 15px !important;
+    }
+
+    /* Evitar que mensajes o textos largos ensanchen la pantalla */
+    .modal-content,
+    .modal-content * {
+        overflow-wrap: anywhere;
+    }
+}
+
+/* Ajuste intermedio para tablets */
+@media screen and (min-width: 601px) and (max-width: 900px) {
+    .container {
+        margin-left: 80px !important;
+        padding: 16px !important;
+    }
+
+    #btnGuardar {
+        left: 80px !important;
+    }
+
+    .modal-content {
+        max-width: 92% !important;
+    }
+}
+
+</style>
 
     <!-- Librerías añadidas para btnAsistencia -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

@@ -228,7 +228,11 @@ body {
 .table-container {
     overflow-y: auto;
     overflow-x: auto;
-    max-height: 280px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    flex-shrink: 1;
     border-radius: 0.5rem;
     border: 1px solid #e5e7eb;
 }
@@ -241,7 +245,7 @@ table {
 
 th { 
     background-color: #f9fafb; 
-    padding: 0.75rem 0.6rem; 
+    padding: 0.45rem 0.5rem; 
     text-align: left; 
     font-weight: 600; 
     color: #4b5563; 
@@ -255,7 +259,7 @@ th {
 }
 
 td { 
-    padding: 0.65rem 0.6rem; 
+    padding: 0.42rem 0.5rem; 
     border-bottom: 1px solid #e5e7eb; 
     color: #1f2937; 
     font-size: 0.85rem; 
@@ -264,6 +268,250 @@ td {
 
 tr:last-child td { border-bottom: none; }
 tr:hover { background-color: #f8fafc; }
+
+
+/* ====== CORRECCIÓN MÓVIL FINAL ====== */
+@media screen and (max-width: 600px) {
+  html, body {
+    width: 100% !important;
+    min-width: 320px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  body {
+    display: block !important;
+    min-height: 100dvh;
+  }
+
+  /* Barra de navegación superior */
+  body > .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 58px !important;
+    padding: 7px 9px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 7px !important;
+    z-index: 1000 !important;
+  }
+  .sidebar .profile { display: none !important; }
+  .sidebar .menu {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    gap: 4px !important;
+    scrollbar-width: none !important;
+  }
+  .sidebar .menu::-webkit-scrollbar { display: none !important; }
+  .sidebar .menu a {
+    display: flex !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+    transform: none !important;
+  }
+  .sidebar .menu a span,
+  .sidebar #btnCerrarSesion span { display: none !important; }
+  .sidebar .menu a.active {
+    border-left: 0 !important;
+    outline: 2px solid rgba(255,255,255,.6);
+  }
+  .sidebar #btnCerrarSesion {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0 !important;
+    border-radius: 10px !important;
+  }
+  .sidebar #btnCerrarSesion::before {
+    content: "🚪";
+    font-size: 18px;
+  }
+
+  /* Área principal a ancho completo */
+  body > .main-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+  }
+  .topbar {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px !important;
+    margin: 0 0 12px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .topbar h1 { font-size: 23px !important; }
+  .topbar p { font-size: 12px !important; }
+  #tutoriaContainer { width: 100% !important; text-align: left !important; }
+  .panel-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+    min-height: 0 !important;
+  }
+  #mainWorkspace { width: 100% !important; min-width: 0 !important; }
+  #mainWorkspace * { min-width: 0; }
+
+  /* Encabezado y botón seleccionar */
+  #mainWorkspace > .flex.flex-col.py-6 {
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    margin-bottom: 12px !important;
+  }
+  #mainWorkspace > .flex.flex-col.py-6 > .flex {
+    align-items: stretch !important;
+  }
+  #txtReporteTitulo { overflow-wrap: anywhere !important; }
+  #btnOpenModal {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 8px !important;
+  }
+
+  /* Descargas: selector arriba y dos botones debajo */
+  #mainWorkspace > .flex.flex-row.items-center.justify-between.border-b {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 12px !important;
+    padding-bottom: 14px !important;
+    margin-bottom: 12px !important;
+  }
+  #mainWorkspace > .flex.flex-row.items-center.justify-between.border-b > div:first-child {
+    width: 100% !important;
+  }
+  #mainWorkspace > .flex.flex-row.items-center.justify-between.border-b > div:last-child {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+  #selectTrimestreDescarga {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #btnDescargarReporte, #btnDescargarMisCursos {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 10px 5px !important;
+    white-space: normal !important;
+    font-size: 12px !important;
+  }
+
+  /* Subir notas */
+  #mainWorkspace > .flex.flex-col.sm\\:flex-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #btnSubirNotas { width: 100% !important; justify-content: center !important; }
+
+  /* Modales */
+  #selectionModal, #modalSubirNotas, #modalEditarNotas,
+  #modalInfoExcel, #excelValidationModal, #customConfirmModal {
+    padding: 7px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+  #selectionModal > div {
+    width: 100% !important;
+    max-width: none !important;
+    height: calc(100dvh - 14px) !important;
+    max-height: calc(100dvh - 14px) !important;
+    border-radius: 13px !important;
+  }
+  #selectionModal > div > div:first-child {
+    padding: 10px 12px !important;
+  }
+  #selectionModal .p-6 { padding: 10px !important; }
+  #selectionModal .grid.grid-cols-12 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 9px !important;
+  }
+  #selectionModal .grid.grid-cols-12 > div { width: 100% !important; }
+  #selectionModal select { width: 100% !important; min-height: 40px !important; }
+  #selectionModal .px-6.py-4.border-t {
+    padding: 9px !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+  #selectionModal .px-6.py-4.border-t button {
+    flex: 1 1 40% !important;
+    padding: 9px 6px !important;
+    font-size: 12px !important;
+  }
+  #btnLimpiarLista { flex-basis: 100% !important; margin: 0 !important; }
+  .table-container {
+    width: 100% !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #studentsTable { min-width: 500px !important; }
+  #studentsTable th, #studentsTable td {
+    padding: 7px 5px !important;
+    font-size: 11px !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  #modalSubirNotas > div, #modalEditarNotas > div,
+  #modalInfoExcel > div, #excelValidationModal > div,
+  #customConfirmModal > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 14px) !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+  #modalSubirNotas .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  #modalInfoExcel table { min-width: 350px !important; }
+  #customToast {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    max-width: none !important;
+  }
+}
+
 </style>
 
 </head>
@@ -538,7 +786,7 @@ tr:hover { background-color: #f8fafc; }
 
 <!-- MODAL DE SELECCIÓN DE REPORTE -->
 <div id="selectionModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] max-h-[85vh] overflow-hidden flex flex-col">
         
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
@@ -551,10 +799,10 @@ tr:hover { background-color: #f8fafc; }
         </div>
 
         <!-- Modal Body -->
-        <div class="p-6 overflow-y-auto flex-1 space-y-6">
+        <div class="p-6 flex-1 min-h-0 overflow-hidden flex flex-col gap-4">
             
             <!-- Selectors Row -->
-            <div class="grid grid-cols-12 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <div class="grid grid-cols-12 gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100 shrink-0">
                 <div class="col-span-12 sm:col-span-3">
                     <label for="selectTrimestre" class="block text-sm font-semibold text-gray-700 mb-1.5">1. Trimestre</label>
                     <select id="selectTrimestre" class="custom-select w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#1565C0] focus:border-[#1565C0] block p-2.5" disabled>
@@ -576,8 +824,8 @@ tr:hover { background-color: #f8fafc; }
             </div>
 
             <!-- Table Section -->
-            <div>
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-3 gap-3">
+            <div class="flex-1 min-h-0 flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-1 gap-2 shrink-0">
                     <h4 class="font-semibold text-gray-700 text-sm uppercase tracking-wide whitespace-nowrap">Lista de Seleccionados</h4>
                     
                     <!-- NUEVO: BUSCADOR DE ESTUDIANTES EN LA TABLA -->
@@ -592,7 +840,7 @@ tr:hover { background-color: #f8fafc; }
                     <p class="text-gray-500 font-medium text-sm">No hay estudiantes en la lista.</p>
                 </div>
 
-                <div id="tableWrapper" class="hidden table-container bg-white">
+                <div id="tableWrapper" class="hidden table-container bg-white flex-1 min-h-0">
                     <table id="studentsTable" class="w-full table-fixed">
                         <thead>
                           <tr id="tableHeaderRow">
@@ -3155,8 +3403,14 @@ doc.text(
         });
 
         document.getElementById('btnCerrarSesion').addEventListener('click', () => {
-            localStorage.removeItem('profesor');
-            window.location.href = 'index.html';
+            showConfirm(
+                '¿CERRAR SESIÓN?',
+                '¿Estás seguro de que deseas cerrar tu sesión? Tendrás que iniciar sesión nuevamente para volver a ingresar.',
+                () => {
+                    localStorage.removeItem('profesor');
+                    window.location.href = 'index.html';
+                }
+            );
         });
     });
 
@@ -4184,12 +4438,6 @@ async function abrirModalEditarNotas(trimestre, curso) {
             keyId: Date.now() + Math.random()
         });
 
-        selectedList.sort((a, b) =>
-            a.nombre.localeCompare(b.nombre, 'es', {
-                sensitivity: 'base'
-            })
-        );
-
         const option = ui.selEstudiante.options[ui.selEstudiante.selectedIndex];
         option.hidden = true;
         ui.selEstudiante.selectedIndex = 0;
@@ -4648,6 +4896,21 @@ const curso = sheet['D5'] ? String(sheet['D5'].v).replace(/\s+/g, '').trim() : "
             `;
             ui.tableBody.appendChild(tr);
         });
+
+        // Mantener visible el último estudiante agregado sin modificar
+        // el tamaño del modal ni ordenar alfabéticamente la lista.
+        if (currentSystemMode === 'estudiante' && ui.tableWrapper) {
+            // Esperar a que el navegador termine de pintar las filas nuevas.
+            // Así el cuarto (y cada siguiente) estudiante queda visible al final.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const ultimaFila = ui.tableBody.lastElementChild;
+                    if (ultimaFila) {
+                        ui.tableWrapper.scrollTop = ultimaFila.offsetTop + ultimaFila.offsetHeight;
+                    }
+                });
+            });
+        }
     }
 </script>
 </body>

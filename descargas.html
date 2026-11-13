@@ -1259,14 +1259,25 @@ document.addEventListener("DOMContentLoaded", () => {
             modalBoletin.style.display = "none";
         }
 
+        // ======================= MODIFICACIÓN 1: EVENTOS DESCARGAR E IMPRIMIR =======================
         if (e.target && e.target.classList.contains("btn-pdf-est")) {
             const estudianteSeleccionado = e.target.getAttribute("data-estudiante");
             const numLista = e.target.getAttribute("data-numero");
             const cursoSelecc = cursoBoletin.value;
             if (cursoSelecc && estudianteSeleccionado) {
-                generarPDFLibreta(cursoSelecc, estudianteSeleccionado, e.target, numLista);
+                generarPDFLibreta(cursoSelecc, estudianteSeleccionado, e.target, numLista, "descargar");
             }
         }
+
+        if (e.target && e.target.classList.contains("btn-print-est")) {
+            const estudianteSeleccionado = e.target.getAttribute("data-estudiante");
+            const numLista = e.target.getAttribute("data-numero");
+            const cursoSelecc = cursoBoletin.value;
+            if (cursoSelecc && estudianteSeleccionado) {
+                generarPDFLibreta(cursoSelecc, estudianteSeleccionado, e.target, numLista, "imprimir");
+            }
+        }
+        // ==============================================================================================
         
         // ---------- LÓGICA DE APERTURA FICHA DE SEGUIMIENTO ----------
         if (e.target && e.target.id === "btnAbrirFicha") {
@@ -1397,8 +1408,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         const materiaUpp = String(pData.CURSO[cursoSeleccionado]).toUpperCase();
                         
                         // Validar que ni el nombre ni la materia correspondan a cargos administrativos
-                        if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR") || 
-                            materiaUpp.includes("REGENTA") || materiaUpp.includes("DIRECTOR")) {
+                        if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR") || profUpp.includes("SECRETARIA") ||
+                            materiaUpp.includes("REGENTA") || materiaUpp.includes("DIRECTOR") || materiaUpp.includes("SECRETARIA")) {
                             continue;
                         }
 
@@ -2195,7 +2206,7 @@ doc.text(tituloEstudiante, 16, y);
         doc.text("Curso:", 129, y);
         doc.setFont("helvetica", "bold");
         doc.text(curso, 145, y);
-       
+        
         // II. SITUACIÓN ACADÉMICA
         y += 5;
         doc.setFont("helvetica", "bold");
@@ -2236,7 +2247,7 @@ doc.text(tituloEstudiante, 16, y);
             styles: {
                 font: "helvetica",
                 fontSize: 8.7,
-                  textColor: [0, 0, 0],
+                 textColor: [0, 0, 0],
                cellPadding: 1.2,
 minCellHeight: 5,
                 valign: "middle",
@@ -2714,8 +2725,11 @@ lineasConformidad.forEach((linea, index) => {
             estudiantesActualesParaBoletin.forEach((est) => {
                 const li = document.createElement("li");
                 li.innerHTML = `
-                    <span style="font-size: 14px; width: 70%;"><b>${est.numero}.</b> ${est.nombre}</span>
-                    <button class="btn-pdf-est" data-estudiante="${est.nombre}" data-numero="${est.numero}">📄 Descargar Libreta</button>
+                    <span style="font-size: 14px; width: 55%;"><b>${est.numero}.</b> ${est.nombre}</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-pdf-est" data-estudiante="${est.nombre}" data-numero="${est.numero}">📄 Descargar</button>
+                        <button class="btn-print-est" style="background:#17a2b8; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold; transition: background 0.3s;" data-estudiante="${est.nombre}" data-numero="${est.numero}">🖨️ Imprimir</button>
+                    </div>
                 `;
                 listaEstudiantesBoletin.appendChild(li);
             });
@@ -2978,7 +2992,8 @@ lineasConformidad.forEach((linea, index) => {
     }
 
     // --- GENERADOR DE PDF PARA LIBRETAS CON DISEÑO MEJORADO ---
-    async function generarPDFLibreta(curso, estudiante, btnElement, numLista) {
+    async function generarPDFLibreta(curso, estudiante, btnElement, numLista, accion = "descargar") {
+        const textoOriginal = accion === "imprimir" ? "🖨️ Imprimir" : "📄 Descargar";
         btnElement.innerText = "⏳ Generando...";
         btnElement.disabled = true;
         try {
@@ -2986,37 +3001,31 @@ lineasConformidad.forEach((linea, index) => {
             const profesoresCurso = [];
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
-                   const profUpp = String(nomProf).toUpperCase();
+                    const profUpp = String(nomProf).toUpperCase();
+                    if (
+                        profUpp.includes("REGENTA") ||
+                        profUpp.includes("DIRECTOR") ||
+                        profUpp.includes("SECRETARIA")
+                    ) continue;
 
-if (
-    profUpp.includes("REGENTA") ||
-    profUpp.includes("DIRECTOR") ||
-    profUpp.includes("SECRETARIA")
-) continue;
-
-const pData = todosProfes[nomProf];
-
-if (pData.CURSO && pData.CURSO[curso]) {
-    const materia = pData.CURSO[curso];
-    const matUpp = String(materia).toUpperCase();
-
-    if (
-        !matUpp.includes("REGENTA") &&
-        !matUpp.includes("DIRECTOR") &&
-        !matUpp.includes("SECRETARIA")
-    ) {
-        profesoresCurso.push({
-            nombre: nomProf,
-            materia: materia
-        });
-    }
-}
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[curso]) {
+                        const materia = pData.CURSO[curso];
+                        const matUpp = String(materia).toUpperCase();
+                        if (
+                            !matUpp.includes("REGENTA") &&
+                            !matUpp.includes("DIRECTOR") &&
+                            !matUpp.includes("SECRETARIA")
+                        ) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
                 }
             }
 
             if (profesoresCurso.length === 0) {
                 alert("No se encontraron profesores asignados a este curso para generar el boletín.");
-                btnElement.innerText = "📄 Descargar Libreta";
+                btnElement.innerText = textoOriginal;
                 btnElement.disabled = false;
                 return;
             }
@@ -3106,29 +3115,49 @@ if (pData.CURSO && pData.CURSO[curso]) {
                 filasHTML += htmlRow;
             }
 
-            function obtenerLugarRanking(trimIndex) {
-                const datosTrim = rankingData[trimIndex];
+            // === LÓGICA DE PROMEDIOS Y RANKING ACUMULADO ===
+            function obtenerLugarRankingTodosLocal(trimIndices, estudianteUpper) {
+                if (!Array.isArray(trimIndices)) trimIndices = [trimIndices];
+                const acumulado = {};
+
+                trimIndices.forEach(index => {
+                    const datosTrim = rankingData[index];
+                    for (const est in datosTrim) {
+                        if (!acumulado[est]) { acumulado[est] = { suma: 0, materias: 0 }; }
+                        acumulado[est].suma += datosTrim[est].suma;
+                        acumulado[est].materias += datosTrim[est].materias;
+                    }
+                });
+
                 const promedios = [];
-                for (const est in datosTrim) {
-                    if (datosTrim[est].materias > 0) promedios.push({ nombre: est, promedio: datosTrim[est].suma / datosTrim[est].materias });
+                for (const est in acumulado) {
+                    if (acumulado[est].materias > 0) {
+                        promedios.push({ nombre: est, promedio: acumulado[est].suma / acumulado[est].materias });
+                    }
                 }
+
                 if (promedios.length === 0) return "";
                 promedios.sort((a, b) => b.promedio - a.promedio);
-                
+
                 let lugar = 1; let ultimoProm = promedios[0].promedio;
                 for (let i = 0; i < promedios.length; i++) {
                     if (promedios[i].promedio < ultimoProm) { lugar++; ultimoProm = promedios[i].promedio; }
-                    if (promedios[i].nombre === estudiante.toUpperCase()) return `${lugar}º`;
+                    if (promedios[i].nombre === estudianteUpper) return `${lugar}º`;
                 }
                 return "";
             }
 
+            const estudianteUpper = estudiante.toUpperCase();
+
+            // Promedios acumulados
             const promTrim1 = matTrim[0] > 0 ? (sumaTrim[0] / matTrim[0]).toFixed(2) : "";
-            const promTrim2 = matTrim[1] > 0 ? (sumaTrim[1] / matTrim[1]).toFixed(2) : "";
-            const promTrim3 = matTrim[2] > 0 ? (sumaTrim[2] / matTrim[2]).toFixed(2) : "";
-            const rankTrim1 = obtenerLugarRanking(0);
-            const rankTrim2 = obtenerLugarRanking(1);
-            const rankTrim3 = obtenerLugarRanking(2);
+            const promTrim2 = matTrim[1] > 0 ? ((sumaTrim[0] + sumaTrim[1]) / (matTrim[0] + matTrim[1])).toFixed(2) : "";
+            const promTrim3 = matTrim[2] > 0 ? ((sumaTrim[0] + sumaTrim[1] + sumaTrim[2]) / (matTrim[0] + matTrim[1] + matTrim[2])).toFixed(2) : "";
+
+            // Ranking acumulado
+            const rankTrim1 = matTrim[0] > 0 ? obtenerLugarRankingTodosLocal(0, estudianteUpper) : "";
+            const rankTrim2 = matTrim[1] > 0 ? obtenerLugarRankingTodosLocal([0, 1], estudianteUpper) : "";
+            const rankTrim3 = matTrim[2] > 0 ? obtenerLugarRankingTodosLocal([0, 1, 2], estudianteUpper) : "";
 
             const contenedorHTML = document.createElement('div');
             contenedorHTML.id = "temp-pdf-container";
@@ -3193,7 +3222,7 @@ if (pData.CURSO && pData.CURSO[curso]) {
                         </div>
                     </div>
                     <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">Evaluación (Ser, Saber, Hacer)</div>
-                <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:14px; font-family:Tahoma, sans-serif; margin-bottom:0.25rem; border:1px solid #374151;">
+                <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:12px; font-family:Tahoma, sans-serif; margin-bottom:0.25rem; border:1px solid #374151;">
                         <thead>
                             <tr>
                                 <th rowspan="2" class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700" style="width:30%; text-align:left; padding-left:0.5rem; background-color:#f9fafb; border:1px solid #374151;">Áreas Curriculares</th>
@@ -3222,9 +3251,9 @@ if (pData.CURSO && pData.CURSO[curso]) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td></tr>
-                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td></tr>
-                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 11px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 11px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td></tr>
+                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim1}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim1}</td></tr>
+                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er y 2do Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim2}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim2}</td></tr>
+                                    <tr><td class="font-bold bg-gray-50 border border-gray-700" style="font-weight: bold; background-color: #f9fafb; border: 1px solid #374151;">1er, 2do y 3er Trimestre</td><td class="text-[11px] font-bold border border-gray-700" style="font-size: 13px; font-weight: bold; border: 1px solid #374151;">${promTrim3}</td><td class="text-[11px] font-bold text-blue-700 border border-gray-700" style="font-size: 13px; font-weight: bold; color: #1d4ed8; border: 1px solid #374151;">${rankTrim3}</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -3250,14 +3279,23 @@ if (pData.CURSO && pData.CURSO[curso]) {
                 jsPDF: { unit: "mm", format: "a4", orientation: "landscape" }
             };
 
-            await html2pdf().set(opciones).from(document.getElementById('boletin-content-render')).save();
+            // Ramificación entre IMPRIMIR o DESCARGAR
+            if (accion === "imprimir") {
+                await html2pdf().set(opciones).from(document.getElementById('boletin-content-render')).toPdf().get('pdf').then(function (pdf) {
+                    pdf.autoPrint(); // Le indica al PDF que lance el cuadro de impresión automáticamente
+                    window.open(pdf.output('bloburl'), '_blank');
+                });
+            } else {
+                await html2pdf().set(opciones).from(document.getElementById('boletin-content-render')).save();
+            }
+
             document.body.removeChild(contenedorHTML);
 
         } catch (error) {
             console.error("Error al generar PDF:", error);
             alert("Hubo un error al generar la libreta.");
         } finally {
-            btnElement.innerText = "📄 Descargar Libreta";
+            btnElement.innerText = textoOriginal;
             btnElement.disabled = false;
         }
     }
@@ -3271,30 +3309,23 @@ if (pData.CURSO && pData.CURSO[curso]) {
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
                     const profUpp = String(nomProf).toUpperCase();
-
-if (
-    profUpp.includes("REGENTA") ||
-    profUpp.includes("DIRECTOR") ||
-    profUpp.includes("SECRETARIA")
-) continue;
-
-const pData = todosProfes[nomProf];
-
-if (pData.CURSO && pData.CURSO[curso]) {
-    const materia = pData.CURSO[curso];
-    const matUpp = String(materia).toUpperCase();
-
-    if (
-        !matUpp.includes("REGENTA") &&
-        !matUpp.includes("DIRECTOR") &&
-        !matUpp.includes("SECRETARIA")
-    ) {
-        profesoresCurso.push({
-            nombre: nomProf,
-            materia: materia
-        });
-    }
-}
+                    if (
+                        profUpp.includes("REGENTA") ||
+                        profUpp.includes("DIRECTOR") ||
+                        profUpp.includes("SECRETARIA")
+                    ) continue;
+                    const pData = todosProfes[nomProf];
+                    if (pData.CURSO && pData.CURSO[curso]) {
+                        const materia = pData.CURSO[curso];
+                        const matUpp = String(materia).toUpperCase();
+                        if (
+                            !matUpp.includes("REGENTA") &&
+                            !matUpp.includes("DIRECTOR") &&
+                            !matUpp.includes("SECRETARIA")
+                        ) {
+                            profesoresCurso.push({ nombre: nomProf, materia: materia });
+                        }
+                    }
                 }
             }
 
@@ -3568,6 +3599,7 @@ const rankTrim3 = matTrim[2] > 0
                                 </table>
                             </div>
                         </header>
+
                         <div class="grid grid-cols-3 gap-2 mb-2 text-[9px] bg-white border border-gray-300 p-1 rounded" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; font-size: 9px; padding: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem;">
                             <div class="space-y-0.5 px-2" style="padding: 0 0.5rem;">
                                 <div class="flex" style="display: flex; margin-bottom: 2px;"><span class="font-bold w-24" style="width: 6rem; font-weight: bold;">Unidad Educativa:</span> <span class="truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SAN ISIDRO C</span></div>
@@ -3586,7 +3618,7 @@ const rankTrim3 = matTrim[2] > 0
                             </div>
                         </div>
                         <div class="text-center font-bold text-[10px] mb-1.5 uppercase" style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 0.375rem; text-transform: uppercase;">Evaluación (Ser, Saber, Hacer)</div>
-                        <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:12px; margin-bottom:0.25rem; border:1px solid #374151;">
+                    <table class="compact-table" style="width:78%; margin:0 auto; border-collapse:collapse; text-align:center; font-size:12px; font-family:Tahoma, sans-serif; margin-bottom:0.25rem; border:1px solid #374151;">
                             <thead>
                                 <tr>
                                     <th rowspan="2" class="w-[30%] text-left pl-2 bg-gray-50 border border-gray-700" style="width:30%; text-align:left; padding-left:0.5rem; background-color:#f9fafb; border:1px solid #374151;">Áreas Curriculares</th>
@@ -3601,8 +3633,9 @@ const rankTrim3 = matTrim[2] > 0
                                     <th class="text-[8px] bg-gray-50 border border-gray-700" style="font-size: 8px; background-color: #f9fafb; border: 1px solid #374151;">Literal ANUAL</th>
                                 </tr>
                             </thead>
-                           <tbody style="font-family: Tahoma, sans-serif;">${filasHTML}</tbody>
+                            <tbody style="font-family: Tahoma, sans-serif;">${filasHTML}</tbody>
                         </table>
+                        
                         <div class="flex gap-4 my-2 items-stretch" style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem; align-items: stretch;">
                             <div class="w-1/2" style="width: 50%;">
                                 <table class="w-full border-collapse text-[9px] compact-table text-center bg-white h-full border border-gray-700" style="width: 100%; border-collapse: collapse; font-size: 9px; text-align: center; height: 100%; border: 1px solid #374151;">
@@ -3736,18 +3769,26 @@ const rankTrim3 = matTrim[2] > 0
                 return numA - numB;
             });
 
-          const profesoresCurso = [];
+            const profesoresCurso = [];
             if (todosProfes) {
                 for (const nomProf in todosProfes) {
                     const profUpp = String(nomProf).toUpperCase();
-                    if (profUpp.includes("REGENTA") || profUpp.includes("DIRECTOR") || profUpp.includes("SECRETARIA")) continue;
+                    if (
+                        profUpp.includes("REGENTA") ||
+                        profUpp.includes("DIRECTOR") ||
+                        profUpp.includes("SECRETARIA")
+                    ) continue;
 
                     const pData = todosProfes[nomProf];
                     if (pData.CURSO && pData.CURSO[cursoSeleccionado]) {
                         const materia = pData.CURSO[cursoSeleccionado];
                         const matUpp = String(materia).toUpperCase();
 
-                        if (!matUpp.includes("REGENTA") && !matUpp.includes("DIRECTOR") && !matUpp.includes("SECRETARIA")) {
+                        if (
+                            !matUpp.includes("REGENTA") &&
+                            !matUpp.includes("DIRECTOR") &&
+                            !matUpp.includes("SECRETARIA")
+                        ) {
                             profesoresCurso.push({
                                 nombre: nomProf,
                                 materia: materia
@@ -3756,6 +3797,57 @@ const rankTrim3 = matTrim[2] > 0
                     }
                 }
             }
+
+            // =====================================================
+            // ORDEN PERSONALIZADO DE MATERIAS PARA btnDescargar
+            // =====================================================
+            const ordenMaterias = [
+                "LENGUAS_CASTELLANA_Y_ORIGINARIA",
+                "LENGUA_EXTRANJERA",
+                "CIENCIA_SOCIALES",
+                "EDUCACION_FISICA_Y_DEPORTES",
+                "EDUCACION_MUSICAL",
+                "ARTES_PLASTICAS_Y_VISUALES",
+                "MATEMATICAS"
+            ];
+
+            const normalizarMateriaOrden = (materia) =>
+                String(materia ?? "")
+                    .trim()
+                    .toUpperCase()
+                    .replace(/[ÁÀÄÂ]/g, "A")
+                    .replace(/[ÉÈËÊ]/g, "E")
+                    .replace(/[ÍÌÏÎ]/g, "I")
+                    .replace(/[ÓÒÖÔ]/g, "O")
+                    .replace(/[ÚÙÜÛ]/g, "U")
+                    .replace(/Ñ/g, "N")
+                    .replace(/[\s-]+/g, "_")
+                    .replace(/_+/g, "_");
+
+            profesoresCurso.sort((a, b) => {
+                const materiaA = normalizarMateriaOrden(a.materia);
+                const materiaB = normalizarMateriaOrden(b.materia);
+
+                const indiceA = ordenMaterias.indexOf(materiaA);
+                const indiceB = ordenMaterias.indexOf(materiaB);
+
+                // Las materias indicadas siempre aparecen primero
+                if (indiceA !== -1 && indiceB !== -1) {
+                    return indiceA - indiceB;
+                }
+
+                if (indiceA !== -1) return -1;
+                if (indiceB !== -1) return 1;
+
+                // El resto de materias mantiene un orden alfabético
+                const compararMateria = materiaA.localeCompare(materiaB, "es");
+                if (compararMateria !== 0) return compararMateria;
+
+                return String(a.nombre ?? "").localeCompare(
+                    String(b.nombre ?? ""),
+                    "es"
+                );
+            });
 
             if (profesoresCurso.length === 0) {
                 alert("No se encontraron profesores asignados a este curso.");
@@ -3795,7 +3887,7 @@ const rankTrim3 = matTrim[2] > 0
             ws.getCell('J1').value = trimestreSeleccionado;
             ws.getRow(1).font = { bold: true };
 
-          
+            
             const cellNombres = ws.getCell('B4');
             cellNombres.value = "APELLIDO Y NOMBRE";
             cellNombres.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -4124,8 +4216,8 @@ const rankTrim3 = matTrim[2] > 0
 
                 if (
                     profUpp.includes("REGENTA") ||
-    profUpp.includes("DIRECTOR") ||
-    profUpp.includes("SECRETARIA")
+                    profUpp.includes("DIRECTOR") ||
+                    profUpp.includes("SECRETARIA")
                 ) {
                     continue;
                 }
@@ -4138,9 +4230,9 @@ const rankTrim3 = matTrim[2] > 0
                     const matUpp = String(materia).toUpperCase();
 
                     if (
-                         !matUpp.includes("REGENTA") &&
-    !matUpp.includes("DIRECTOR") &&
-    !matUpp.includes("SECRETARIA")
+                        !matUpp.includes("REGENTA") &&
+                        !matUpp.includes("DIRECTOR") &&
+                        !matUpp.includes("SECRETARIA")
                     ) {
                         profesoresCurso.push({
                             nombre: nomProf,
@@ -4212,7 +4304,7 @@ const rankTrim3 = matTrim[2] > 0
 
         ws.mergeCells('B3:B5');
 
-        const cellNombres = ws.getCell('B3');
+        const cellNombres = ws.getCell('B4');
 
         cellNombres.value = "APELLIDO Y NOMBRE";
 
