@@ -663,17 +663,32 @@ if (!profesor) {
     async function verificarCursosProfesor() {
         try {
             // Consultar si el profesor ya tiene cursos registrados en Firebase
-            const response = await fetch(`${baseUrl}/PROFESORES/${profesor}/CURSO.json`);
+            const response = await fetch(`${baseUrl}/PROFESORES/${encodeURIComponent(profesor)}/CURSO.json`);
+
+            // Si Firebase responde con error, NO asumir que el registro está vacío
+            if (!response.ok) {
+                throw new Error(`Firebase respondió con estado ${response.status}`);
+            }
+
             const data = await response.json();
-            
-            // Si data es null o indefinido, significa que no tiene cursos registrados
-            if (!data) {
+
+            // Abrir el registro SOLAMENTE cuando Firebase confirmó que no hay cursos
+            const tieneCursos = data && typeof data === "object" && Object.keys(data).length > 0;
+
+            if (!tieneCursos) {
                 iniciarModalRegistro();
             }
+            // Si ya tiene cursos, no se abre el modal.
+
         } catch (error) {
-            console.error("Error al verificar cursos del profesor:", error);
-            // Podrías mostrar el modal de registro por defecto si falla la verificación
-            iniciarModalRegistro();
+            console.error("No se pudo verificar el registro de cursos:", error);
+
+            // Una falla de conexión NO significa que el profesor no tenga cursos.
+            // Mantener cerrado el registro y avisar al usuario.
+            mostrarMensaje(
+                "Sin conexión",
+                "No se pudo verificar tu registro de cursos y materias. Comprueba tu conexión a internet e inténtalo nuevamente. Tus datos guardados no se han eliminado."
+            );
         }
     }
 
