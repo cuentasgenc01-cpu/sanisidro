@@ -3931,7 +3931,7 @@ const rankTrim3 = matTrim[2] > 0
             ws.mergeCells(3, colAplazos, 4, colAplazos);
 
             const cellAplazosHeader = ws.getCell(3, colAplazos);
-            cellAplazosHeader.value = "APLAZOS";
+            cellAplazosHeader.value = "APLAZADOS";
             cellAplazosHeader.alignment = {
                 textRotation: 90,
                 horizontal: 'center',
@@ -4490,6 +4490,30 @@ const rankTrim3 = matTrim[2] > 0
 
         ws.getColumn(colPromedio).width = 6.5;
 
+        // COLUMNA APLAZADOS: solamente se crea al seleccionar TERCERO.
+        const colAplazados = trimestreSeleccionado === "TERCERO"
+            ? colPromedio + 1
+            : null;
+
+        if (colAplazados !== null) {
+            ws.mergeCells(3, colAplazados, 5, colAplazados);
+
+            const cellAplazadosHeader = ws.getCell(3, colAplazados);
+            cellAplazadosHeader.value = "APLAZADOS";
+            cellAplazadosHeader.alignment = {
+                horizontal: 'center',
+                vertical: 'middle',
+                wrapText: true
+            };
+            cellAplazadosHeader.font = { bold: true, size: 9 };
+            cellAplazadosHeader.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFC7CE' }
+            };
+            ws.getColumn(colAplazados).width = 10;
+        }
+
         ws.getRow(3).height = 25;
         ws.getRow(4).height = 57;
         ws.getRow(5).height = 20;
@@ -4536,6 +4560,7 @@ const rankTrim3 = matTrim[2] > 0
             let sumaAnualGeneral = 0;
             let materiasValidasGeneral = 0;
             let promedioCompleto = true;
+            let cantidadAplazados = 0;
 
             profesoresCurso.forEach((p, idx) => {
 
@@ -4735,6 +4760,12 @@ const rankTrim3 = matTrim[2] > 0
                         cellA.value = notaA;
                         cellA.font = { bold: true };
 
+                        // Cuenta las notas anuales de materia (columna A)
+                        // estrictamente menores a 50.5.
+                        if (notaA < 50.5) {
+                            cantidadAplazados++;
+                        }
+
                         if (notaA < 51) {
                             cellA.font = {
                                 bold: true,
@@ -4763,6 +4794,24 @@ const rankTrim3 = matTrim[2] > 0
                     fila,
                     colPromedio
                 );
+
+            // Mostrar el total de materias aplazadas únicamente en TERCERO.
+            if (colAplazados !== null) {
+                const cellAplazados = ws.getCell(fila, colAplazados);
+                cellAplazados.value = cantidadAplazados > 0
+                    ? cantidadAplazados
+                    : "";
+                cellAplazados.alignment = {
+                    horizontal: 'center',
+                    vertical: 'middle'
+                };
+                if (cantidadAplazados > 0) {
+                    cellAplazados.font = {
+                        bold: true,
+                        color: { argb: 'FFFF0000' }
+                    };
+                }
+            }
 
             if (
                 promedioCompleto &&
@@ -4854,7 +4903,7 @@ const rankTrim3 = matTrim[2] > 0
 
         for (let r = 3; r < fila; r++) {
 
-            for (let c = 1; c <= colPromedio; c++) {
+            for (let c = 1; c <= (colAplazados !== null ? colAplazados : colPromedio); c++) {
 
                 const celdaFinal =
                     ws.getCell(r, c);
