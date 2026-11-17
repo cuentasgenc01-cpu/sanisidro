@@ -1438,6 +1438,30 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             await Promise.all(promesasReportes);
 
+            // Cargar también los reportes de los trimestres anteriores al seleccionado.
+            // Se conserva reportesCache como los reportes del trimestre actual.
+            const ordenTrimestresFicha = ["PRIMERO", "SEGUNDO", "TERCERO"];
+            const indiceTrimestreFicha = ordenTrimestresFicha.indexOf(String(trimestreSeleccionado).toUpperCase());
+            const reportesPorTrimestreFicha = {
+                [String(trimestreSeleccionado).toUpperCase()]: reportesCache
+            };
+
+            const trimestresAnterioresFicha = ordenTrimestresFicha.slice(0, indiceTrimestreFicha);
+            await Promise.all(trimestresAnterioresFicha.map(async (trimAnterior) => {
+                const cacheAnterior = {};
+                await Promise.all(profesoresCurso.map(async (p) => {
+                    try {
+                        const urlAnterior = `https://sanisidro-933a9-default-rtdb.firebaseio.com/REPORTE/${encodeURIComponent(p.profesor)}/${trimAnterior}/${encodeURIComponent(cursoSeleccionado)}.json`;
+                        const respuestaAnterior = await fetch(urlAnterior);
+                        cacheAnterior[p.profesor] = (await respuestaAnterior.json()) || {};
+                    } catch (err) {
+                        console.error("Error al obtener reporte histórico de", p.profesor, trimAnterior, err);
+                        cacheAnterior[p.profesor] = {};
+                    }
+                }));
+                reportesPorTrimestreFicha[trimAnterior] = cacheAnterior;
+            }));
+
             // Filtrar solo los estudiantes que tienen al menos un reporte ("X")
             const estudiantesConReporte = estudiantesLimpios.filter(estudiante => {
                 let tieneReporte = false;
@@ -1658,17 +1682,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Extraer materias observadas para este alumno (Se autocompletan las áreas con problemas)
               // Extraer materias observadas para este alumno (Se autocompletan las áreas con problemas)
+// Materias reportadas en el trimestre seleccionado y marcas históricas
+// de los trimestres anteriores en los que el mismo estudiante también fue reportado.
 let materiasObservadas = [];
 profesoresCurso.forEach((p) => {
-    const reportesProf = reportesCache[p.profesor];
-    if (reportesProf) {
-        for (const key in reportesProf) {
-            const reg = reportesProf[key];
-            if (reg && reg.nombre && String(reg.nombre).trim().toUpperCase() === estudiante) {
-                materiasObservadas.push(p.materia);
-                break;
-            }
-        }
+    const trimsReportado = [];
+
+    ordenTrimestresFicha.slice(0, indiceTrimestreFicha + 1).forEach((trim) => {
+        const reportesTrim = reportesPorTrimestreFicha[trim] || {};
+        const reportesProf = reportesTrim[p.profesor] || {};
+        const coincide = Object.values(reportesProf).some(reg =>
+            reg && reg.nombre &&
+            String(reg.nombre).trim().toUpperCase() === estudiante
+        );
+        if (coincide) trimsReportado.push(trim);
+    });
+
+    // La materia se incluye solo si tiene reporte en el trimestre seleccionado.
+    if (trimsReportado.includes(String(trimestreSeleccionado).toUpperCase())) {
+        materiasObservadas.push({
+            materia: p.materia,
+            trimestres: trimsReportado
+        });
     }
 });
 
@@ -1677,33 +1712,24 @@ doc.setFontSize(9);
 
 if (materiasObservadas.length > 0) {
 
-    // Crear filas de 3 materias por fila
+    // Crear filas de 3 materias por fila. Las marcas trimestrales
+    // se dibujan pequeñas en la esquina superior derecha de cada celda.
     const filasMaterias = [];
 
     for (let i = 0; i < materiasObservadas.length; i += 3) {
-
         const fila = [];
-
         for (let j = 0; j < 3; j++) {
-
             const idx = i + j;
-
             if (idx < materiasObservadas.length) {
+                const item = materiasObservadas[idx];
+                let matTexto = item.materia;
+                if (matTexto.length > 20) matTexto = matTexto.substring(0, 20) + "...";
 
-                let matTexto = materiasObservadas[idx];
-
-                // Máximo 22 caracteres + ...
-                if (matTexto.length > 20) {
-                    matTexto = matTexto.substring(0, 20) + "...";
-                }
-
-                fila.push(`${idx + 1}.   ${matTexto}`);
-
+                fila.push(`${idx + 1}. ${matTexto}`);
             } else {
                 fila.push("");
             }
         }
-
         filasMaterias.push(fila);
     }
 
@@ -1730,6 +1756,33 @@ if (materiasObservadas.length > 0) {
             valign: 'middle',
             lineColor: [0, 0, 0],
             lineWidth: 0.3
+        },
+
+        // Dibujar las etiquetas 1T/2T/3T en pequeño, sin crear otra línea
+        // ni aumentar el alto de las filas o el tamaño de la tabla.
+        didDrawCell: function(data) {
+            if (data.section !== 'body') return;
+
+            const indiceMateria = data.row.index * 3 + data.column.index;
+            const item = materiasObservadas[indiceMateria];
+            if (!item || !item.trimestres.length) return;
+
+            const marcas = item.trimestres.map(trim =>
+                trim === "PRIMERO" ? "1T" : trim === "SEGUNDO" ? "2T" : "3T"
+            ).join("  ");
+
+            const x = data.cell.x + data.cell.width - 2;
+            const y = data.cell.y + 3.2;
+
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(6.5);
+            const ancho = doc.getTextWidth(marcas) + 2.2;
+            doc.setFillColor(255, 230, 153);
+            doc.roundedRect(x - ancho, y - 2.5, ancho, 3.5, 0.7, 0.7, 'F');
+            doc.setTextColor(156, 87, 0);
+            doc.text(marcas, x - 1, y, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
         },
 
         columnStyles: {
